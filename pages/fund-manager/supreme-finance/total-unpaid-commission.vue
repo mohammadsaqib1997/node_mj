@@ -1,5 +1,11 @@
 <template lang="pug">
     .wrapper
+      .box.main-box
+        .header.columns.is-gapless
+          .column
+              h1 Total UnPaid Commission - Report
+        .body
+          .section
       .box.counter-box
           .columns.is-gapless.is-multiline
               .column.is-12-mobile.is-6-tablet.is-3-widescreen
@@ -18,18 +24,6 @@
                       b Rs.
                       h1 1,563,000
                   h5 Un-Paid Commissions
-      .box.main-box
-          .header.columns.is-gapless
-              .column
-                  h1 Registered Members
-          .body
-              .section
-      .box.main-box
-          .header.columns.is-gapless
-              .column
-                  h1 Commission
-          .body
-              .section
 </template>
 
 <script>

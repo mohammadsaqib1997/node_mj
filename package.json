@@ -5,11 +5,12 @@
   "author": "Muhammad Saqib <mohammadsaqib1997@gmail.com>",
   "private": true,
   "scripts": {
-    "dev": "node ./server/index.js",
+    "dev": "backpack",
     "build": "nuxt build",
     "start": "cross-env NODE_ENV=production node ./server/index.js"
   },
   "dependencies": {
+    "backpack-core": "^0.7.0",
     "cross-env": "^5.1.6",
     "express": "^4.16.3",
     "lodash": "^4.17.10",

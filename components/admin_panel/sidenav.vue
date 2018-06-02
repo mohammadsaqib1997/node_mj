@@ -11,9 +11,8 @@
                     .navbar-item.has-dropdown
                         .navbar-item.has-arrow(v-on:click.prevent="dropToggle") Supreme Finances
                         .navbar-dropdown
-                            nuxt-link.navbar-item(to="/3") item 1
-                            nuxt-link.navbar-item(to="/3") item 1
-                            nuxt-link.navbar-item(to="/3") item 1
+                            nuxt-link.navbar-item(to="/fund-manager/supreme-finance/total-paid-commission") Total Paid Commission
+                            nuxt-link.navbar-item(to="/fund-manager/supreme-finance/total-unpaid-commission") Total UnPaid Commission
 
             .navbar-item.has-dropdown
                 .navbar-item.mm-area.has-arrow(v-on:click.prevent="dropToggle") Members Area
