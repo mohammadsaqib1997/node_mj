@@ -1,0 +1,16 @@
+{
+  "name": "mj_supreme",
+  "version": "1.0.0",
+  "description": "Nuxt.js project",
+  "author": "Muhammad Saqib <mohammadsaqib1997@gmail.com>",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt"
+  },
+  "dependencies": {
+    "nuxt": "^1.4.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.12.0"
+  }
+}
