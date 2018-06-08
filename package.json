@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "backpack-core": "^0.7.0",
+    "chart.js": "^2.7.2",
     "cross-env": "^5.1.6",
     "express": "^4.16.3",
     "lodash": "^4.17.10",
@@ -20,7 +21,8 @@
     "nuxt-buefy": "0.0.4",
     "pug": "^2.0.3",
     "sass-loader": "^7.0.2",
-    "simple-vue-validator": "^0.15.1"
+    "simple-vue-validator": "^0.15.1",
+    "vue-chartjs": "^3.3.1"
   },
   "devDependencies": {
     "prettier": "^1.12.0"

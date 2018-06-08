@@ -7,7 +7,7 @@
                         a.navbar-item(href='#')
                             b-icon.flip-y(icon="phone" size="is-small")
                             span.fs-14 &nbsp;+92 331 2286074
-                        .navbar-item.px-0
+                        .navbar-item.px-0.hidden-tablet
                             span.sm-line
                         a.navbar-item(href='#')
                             b-icon(icon="envelope" size="is-small")
@@ -25,14 +25,12 @@
                                 li.sc_icon
                                     a
                                         b-icon(icon="google-plus-g" size="is-small" pack="fab")
-                        .navbar-item.p-0
-                            button.button.top-button(@click="$store.commit('toggleLoginModal')")
-                                b-icon(icon="user" size="is-small" pack="far")
-                                span.fs-14 LOGIN
-
-        div
-
-
+                        .navbar-item.has-dropdown.is-hoverable.p-0.profile_con_nav
+                          .navbar-item
+                            b-icon(icon="user" size="is-small" pack="far")
+                          .navbar-dropdown
+                            a.navbar-item(@click.prevent="$store.commit('toggleLoginModal')") LOGIN
+                            nuxt-link.navbar-item(to="/signup") SIGNUP
 </template>
 
 <script>
@@ -43,44 +41,65 @@
 
 <style lang="sass" scoped>
     .top-header
-        background-color: #3b3f58
-        color: #ffffff
-
+      background-color: #3b3f58
+      .navbar
+        z-index: 31
         .navbar-burger
             color: #ffffff
         .navbar-menu
-            .navbar-item
-                color: #ffffff
-                background-color: transparent
-                .icon
-                    color: #d7bb6e
-                .sm-line
-                    height: 50%
-                    width: 1px
-                    background-color: #fff
-                .fs-14
-                    font-size: 14px
-                .top-button
-                    background-color: transparent
-                    color: #fff
-                    border: none
-                    height: 100%
-                    border-left: 1px solid #535a75
-                    border-right: 1px solid #535a75
-                    -webkit-box-shadow: none
-                    -moz-box-shadow: none
-                    box-shadow: none
-                    padding-left: 20px
-                    padding-right: 20px
-                    -webkit-border-radius: 0
-                    -moz-border-radius: 0
-                    border-radius: 0
-            @media screen and (max-width: 1023px)
-                background-color: #3b3f58
-                text-align: center
+          .navbar-item
+            color: #ffffff
+            background-color: transparent
+            &.profile_con_nav
+              position: relative
+              padding-left: 10px
+              margin-left: 5px
+              &:before
+                content: " "
+                position: absolute
+                top: 1rem
+                bottom: 1rem
+                left: 0
+                width: 1px
+                background-color: #fff
+              .navbar-dropdown
                 .navbar-item
-                    .top-button
-                        border: 1px solid #535a75
+                  color: #333
+                  &:hover
+                    background-color: whitesmoke !important
+
+            .icon
+              color: #d7bb6e
+            .sm-line
+              height: 50%
+              width: 1px
+              background-color: #fff
+            .fs-14
+              font-size: 14px
+          @media screen and (max-width: 1087px)
+            background-color: #3b3f58
+            text-align: center
+            .navbar-item
+              &.profile_con_nav
+                padding-left: 0
+                margin-left: 0
+                display: inline-block
+                &:before
+                  content: none
+                &>.navbar-item:first-child
+                  display: none
+                .navbar-dropdown
+                  .navbar-item
+                    color: #d7bb6e
+                    display: inline-block
+                    border: 1px solid #d7bb6e
+                    margin: 5px
+                    &:hover
+                      background-color: #38393c !important
+
+    @media screen and (max-width: 1087px)
+      .hidden-tablet
+        display: none
 
     .social_icons
         > .sc_icon

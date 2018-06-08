@@ -21,6 +21,12 @@
 </script>
 
 <style lang="sass">
+  .exp-btn
+    height: auto
+    border: none
+    box-shadow: none !important
+    text-transform: uppercase
+
   .table-filter
       align-items: center
       margin-bottom: 2rem !important

@@ -32,10 +32,10 @@
                         .tab-body
                             .tab-content(:class="{active: this.cur_step === 1}")
                               user-detail-form
-                              template(v-if="tab_header_ind === 1")
-                                hr
-                                bike-detail-form
                             .tab-content(:class="{active: this.cur_step === 2}")
+                              template(v-if="tab_header_ind === 1")
+                                bike-detail-form
+                                hr
                               product-detail-form
                             .tab-content(:class="{active: this.cur_step === 3}")
                               .activation-con
@@ -55,14 +55,10 @@
                         .tab-footer(v-if="this.cur_step < 3")
                           button.button.btn-des-1(v-if="cur_step > 1" v-on:click="prev_step")
                             b-icon(icon="angle-left" style="margin-top: 2px;")
-                            | &nbsp;&nbsp;Back to step {{ this.cur_step - 1 }}
-                          template(v-if="this.cur_step === 2")
-                            button.button.btn-des-1(v-on:click="next_step")
-                                | Activate Now
-                          template(v-else)
-                            button.button.btn-des-1(v-on:click="next_step")
-                                | Continue to step {{ this.cur_step + 1 }}&nbsp;&nbsp;
-                                b-icon(icon="angle-right" style="margin-top: 2px;")
+                            | &nbsp;&nbsp;Back to {{ steps_name[cur_step - 1] }}
+                          button.button.btn-des-1(v-on:click="next_step")
+                              | Continue to {{ steps_name[cur_step + 1] }}&nbsp;&nbsp;
+                              b-icon(icon="angle-right" style="margin-top: 2px;")
 </template>
 
 <script>
@@ -88,7 +84,13 @@ export default {
         loading: false
       },
       tab_header_ind: 0,
-      cur_step: 1
+      cur_step: 1,
+      steps_name: {
+        1: "User Details",
+        2: "Product Details",
+        3: "Activation",
+        4: "Confirmation"
+      }
     }
   },
   methods: {
