@@ -21,11 +21,45 @@
 </script>
 
 <style lang="sass">
+  $primary: #d9bd68
+  $primary-light: rgba(217, 189, 104, 0.25)
+
   .exp-btn
     height: auto
     border: none
     box-shadow: none !important
     text-transform: uppercase
+
+  .datepicker
+    .dropdown
+      .has-text-primary
+        color: $primary !important
+      .pagination-previous:focus, .pagination-next:focus, .pagination-link:focus
+        border-color: $primary
+      .datepicker-table
+        .datepicker-body
+          .datepicker-row
+            .datepicker-cell
+              &.is-today
+                border: solid 1px $primary
+              &.is-selected
+                background-color: $primary
+      .select:not(.is-multiple):not(.is-loading)::after
+        border-color: $primary
+      .select
+        select
+          &:focus, &:active
+            border-color: $primary
+            box-shadow: 0 0 0 0.125em $primary-light
+
+    .control
+      .input
+        border-radius: 0
+        height: 2.8rem
+        &:focus, &:active
+          border-color: $primary
+      .icon
+        height: 2.8rem
 
   .table-filter
       align-items: center
@@ -69,7 +103,7 @@
                           font-size: 3vw
                   .icon
                       top: 4px
-                      color: #d9bd68
+                      color: $primary
                   &.is-loading
                       .icon
                           display: none
@@ -86,12 +120,12 @@
                   border-radius: 0
                   font-size: 14px
                   &:focus, &:active
-                      -webkit-box-shadow: 0 0 0 0.12em #d9bd68 !important
-                      -moz-box-shadow: 0 0 0 0.12em #d9bd68 !important
-                      box-shadow: 0 0 0 0.12em #d9bd68 !important
+                      -webkit-box-shadow: 0 0 0 0.12em $primary !important
+                      -moz-box-shadow: 0 0 0 0.12em $primary !important
+                      box-shadow: 0 0 0 0.12em $primary !important
                   &>.icon
                       margin-top: 2px
-                      color: #d9bd68
+                      color: $primary
       @media screen and (max-width: 768px)
           display: block !important
           &>.field
@@ -133,7 +167,7 @@
                       &:nth-child(1), &:nth-child(2)
                           border-bottom: 2px solid #7c7d9e
                   &>h1
-                      color: #d9bd68
+                      color: $primary
                       margin-bottom: 0
                       font-size: 4.5rem
                       font-weight: 200
@@ -150,11 +184,11 @@
                       margin: 0 auto
                       display: inline-block
                       b
-                          color: #d9bd68
+                          color: $primary
                           font-size: 26px
                       h1
                           margin: 0
-                          color: #d9bd68
+                          color: $primary
                           font-weight: 300
                           font-size: 2.2rem
                           line-height: 1.5rem
@@ -189,7 +223,7 @@
                                   -moz-box-shadow: 0 0 0 0.12em #bbbbbb !important
                                   box-shadow: 0 0 0 0.12em #bbbbbb !important
                               &>.icon
-                                  color: #d9bd68
+                                  color: $primary
                       &.receipt_con
                         padding: 0
                         .anch
@@ -209,7 +243,7 @@
                             -moz-box-shadow: 0 0 0 0.12em #bbbbbb !important
                             box-shadow: 0 0 0 0.12em #bbbbbb !important
                           &>.icon
-                              color: #d9bd68
+                              color: $primary
       .pagination
           a
               &[role=button]
@@ -219,7 +253,7 @@
                   border-color: #eeeeee
                   color: #959595
                   &.is-current
-                      background-color: #d9bd68
+                      background-color: $primary
                       color: #ffffff
           @media screen and (min-width: 769px)
               .pagination-previous
@@ -270,7 +304,7 @@
                               font-size: 3vw
                       .icon
                           top: 4px
-                          color: #d9bd68
+                          color: $primary
                       &.is-loading
                           .icon
                               display: none
@@ -288,7 +322,7 @@
                   position: absolute
                   width: 5rem
                   height: 3px
-                  background-color: #d9bd68
+                  background-color: $primary
                   left: 0
                   top: 100%
           .body
@@ -313,5 +347,80 @@
               margin-left: 0
               padding-left: 1rem
               padding-right: 1rem
+
+  .btn-des-1
+    color: #ffffff !important
+    margin-top: 1rem
+    background-color: #ea2378
+    border-radius: 0
+    border: none
+    padding: 1rem 2rem
+    min-height: 3.6rem
+    height: auto
+    text-transform: uppercase
+    font-weight: bold
+    font-size: 14px
+    position: relative
+    -webkit-box-shadow: 0 2px 20px 2px #ccc
+    -moz-box-shadow: 0 2px 20px 2px #ccc
+    box-shadow: 0 2px 20px 2px #ccc
+    &:hover
+      background-color: #c52566
+    &:focus
+      -webkit-box-shadow: 0 2px 20px 2px #ccc !important
+      -moz-box-shadow: 0 2px 20px 2px #ccc !important
+      box-shadow: 0 2px 20px 2px #ccc !important
+    &:not(.is-loading):after
+      content: ' '
+      position: absolute
+      width: 100%
+      height: 5px
+      background-color: #c52566
+      bottom: 0
+
+  .form
+    label
+      font-weight: 300
+      line-height: 3rem
+      font-size: 1.3rem
+    .field
+      position: relative
+    .field:not(:last-child)
+        margin-bottom: 1.5rem
+
+    input.input, .cus-des-1 .select > select
+      background-color: #f5f6f7
+      -webkit-box-shadow: none
+      -moz-box-shadow: none
+      box-shadow: none
+      -webkit-border-radius: 0
+      -moz-border-radius: 0
+      border-radius: 0
+      border: none
+      font-size: 15px
+      color: #3b3f57
+      height: 3.2rem
+      padding: 0 1rem
+      &:focus, &:active
+        border-color: transparent
+        -webkit-box-shadow: 0 0 2px 0 $primary
+        -moz-box-shadow: 0 0 2px 0 $primary
+        box-shadow: 0 0 2px 0 $primary
+        background-color: #ffffff
+
+    .cus-des-1 .select:not(.is-multiple):not(.is-loading)::after
+      top: calc(0.625em + 1rem)
+      border-color: #dcdcdc
+
+    .control.has-icons-right .icon.is-right
+        top: 6px
+    .b-radio.radio
+      input[type=radio] + .check
+        border-color: $primary
+        &:before
+          background: $primary
+      &:hover
+        input[type=radio] + .check
+          border-color: $primary
 
 </style>

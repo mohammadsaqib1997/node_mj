@@ -128,6 +128,8 @@
         font-weight: 500
       label.label
           font-weight: 100
+          line-height: inherit
+          font-size: inherit
       .field
           position: relative
           .fp_link

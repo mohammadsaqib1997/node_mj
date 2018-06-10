@@ -17,8 +17,8 @@
             .navbar-item.has-dropdown
                 .navbar-item.mm-area.has-arrow(v-on:click.prevent="dropToggle") Members Area
                 .navbar-dropdown
-                    nuxt-link.navbar-item(to="/3") item 1
-                    nuxt-link.navbar-item(to="/3") item 1
+                    nuxt-link.navbar-item(to="/members-area/add-new-member") Add New Member
+                    nuxt-link.navbar-item(to="/members-area/member-profile") Member Profile
                     nuxt-link.navbar-item(to="/3") item 1
 
             .navbar-item.has-dropdown

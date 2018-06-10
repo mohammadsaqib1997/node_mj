@@ -54,36 +54,6 @@ import LineChart from '~/charts/LineChart.js'
     .field
       .label
         color: #666
-    .datepicker
-      .dropdown
-        .has-text-primary
-          color: $primary !important
-        .pagination-previous:focus, .pagination-next:focus, .pagination-link:focus
-          border-color: $primary
-        .datepicker-table
-          .datepicker-body
-            .datepicker-row
-              .datepicker-cell
-                &.is-today
-                  border: solid 1px $primary
-                &.is-selected
-                  background-color: $primary
-        .select:not(.is-multiple):not(.is-loading)::after
-          border-color: $primary
-        .select
-          select
-            &:focus, &:active
-              border-color: $primary
-              box-shadow: 0 0 0 0.125em $primary-light
-
-      .control
-        .input
-          border-radius: 0
-          height: 2.8rem
-          &:focus, &:active
-            border-color: $primary
-        .icon
-          height: 2.8rem
 
 
 </style>
