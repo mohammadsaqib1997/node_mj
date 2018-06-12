@@ -46,14 +46,10 @@ import LineChart from '~/charts/LineChart.js'
     }
 </script>
 
-<style lang="sass">
-  $primary: #d9bd68
-  $primary-light: rgba(217, 189, 104, 0.25)
+<style lang="sass" scoped>
   .set-reports-period-con
     margin-bottom: 3rem
     .field
       .label
         color: #666
-
-
 </style>

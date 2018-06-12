@@ -3,7 +3,7 @@
       .box.main-box
         .header.columns.is-gapless.is-multiline
           .column
-              h1 Total UnPaid Commission - Report
+              h1 InActive Members - Report
           .column.is-2-desktop.is-12-tablet.has-text-right
             button.button.exp-btn
                 img(src="~/assets/img/export-btn.png")
