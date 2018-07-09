@@ -2,7 +2,7 @@
     .topbar
         .navbar
             .navbar-brand
-                a#nBurgerMain.navbar-burger(role="button" aria-label="menu" aria-expanded="false")
+                a.navbar-burger.main-menu(role="button" aria-label="menu" aria-expanded="false" v-on:click.prevet="navbarActToggle")
                     span(aria-hidden="true")
                     span(aria-hidden="true")
                     span(aria-hidden="true")
@@ -36,23 +36,24 @@
 </template>
 
 <script>
-    export default {
-        mounted() {
-            $(function () {
-                $("body").off('click', '#nBurgerTop')
-                $("body").off('click', '#nBurgerMain')
+export default {
+  mounted() {
+    $(function () {
+      $("body").off('click', '#nBurgerTop')
 
-                $("body").on('click', '#nBurgerTop', function () {
-                    $(this).toggleClass("is-active")
-                    $("#navTopMenu").toggleClass("is-active")
-                })
-                $("body").on('click', '#nBurgerMain', function () {
-                    $(this).toggleClass("is-active")
-                    $("#mainNav").toggleClass("is-active")
-                })
-            })
-        }
+      $("body").on('click', '#nBurgerTop', function () {
+        $(this).toggleClass("is-active")
+        $("#navTopMenu").toggleClass("is-active")
+      })
+    })
+  },
+  methods: {
+    navbarActToggle: function (e) {
+      e.target.closest(".navbar-burger").classList.toggle('is-active')
+      document.getElementById("navbar").classList.toggle('is-active')
     }
+  }
+}
 </script>
 
 <style scoped lang="sass">
@@ -66,20 +67,26 @@
                     max-height: 100%
                     width: auto
             .navbar-burger
-                height: auto
-                color: #333
-                &:nth-child(3)
-                    &.is-active
-                        span
-                            width: 12px
-                            &:nth-child(1)
-                                left: 50%
-                            &:nth-child(3)
-                                left: 34%
+              height: auto
+              color: #333
+              &:nth-child(3)
+                  &.is-active
+                      span
+                          width: 12px
+                          &:nth-child(1)
+                              left: 50%
+                          &:nth-child(3)
+                              left: 34%
 
-                &:first-child
-                    margin-left: 0
-                    margin-right: auto
+              &:first-child
+                  margin-left: 0
+                  margin-right: auto
+              &.main-menu
+                display: none
+              @media screen and (max-width: 1023px)
+                &.main-menu
+                  display: block
+
         .navbar-menu
             .navbar-end
                 margin-right: 5rem
@@ -112,7 +119,7 @@
                     font-weight: bold
                     margin-right: -8px
                     z-index: 1
-            @media screen and (max-width: 1023px)
+            @media screen and (max-width: 1087px)
                 &.is-active
                     top: 100%
                     position: absolute

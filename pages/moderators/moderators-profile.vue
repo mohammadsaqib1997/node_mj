@@ -3,7 +3,7 @@
         .box.main-box
             .header.columns.is-gapless
                 .column
-                    h1 Member Profiles
+                    h1 Moderators Profile
             .body
                 .section
                     b-field.table-filter(grouped)

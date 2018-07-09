@@ -3,7 +3,7 @@
         .container
             nav.navbar
                 .navbar-brand
-                    .navbar-item
+                    nuxt-link.navbar-item(to="/")
                         img.brand-logo(src="~/assets/img/logo.png")
                     a#nBurgerMain.navbar-burger(role="button" aria-label="menu" aria-expanded="false")
                         span(aria-hidden="true")
@@ -11,14 +11,13 @@
                         span(aria-hidden="true")
                 .navbar-menu#mainMenu
                     .navbar-end
-                        nuxt-link.navbar-item(to="/") Company
+                        nuxt-link.navbar-item(to="/about-us") Company
                         nuxt-link.navbar-item(to="/products") Products
                         nuxt-link.navbar-item(to="/media") Media
                         nuxt-link.navbar-item(to="/blog") Blog
                         nuxt-link.navbar-item(to="/career") Career
                         nuxt-link.navbar-item(to="/contact") Contact
                         nuxt-link.navbar-item(to="/help-center") Help Center
-
 </template>
 
 <script>
