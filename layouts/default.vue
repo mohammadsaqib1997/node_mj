@@ -79,6 +79,9 @@
           width: 50px
           bottom: 0
           left: 0
+        &.lt
+          color: #fefefe
+
       h2.title-2
         position: relative
         color: #3d3e5a
@@ -101,6 +104,8 @@
         font-size: 1.8rem
         font-family: serif
         text-transform: uppercase
+        &.acnt
+          color: #d9bd68
 
       .btn-des-1
         color: #ffffff !important
