@@ -63,6 +63,9 @@
   .bg-color
     background-color: #f5f6f7
     & /deep/
+      hr
+        background-color: #cccccc
+        height: 1px
       h1.title-1
         color: #3d3e5a
         font-size: 3rem
@@ -71,6 +74,7 @@
         text-transform: uppercase
         padding-bottom: 1.5rem
         position: relative
+        word-wrap: break-word
         &:after
           position: absolute
           content: ' '
@@ -81,6 +85,17 @@
           left: 0
         &.lt
           color: #fefefe
+        &.center
+          text-align: center
+          &:after
+            left: 0
+            right: 0
+            margin: 0 auto
+        &.simple
+          &:after
+            content: none
+        @media screen and (max-width: 425px)
+          font-size: 30px
 
       h2.title-2
         position: relative

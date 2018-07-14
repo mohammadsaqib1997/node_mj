@@ -46,7 +46,7 @@
         .columns
           .column
             h3.title-3 Presentations
-            .columns.is-gapless.box_cont(v-for="i in [2, 3]")
+            .columns.is-gapless.box_cont.is-mobile(v-for="i in [2, 3]")
               .column.is-3
                 .bk_img(:style="'background-image: url(/img/au_img_'+i+'.jpg)'")
               .column
@@ -56,7 +56,7 @@
           .column.is-2
           .column
             h3.title-3 Downloads
-            .columns.is-gapless.box_cont(v-for="i in [2, 3]")
+            .columns.is-gapless.box_cont.is-mobile(v-for="i in [2, 3]")
               .column.is-3
                 .bk_img.simple(:style="'background-image: url(/img/download_img.png)'")
               .column
@@ -104,6 +104,7 @@ export default {
       margin: 2rem auto
       color: #fff
       font-weight: 200
+      text-transform: uppercase
   .sct-2
     padding-bottom: 0
     .cont-1

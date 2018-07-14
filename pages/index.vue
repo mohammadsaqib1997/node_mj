@@ -10,7 +10,7 @@
             button.button.btn More Info
     .section.sct-2
       .container
-        h1.title-1 Products
+        h1.title-1.center Products
         .columns
           .column
             .box-pro-det
@@ -39,73 +39,7 @@
                 | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
                 | sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
               button.button View More
-    .section.sct-3
-      .container
-        h1.title-1 Upcoming PRoDUCTS
-        .columns.is-multiline.fpd-cont
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-1.png")
-              .det-cont
-                .title Bikes
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-2.png")
-              .det-cont
-                .title New Cars
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-3.png")
-              .det-cont
-                .title Old Cars
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-4.png")
-              .det-cont
-                .title Vans
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-5.png")
-              .det-cont
-                .title Plots
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-6.png")
-              .det-cont
-                .title One Story Bunglow
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
-          .column.is-4
-            .box-fpd-cont
-              .img-cont
-                img(src="~/assets/img/hm-fpd-img-7.png")
-              .det-cont
-                .title 2 Story Bunglow
-                .detail-txt
-                  | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                  | sed do eiusmod tempor incididunt
+    upcoming-prod-section
     .section.sct-4
       .container
         .columns.is-gapless
@@ -177,7 +111,11 @@
 </template>
 
 <script>
+import upcomingProdSection from "~/components/upcoming-prod-section.vue"
 export default {
+  components: {
+    "upcoming-prod-section": upcomingProdSection
+  },
   data() {
     return {
 
@@ -187,14 +125,6 @@ export default {
 </script>
 
 <style scoped lang="sass">
-  .sct-2, .sct-3
-    h1.title-1
-      text-align: center
-      &:after
-        left: 0
-        right: 0
-        margin: 0 auto
-
   .sct-1
     position: relative
     margin-bottom: 1rem
@@ -263,52 +193,6 @@ export default {
         text-transform: uppercase
         &:focus
           box-shadow: 0 0 5px 1px rgba(216, 190, 111, .5)
-  .sct-3
-    background-color: #fefefe
-    position: relative
-    margin-top: 3rem
-    &:before
-      content: " "
-      position: absolute
-      top: -30px
-      left: 0
-      right: 0
-      background-color: #fefefe
-      height: 4rem
-      transform: rotate(-2deg)
-      box-shadow: 0 -3px 10px -3px rgba(204, 204, 204, .3)
-    .fpd-cont
-      margin-top: 1.5rem
-      .box-fpd-cont
-        margin-top: 2rem
-        display: flex
-        .det-cont
-          padding-right: 3rem
-          width: auto
-          flex-grow: 1
-          flex-basis: 0
-          flex-shrink: 1
-          display: block
-          .title
-            font-size: 15px
-            text-transform: uppercase
-            color: #3d3e5a
-            padding-top: 6px
-            margin-bottom: 8px
-          .detail-txt
-            color: #868686
-            font-size: 15px
-            margin-bottom: 1.5rem
-        .img-cont
-          display: flex
-          align-items: center
-          justify-content: center
-          height: 110px
-          width: 110px
-          background-color: white
-          border: 2px solid #e3ce90
-          border-radius: 5px
-          margin-right: 1rem
   .sct-4
     padding: 0
     position: relative
