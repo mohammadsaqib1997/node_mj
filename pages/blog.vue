@@ -445,6 +445,4 @@ export default {
             text-transform: uppercase
             font-size: 14px
 
-
-
 </style>

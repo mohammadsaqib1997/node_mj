@@ -201,25 +201,33 @@
                 color: #989898
         .field:not(:last-child)
             margin-bottom: 1.5rem
-        input.input
-            background-color: #f5f6f7
-            -webkit-box-shadow: none
-            -moz-box-shadow: none
-            box-shadow: none
-            -webkit-border-radius: 0
-            -moz-border-radius: 0
-            border-radius: 0
-            border: none
-            font-size: 15px
-            color: #3b3f57
-            padding: 25px 20px
+        input.input, select, textarea
+          background-color: #f5f6f7
+          -webkit-box-shadow: none
+          -moz-box-shadow: none
+          box-shadow: none
+          -webkit-border-radius: 0
+          -moz-border-radius: 0
+          border-radius: 0
+          border: none
+          font-size: 15px
+          color: #3b3f57
+          padding: 16px 20px
+          height: auto
 
-            &:focus, &:active
-                border-color: transparent
-                -webkit-box-shadow: 0 0 2px 0 #d9bd68
-                -moz-box-shadow: 0 0 2px 0 #d9bd68
-                box-shadow: 0 0 2px 0 #d9bd68
-                background-color: #ffffff
+          &:focus, &:active
+            border-color: transparent
+            -webkit-box-shadow: 0 0 2px 0 #d9bd68
+            -moz-box-shadow: 0 0 2px 0 #d9bd68
+            box-shadow: 0 0 2px 0 #d9bd68
+            background-color: #ffffff
+        .select
+          height: auto
+          &:after
+            border-color: #dabd67
+          select
+            option
+              color: #dabd67
         .control.has-icons-right .icon.is-right
             top: 6px
         .b-radio.radio
