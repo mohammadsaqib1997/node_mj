@@ -28,6 +28,9 @@ module.exports = {
       materialDesignIcons: false
     }]
   ],
+  axios: {
+    baseURL: 'http://127.0.0.1:3000'
+  },
   build: {
     vendors: ['babel-polyfill'],
     extend (config, { isClient }) {
