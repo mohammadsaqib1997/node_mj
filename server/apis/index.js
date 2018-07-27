@@ -8,7 +8,7 @@ let corsOptions = {
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true)
     } else {
-      callback('Invalid CORS!')
+      callback('Invalid CORS! '+origin)
     }
   }
 }

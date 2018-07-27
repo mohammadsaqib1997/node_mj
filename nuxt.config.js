@@ -31,7 +31,7 @@ module.exports = {
     }]
   ],
   axios: {
-    baseURL: (config.dev)? 'http://127.0.0.1:3000':'http://144.208.75.78:3000'
+    baseURL: (config.dev)? 'http://127.0.0.1:3000' : 'http://144.208.75.78:3000'
   },
   build: {
     vendors: ['babel-polyfill'],
