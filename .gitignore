@@ -13,6 +13,8 @@ dist
 # Backpack build
 build
 
+mysqls
+
 README.md
 
 .idea

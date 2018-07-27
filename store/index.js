@@ -1,11 +1,79 @@
 export const state = () => ({
-    loginModalActive: false
+  pageLoading: true,
+  initAuth: false,
+  loginModalActive: false,
+  jwtToken: null,
+  user: null,
+  isForgotPassword: false
 })
 
 export const mutations = {
-    toggleLoginModal (state) {
-        state.loginModalActive = !state.loginModalActive
-    }
+  pageLoadingSet (state, payload) {
+    state.pageLoading = payload
+  },
+  initAuthSet(state, payload) {
+    state.initAuth = payload
+  },
+  loginModalActiveSet(state, payload) {
+    state.loginModalActive = payload
+  },
+  jwtTokenSet(state, payload) {
+    state.jwtToken = payload
+  },
+  setUser(state, payload) {
+    state.user = payload
+  },
+  isForgotPasswordSet(state, payload) {
+    state.isForgotPassword = payload
+  }
+}
+
+export const actions = {
+  // async nuxtServerInit ({ commit, dispatch }, { req, res }) {
+  //    console.log(res.locals)
+  //    commit('csrfTokenSet', res.locals.csrftoken)
+  // },
+  async initAuthCheck({ commit }) {
+    return new Promise(async resolve => {
+      if (localStorage.getItem("user") !== "") {
+        try {
+          if (JSON.parse(localStorage.getItem('user')).hasOwnProperty("token")) {
+            await setTimeout(async ()=>{
+              await this.$axios.post(
+                "/api/web/tokenLogin",
+                {
+                  token: JSON.parse(localStorage.getItem('user')).token
+                }
+              ).then(res => {
+                if (res.data.status) {
+                  commit("setUser", { token: res.data.token });
+                } else {
+                  localStorage.removeItem("user")
+                  commit('setUser', null)
+                }
+              })
+              commit("initAuthSet", true)
+              resolve()
+            }, 3000)
+          }else{
+            commit("initAuthSet", true)
+            resolve()
+          }
+        } catch (err) {
+          commit("initAuthSet", true)
+          resolve()
+        }
+      }else{
+        commit("initAuthSet", true)
+        resolve()
+      }
+    })
+  },
+
+  logout({ commit }) {
+    localStorage.removeItem("user")
+    commit('setUser', null)
+  }
 }
 
 //export const strict = false

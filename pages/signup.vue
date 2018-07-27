@@ -20,67 +20,69 @@
                             | Confirmation
                 #formSignUpCon.column.is-6.is-offset-1
                     .tab-des-1
-                        .tab-header
-                            .columns.is-gapless
-                                .column(@click="tabActive(0)")
-                                    .t-card(:class="{active: (tab_header_ind === 0)}")
-                                        span Supreme Card
-                                .column(@click="tabActive(1)")
-                                    .t-bike(:class="{active: (tab_header_ind === 1)}")
-                                        span Motorcycle
+                      .tab-header
+                        .columns.is-gapless
+                          .column(@click="tabActive(0)")
+                            .t-card(:class="{active: (tab_header_ind === 0)}")
+                              span Supreme Card
+                          .column(@click="tabActive(1)")
+                            .t-bike(:class="{active: (tab_header_ind === 1)}")
+                              span Motorcycle
 
-                        .tab-body
-                            .tab-content(:class="{active: this.cur_step === 1}")
-                              user-detail-form
-                            .tab-content(:class="{active: this.cur_step === 2}")
-                              template(v-if="tab_header_ind === 1")
-                                bike-detail-form
-                                hr
-                              product-detail-form
-                            .tab-content(:class="{active: this.cur_step === 3}")
-                              .activation-con
-                                .txt-content
-                                  | Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                                .img-heading
-                                  img(src="~/assets/img/checked.png")
-                                  h1 Activation - Process
-                            .tab-content(:class="{active: this.cur_step === 4}")
-                              .confirmation-con
-                                .txt-content
-                                  | Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                                .img-heading
-                                  img(src="~/assets/img/checked.png")
-                                  h1 Signup - Completed
+                      .tab-body
+                        .tab-content(:class="{active: this.cur_step === 1}")
+                          user-detail-form(ref="userDetForm")
+                        .tab-content(:class="{active: this.cur_step === 2}")
+                          template(v-if="tab_header_ind === 1")
+                            bike-detail-form(ref="bikeDetForm")
+                            hr
+                          product-detail-form(ref="prdDetForm")
+                        .tab-content(:class="{active: this.cur_step === 3}")
+                          .activation-con
+                            .txt-content
+                              | Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                            .img-heading
+                              img(src="~/assets/img/checked.png")
+                              h1 Activation - Process
+                        .tab-content(:class="{active: this.cur_step === 4}")
+                          .confirmation-con
+                            .txt-content
+                              | Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                            .img-heading
+                              img(src="~/assets/img/checked.png")
+                              h1 Signup - Completed
 
-                        .tab-footer(v-if="this.cur_step < 3")
-                          button.button.btn-des-1(v-if="cur_step > 1" v-on:click="prev_step")
-                            b-icon(icon="angle-left" style="margin-top: 2px;")
-                            | &nbsp;&nbsp;Back to {{ steps_name[cur_step - 1] }}
-                          button.button.btn-des-1(v-on:click="next_step")
-                              | Continue to {{ steps_name[cur_step + 1] }}&nbsp;&nbsp;
-                              b-icon(icon="angle-right" style="margin-top: 2px;")
+                      .tab-footer(v-if="this.cur_step < 3")
+                        button.button.btn-des-1(v-if="cur_step > 1" v-on:click="prev_step")
+                          b-icon(icon="angle-left" style="margin-top: 2px;")
+                          | &nbsp;&nbsp;Back to {{ steps_name[cur_step - 1] }}
+                        button.button.btn-des-1(v-on:click="next_step")
+                            | Continue to {{ steps_name[cur_step + 1] }}&nbsp;&nbsp;
+                            b-icon(icon="angle-right" style="margin-top: 2px;")
+                      b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
 </template>
 
 <script>
-import userDetailForm from '~/components/forms/user_details.vue'
-import productDetailForm from '~/components/forms/product_details.vue'
-import bikeDetailForm from '~/components/forms/bike_details.vue'
+import userDetailForm from "~/components/forms/user_details.vue";
+import productDetailForm from "~/components/forms/product_details.vue";
+import bikeDetailForm from "~/components/forms/bike_details.vue";
 export default {
   components: {
     userDetailForm,
     productDetailForm,
     bikeDetailForm
   },
-  mounted () {
-    if(this.$route.query.token) {
-      this.cur_step = 4
+  mounted() {
+    const self = this;
+    if (this.$route.query.token) {
+      this.cur_step = 4;
     }
   },
   data() {
     return {
       form: {
-        suc: '',
-        err: '',
+        suc: "",
+        err: "",
         loading: false
       },
       tab_header_ind: 0,
@@ -91,28 +93,58 @@ export default {
         3: "Activation",
         4: "Confirmation"
       }
-    }
+    };
   },
   methods: {
-    tabActive: function (ind) {
-      if(this.cur_step === 1)
-        this.tab_header_ind = ind
+    tabActive: function(ind) {
+      if (this.cur_step === 1) this.tab_header_ind = ind;
     },
-    next_step: function () {
-      if(this.cur_step < 3)
-        this.cur_step++
-        this.animateDiv("#formSignUpCon")
+    next_step: async function() {
+      const self = this
+      if (self.cur_step === 1) {
+        await self.$refs.userDetForm.validate().then(result => {
+          if (result) {
+            self.cur_step++;
+          }
+        });
+      } else if (self.cur_step === 2) {
+        let check1 = true;
+        if (self.tab_header_ind === 1) {
+          check1 = await self.$refs.bikeDetForm.validate().then(result => {
+            if (result) {
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
+        let check2 = true;
+        check2 = await self.$refs.prdDetForm.validate().then(result => {
+          if (result) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+        if (check1 && check2) {
+          self.form.loading = true;
+          setTimeout(() => {
+            self.form.loading = false;
+            self.cur_step++;
+          }, 3000);
+        }
+      }
+      self.animateDiv("#formSignUpCon");
     },
-    prev_step: function () {
-      if(this.cur_step > 1)
-        this.cur_step--
-        this.animateDiv("#formSignUpCon")
+    prev_step: function() {
+      if (this.cur_step > 1) this.cur_step--;
+      this.animateDiv("#formSignUpCon");
     },
-    animateDiv: function (divName) {
-      $('html, body').animate({ scrollTop: $(divName).offset().top }, 500);
+    animateDiv: function(divName) {
+      $("html, body").animate({ scrollTop: $(divName).offset().top }, 500);
     }
   }
-}
+};
 </script>
 
 <style scoped lang="sass">

@@ -1,62 +1,78 @@
 <template lang="pug">
-    .bg-color
-        top-header
-        navbar-comp
-        nuxt
-        footer-comp
-        b-modal.login-modal(:active.sync="loginModalActive" :has-modal-card="true" :canCancel="['outside']")
-            .modal-card
-                section.modal-card-body
-                    .logo
-                        img(src="~/assets/img/logo-footer.png")
-                    .section
-                        section.form
-                            b-field(label="Username")
-                                b-input(type="text" placeholder="(example: Shabir Ahmed)")
-
-                            b-field(label="Password" :addons="false")
-                                a.control.fp_link(href="#" @click.prevent="closeLoginModal('/forgot-password')") Forgot ?
-                                b-input(type="password" placeholder="******")
-
-                            b-field.has-text-centered.my-2
-                                button.button.btn-des-1(@click.prevent="closeLoginModal('/dashboard')") Login
+  .bg-color
+    template(v-if="$store.state.pageLoading === false")
+      top-header
+      navbar-comp
+      nuxt
+      footer-comp
+      b-modal.login-modal(:active.sync="loginModalActive" v-on:close="modalCloseTr" :has-modal-card="true" :canCancel="['outside']")
+        .modal-card
+          section.modal-card-body
+            login-form(v-if="!isForgotPass")
+            forgot-pass-form(v-else)
 </template>
 
 <script>
-    import topHeader from '~/components/TopHeader.vue'
-    import navbarComp from '~/components/NavbarComp.vue'
-    import footerComp from '~/components/FooterComp.vue'
-    export default {
-        computed: {
-            loginRootActive: function () {
-                return this.$store.state.loginModalActive
-            }
-        },
-        components: {
-            topHeader,
-            navbarComp,
-            footerComp
-        },
-        data () {
-            return {
-                loginModalActive: this.loginRootActive
-            }
-        },
-        watch: {
-            loginRootActive: function (val) {
-                this.loginModalActive = val
-            },
-            loginModalActive: function (val) {
-                (!val) ? this.$store.commit('toggleLoginModal') : ''
-            }
-        },
-        methods: {
-            closeLoginModal (sendRoute) {
-                this.loginModalActive = false
-                this.$router.push(sendRoute)
-            }
-        }
+import topHeader from "~/components/TopHeader.vue";
+import navbarComp from "~/components/NavbarComp.vue";
+import footerComp from "~/components/FooterComp.vue";
+import loginForm from "~/components/forms/login.vue";
+import forgotPassForm from "~/components/forms/forgot_password.vue";
+
+import io from "socket.io-client";
+export default {
+  async mounted() {
+    const self = this;
+    self.socket = io();
+    self.socket.on("token", data => {
+      if (data.hasOwnProperty("token")) {
+        self.$store.commit("jwtTokenSet", data.token);
+      } else {
+        console.error(data.error.message);
+      }
+    });
+  },
+  destroyed() {
+    this.socket ? this.socket.disconnect() : "";
+  },
+  components: {
+    topHeader,
+    navbarComp,
+    footerComp,
+    loginForm,
+    forgotPassForm
+  },
+  computed: {
+    loginRootActive: function() {
+      return this.$store.state.loginModalActive;
+    },
+    isForgotPass: function() {
+      return this.$store.state.isForgotPassword;
     }
+  },
+  data() {
+    return {
+      socket: null,
+      loginModalActive: this.loginRootActive
+    };
+  },
+  watch: {
+    loginRootActive: function(val) {
+      this.loginModalActive = val;
+    },
+    loginModalActive: function(val) {
+      this.$store.commit("loginModalActiveSet", val);
+    },
+    isForgotPass: function(val) {
+      console.log(val);
+    }
+  },
+  methods: {
+    modalCloseTr() {
+      this.$store.commit("isForgotPasswordSet", false);
+    }
+  }
+};
 </script>
 
 <style lang="sass" scoped>
@@ -162,22 +178,6 @@
               max-width: 450px
               .modal-card-body
                   padding: 0
-                  .logo
-                      text-align: center
-                      padding: 20px
-                      margin-bottom: 1rem
-                      border-bottom: 2px solid #ebeced
-                      &:after
-                          content: ' '
-                          display: block
-                          width: 50px
-                          height: 2px
-                          background: #d9bd68
-                          position: relative
-                          bottom: -22px
-                          margin: 0 auto
-                  .section
-                      padding: 1.5rem 4rem 0
       .my-2
           margin-top: 2rem
           margin-bottom: 2rem
@@ -209,18 +209,25 @@
           -webkit-border-radius: 0
           -moz-border-radius: 0
           border-radius: 0
-          border: none
+          border: 1px solid transparent;
           font-size: 15px
           color: #3b3f57
-          padding: 16px 20px
+          padding: 16px 35px 16px 20px
           height: auto
-
           &:focus, &:active
-            border-color: transparent
             -webkit-box-shadow: 0 0 2px 0 #d9bd68
             -moz-box-shadow: 0 0 2px 0 #d9bd68
             box-shadow: 0 0 2px 0 #d9bd68
             background-color: #ffffff
+            
+          &.is-danger
+            border: 1px solid #ff3860 !important;
+            &:focus, &:active
+              -webkit-box-shadow: 0 0 2px 0 #ff3860
+              -moz-box-shadow: 0 0 2px 0 #ff3860
+              box-shadow: 0 0 2px 0 #ff3860
+              background-color: #ffffff
+
         .select
           height: auto
           &:after
@@ -229,7 +236,7 @@
             option
               color: #dabd67
         .control.has-icons-right .icon.is-right
-            top: 6px
+            top: 10px
         .b-radio.radio
           input[type=radio] + .check
             border-color: #d9bd68
@@ -238,5 +245,14 @@
           &:hover
             input[type=radio] + .check
               border-color: #d9bd68
+        .error, .success
+          font-size: 18px
+          text-align: center
+          margin-bottom: 1rem
+          font-weight: 100
+        .error
+            color: hsl(348, 100%, 61%)
+        .success
+            color: hsl(141, 71%, 48%)
 
 </style>

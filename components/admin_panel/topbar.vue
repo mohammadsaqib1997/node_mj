@@ -31,8 +31,8 @@
                             |Username
                             img.arrow-ic(src="~/assets/img/arrow.png")
                         .navbar-dropdown
-                            nuxt-link.navbar-item(to="/profile") Profile
-                            a.navbar-item(href="#") Logout
+                            nuxt-link.navbar-item(to="/profile") PROFILE
+                            a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
 </template>
 
 <script>

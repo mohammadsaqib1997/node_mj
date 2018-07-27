@@ -1,5 +1,6 @@
 module.exports = {
   dev: (process.env.NODE_ENV !== 'production'),
+  loading: '~/components/loadingComp.vue',
   head: {
     title: 'MJ SUPREME',
     meta: [
@@ -12,12 +13,16 @@ module.exports = {
       {rel: 'stylesheet', href: '/fontawesome/css/fontawesome-all.min.css'}
     ],
     script: [
-      /* Here is add static url please remove it '/~mjsupreme/' */
-      {src: '/js/jquery-3.3.1.min.js'}
+      {src: '/js/jquery-3.3.1.min.js'},
     ]
   },
-  plugins: ['~/plugins/s-vue-validator.js', '~/plugins/vue-map.js'],
+  plugins: [
+    '~/plugins/s-vue-validator.js', 
+    '~/plugins/vue-map.js',
+    { src: '~/plugins/route-chg.js', ssr: false }
+  ],
   modules: [
+    '@nuxtjs/axios',
     ['nuxt-buefy', {
       defaultIconPack: 'fas',
       materialDesignIcons: false
@@ -37,5 +42,5 @@ module.exports = {
       }
     }
   },
-  mode: "spa"
+  //mode: "spa"
 }

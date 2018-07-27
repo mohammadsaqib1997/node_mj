@@ -26,17 +26,19 @@
                                     a
                                         b-icon(icon="google-plus-g" size="is-small" pack="fab")
                         .navbar-item.has-dropdown.is-hoverable.p-0.profile_con_nav
-                          .navbar-item
-                            b-icon(icon="user" size="is-small" pack="far")
-                          .navbar-dropdown
-                            a.navbar-item(@click.prevent="$store.commit('toggleLoginModal')") LOGIN
-                            nuxt-link.navbar-item(to="/signup") SIGNUP
+                            .navbar-item
+                                b-icon(icon="user" size="is-small" pack="far")
+                            .navbar-dropdown
+                                template(v-if="$store.state.user !== null")
+                                    nuxt-link.navbar-item(to="/dashboard") DAHSBOARD
+                                    a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
+                                template(v-else)
+                                    a.navbar-item(@click.prevent="$store.commit('loginModalActiveSet', true)") LOGIN
+                                    nuxt-link.navbar-item(to="/signup") SIGNUP
 </template>
 
 <script>
-    export default {
-
-    }
+export default {};
 </script>
 
 <style lang="sass" scoped>
