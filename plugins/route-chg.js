@@ -1,7 +1,21 @@
 import _ from 'lodash'
 
 const authRoutes = [
-    'dashboard'
+    'dashboard',
+    'business-chart',
+    'notifications',
+    'profile',
+    'system-level',
+    'fund-manager-supreme-finance-total-paid-commission',
+    'fund-manager-supreme-finance-total-unpaid-commission',
+    'fund-manager-commission-paid',
+    'fund-manager-commission-unpaid',
+    'members-area-total-members-active-members-report',
+    'members-area-total-members-inactive-members-report',
+    'members-area-add-new-member',
+    'members-area-members-profile',
+    'moderators-add-new-moderator',
+    'moderators-moderators-profile',
 ]
 
 const unAuthRoutes = [

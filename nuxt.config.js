@@ -21,7 +21,8 @@ module.exports = {
   plugins: [
     '~/plugins/s-vue-validator.js', 
     '~/plugins/vue-map.js',
-    { src: '~/plugins/route-chg.js', ssr: false }
+    { src: '~/plugins/route-chg.js', ssr: false },
+    { src: '~/plugins/axios.js', ssr: false }
   ],
   modules: [
     '@nuxtjs/axios',
@@ -31,7 +32,7 @@ module.exports = {
     }]
   ],
   axios: {
-    baseURL: (config.dev)? 'http://127.0.0.1:3000' : 'http://144.208.75.78:3000'
+    baseURL: (config.dev) ? 'http://127.0.0.1:3000' : 'http://144.208.75.78:3000'
   },
   build: {
     vendors: ['babel-polyfill'],

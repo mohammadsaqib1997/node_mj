@@ -64,7 +64,7 @@ router.post('/login', (req, res) => {
                 user_id: results[0].id
               }
             }, secret, {
-                expiresIn: "5 minutes"
+                expiresIn: "1 days"
               })
             res.json({
               status: true,

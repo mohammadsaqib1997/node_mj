@@ -8,13 +8,14 @@ let corsOptions = {
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true)
     } else {
-      callback('Invalid CORS! '+origin)
+      callback('Invalid CORS!')
     }
   }
 }
 
 router.use("/web", cors(corsOptions), require('./web.js'))
 
+router.use("/product", cors(corsOptions), require('./products.js'))
 router.use("/member", cors(corsOptions), require('./members.js'))
 router.use("/moderator", cors(corsOptions), require('./moderator.js'))
 router.use("/admin", cors(corsOptions), require('./admin.js'))

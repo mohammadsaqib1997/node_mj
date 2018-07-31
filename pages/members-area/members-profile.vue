@@ -31,41 +31,63 @@
                     b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10")
                         template(slot-scope="props")
                             b-table-column.ed-con(width="50")
-                                button.button.ed-btn
+                                button.button.ed-btn(v-on:click.prevent="o_e_mem_m(props.row.user_asn_id)")
                                     b-icon(icon="edit")
                                     | &nbsp;&nbsp;&nbsp;EDIT
-                            b-table-column(field="id" label="ID" width="40" centered)
-                                | {{ props.row.id }}
+                            b-table-column(field="user_asn_id" label="ID" width="40")
+                                | {{ props.row.user_asn_id }}
                             b-table-column(field="email" label="Email" )
                                 | {{ props.row.email }}
-                            b-table-column(field="name" label="Name" )
-                                | {{ props.row.name }}
+                            b-table-column(field="full_name" label="Name" )
+                                | {{ props.row.full_name }}
                             b-table-column(field="status" label="Status" )
-                                | {{ props.row.status }}
-                            b-table-column(field="paid_amount" label="Due Amount" )
-                                | Suspended
+                                | {{ (props.row.active_sts === 1) ? 'Approved':'Suspended' }}
+                            // b-table-column(field="paid_amount" label="Due Amount" )
+                            //     | {{ props.row.status }}
                         template(slot="bottom-left")
                             p.page-result-txt Showing 15 of  430 results
-        br
+        b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
+            .modal-card
+                #ed-member-con.modal-card-body
+                    ed-member-form(:edit_id="select_edit")
 </template>
 
 <script>
-    export default {
-        layout: 'admin_layout',
-        data () {
-            const data = [
-                { 'id': 1, 'name': 'Jesse', 'status': 'Active', 'email': 'abc@domain.com' },
-                { 'id': 2, 'name': 'John', 'status': 'Inactive', 'email': 'abc@domain.com' },
-                { 'id': 3, 'name': 'Tina', 'status': 'Inactive', 'email': 'abc@domain.com' },
-                { 'id': 4, 'name': 'Clarence', 'status': 'Active', 'email': 'abc@domain.com' },
-                { 'id': 5, 'name': 'Anne', 'status': 'Active', 'email': 'abc@domain.com' },
-            ]
-
-            return {
-                data
-            }
-        }
-    }
+import edMemberForm from "~/components/forms/ed-member.vue";
+export default {
+  layout: "admin_layout",
+  components: {
+    edMemberForm
+  },
+  async mounted() {
+    const res = await this.$axios.$get("/api/member/");
+    this.data = res.data;
+  },
+  computed: {
+      modalActive: function () {
+          return this.$store.state.edMemModal.modalActive
+      }
+  },
+  watch: {
+      modalActive: function (val) {
+          if(val === false) {
+              this.select_edit = null
+          }
+      }
+  },
+  data() {
+    return {
+      data: [],
+      select_edit: null
+    };
+  },
+  methods: {
+      o_e_mem_m: function (id) {
+          this.select_edit = id
+          this.$store.commit('edMemModal/setModalActive', true)
+      }
+  }
+};
 </script>
 
 <style lang="sass" scoped>

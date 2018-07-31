@@ -10,10 +10,10 @@
         b-input(type="password" placeholder="******" v-model="password")
 
     b-field(label="CNIC" :type="(validation.hasError('cnic_num')) ? 'is-danger':''" :message="validation.firstError('cnic_num')")
-        b-input(type="text" placeholder="xxxxx-xxxxxxx-x" v-model="cnic_num")
+        b-input(type="text" placeholder="xxxxx-xxxxxxx-x" v-model="cnic_num" v-mask="'#####-#######-#'")
 
     b-field(label="Contact Number" :type="(validation.hasError('cont_num')) ? 'is-danger':''" :message="validation.firstError('cont_num')")
-        b-input(type="text" placeholder="92-xxx-xxx-xxxx" v-model="cont_num")
+        b-input(type="text" placeholder="92-xxx-xxx-xxxx" v-model="cont_num" v-mask="'92-###-###-####'")
 
     b-field(label="Address" :type="(validation.hasError('address')) ? 'is-danger':''" :message="validation.firstError('address')")
         b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="address")
@@ -23,9 +23,13 @@
 </template>
 
 <script>
+import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 export default {
+  directives: {
+    mask
+  },
   data() {
     return {
       full_name: "",

@@ -266,7 +266,7 @@ export default {
 </script>
 
 <style scoped lang="sass">
-//- setting-up navigation
+// - setting-up navigation
 .navbar-container
   position: absolute
   width: 250px
@@ -299,7 +299,7 @@ export default {
 //- designing navigation
 .navbar-container
   border-right: 2px solid #dcdcdc
-  z-index: 999
+  z-index: 6
   background-color: #f6f6f6
   .wrapper
     &>ul

@@ -38,13 +38,13 @@ export default {
       return Validator.value(value)
         .required()
         .email()
-        .maxLength(100)
+        .maxLength(100);
     },
     password: function(value) {
       return Validator.value(value)
         .required()
         .minLength(6)
-        .maxLength(50)
+        .maxLength(50);
     }
   },
   methods: {
@@ -55,18 +55,13 @@ export default {
       self.form.suc = "";
 
       await self.$validate().then(async succ => {
-        if(succ) {
+        if (succ) {
           self.form.loading = true;
-          await self.$axios.post(
-              "/api/web/login",
-              {
-                email: self.email,
-                password: self.password
-              },
-              {
-                headers: { "x-access-token": self.$store.state.jwtToken }
-              }
-            )
+          await self.$axios
+            .post("/api/web/login", {
+              email: self.email,
+              password: self.password
+            })
             .then(res => {
               if (res.data.status) {
                 self.form.suc = "Successfully Login!";
@@ -77,8 +72,8 @@ export default {
                 );
                 setTimeout(() => {
                   self.form.loading = false;
-                  self.$store.commit("loginModalActiveSet", false)
-                  self.$router.push('/dashboard')
+                  self.$store.commit("loginModalActiveSet", false);
+                  self.$router.push("/dashboard");
                 }, 1500);
               } else {
                 self.form.loading = false;
@@ -90,7 +85,7 @@ export default {
               self.form.err = err.message;
             });
         }
-      })
+      });
     }
   }
 };
