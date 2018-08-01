@@ -78,7 +78,7 @@
           tr
             td
               &.sts-con
-                padding: 0
+                padding: 0 !important
                 span
                   display: block
                   .r-sts-btn

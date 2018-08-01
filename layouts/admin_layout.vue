@@ -332,12 +332,12 @@ export default {
                                         padding-left: 1rem
                                         padding-right: 1rem
                                         align-items: center
-                                    &:hover
-                                        -webkit-box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                        -moz-box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                        box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                    &>.icon
-                                        color: $primary
+                                        &:hover
+                                            -webkit-box-shadow: 0 0 0 0.12em #bbbbbb !important
+                                            -moz-box-shadow: 0 0 0 0.12em #bbbbbb !important
+                                            box-shadow: 0 0 0 0.12em #bbbbbb !important
+                                        &>.icon
+                                            color: $primary
                 .pagination
                     a
                         &[role=button]

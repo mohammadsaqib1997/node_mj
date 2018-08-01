@@ -42,10 +42,21 @@
                                 | {{ props.row.full_name }}
                             b-table-column(field="status" label="Status" )
                                 | {{ (props.row.active_sts === 1) ? 'Approved':'Suspended' }}
-                            // b-table-column(field="paid_amount" label="Due Amount" )
-                            //     | {{ props.row.status }}
+                            b-table-column.receipt_con(field="receipt" label="Receipt" )
+                                template(v-if="props.row.receipt")
+                                    a.anch(href="#") REF {{ "#"+props.row.receipt }}
+                                template(v-else)
+                                    .upload
+                                        span UPLOAD&nbsp;&nbsp;&nbsp;
+                                        b-icon(icon="plus-circle")
                         template(slot="bottom-left")
                             p.page-result-txt Showing 15 of  430 results
+                        template(slot="empty")
+                            section.section
+                                .content.has-text-grey.has-text-centered
+                                    p
+                                        b-icon(icon="frown" pack="far" size="is-large")
+                                    p Nothing here.
         b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
             .modal-card
                 #ed-member-con.modal-card-body
@@ -64,16 +75,16 @@ export default {
     this.data = res.data;
   },
   computed: {
-      modalActive: function () {
-          return this.$store.state.edMemModal.modalActive
-      }
+    modalActive: function() {
+      return this.$store.state.edMemModal.modalActive;
+    }
   },
   watch: {
-      modalActive: function (val) {
-          if(val === false) {
-              this.select_edit = null
-          }
+    modalActive: function(val) {
+      if (val === false) {
+        this.select_edit = null;
       }
+    }
   },
   data() {
     return {
@@ -82,14 +93,10 @@ export default {
     };
   },
   methods: {
-      o_e_mem_m: function (id) {
-          this.select_edit = id
-          this.$store.commit('edMemModal/setModalActive', true)
-      }
+    o_e_mem_m: function(id) {
+      this.select_edit = id;
+      this.$store.commit("edMemModal/setModalActive", true);
+    }
   }
 };
 </script>
-
-<style lang="sass" scoped>
-
-</style>
