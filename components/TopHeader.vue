@@ -11,7 +11,7 @@
                             span.sm-line
                         a.navbar-item(href='#')
                             b-icon(icon="envelope" size="is-small")
-                            span.fs-14 &nbsp;&nbsp;info@ouac.com
+                            span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
 
                     .navbar-end
                         .navbar-item

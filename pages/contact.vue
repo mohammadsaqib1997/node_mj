@@ -27,18 +27,18 @@
 
               .btn-cont
                 button.button.btn-des-1 Submit
-        hr
-        .columns
-          .column.info-cont.is-4
-            h1.title-1 Location
-            p.txt-wrp SHOP # 120 , Building Name
-              |  Street Name, Close By, Area
-              |  City, Country, Postal Code 121001
-            .img-cont
-              img(src="~/assets/img/map-icon-img.png")
-          .column.form-cont.is-6.is-offset-1
-            gmap-map.map-cont(:center="{lat:24.946218, lng:67.005615}" :zoom="7" :options="{ disableDefaultUI: true }")
-              gmap-marker(:position="{lat:24.946218, lng:67.005615}")
+        // hr
+        // .columns
+        //   .column.info-cont.is-4
+        //     h1.title-1 Location
+        //     p.txt-wrp SHOP # 120 , Building Name
+        //       |  Street Name, Close By, Area
+        //       |  City, Country, Postal Code 121001
+        //     .img-cont
+        //       img(src="~/assets/img/map-icon-img.png")
+        //   .column.form-cont.is-6.is-offset-1
+        //     gmap-map.map-cont(:center="{lat:24.946218, lng:67.005615}" :zoom="7" :options="{ disableDefaultUI: true }")
+        //       gmap-marker(:position="{lat:24.946218, lng:67.005615}")
         hr
         h1.title-1.center SOCIALIZE WITH US
         ul.social_icons

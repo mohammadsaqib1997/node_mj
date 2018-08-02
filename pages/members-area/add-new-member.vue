@@ -133,7 +133,6 @@ export default {
     }
   },
   async mounted() {
-    this.form.loading = true;
     const list_pds = await this.$axios.$get("/api/product/");
     this.prd_list = list_pds.data;
     this.form.loading = false;
@@ -173,7 +172,7 @@ export default {
       form: {
         suc: "",
         err: "",
-        loading: false,
+        loading: true,
         submitted: false
       }
     };

@@ -28,7 +28,7 @@
                                 button.button
                                     b-icon(icon="eye" pack="fas")
                                     | &nbsp;&nbsp;&nbsp;VIEW
-                    b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10")
+                    b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10" :loading="loading")
                         template(slot-scope="props")
                             b-table-column.ed-con(width="50")
                                 button.button.ed-btn(v-on:click.prevent="o_e_mod_m(props.row.id)")
@@ -44,6 +44,12 @@
                                 | {{ props.row.active_sts===0 ? 'Suspended':'Active' }}
                         template(slot="bottom-left")
                             p.page-result-txt Showing 15 of  430 results
+                        template(slot="empty")
+                            section.section
+                                .content.has-text-grey.has-text-centered
+                                    p
+                                        b-icon(icon="frown" pack="far" size="is-large")
+                                    p Nothing here.
         b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
             .modal-card
                 #ed-moderator-con.modal-card-body
@@ -51,15 +57,16 @@
 </template>
 
 <script>
-import edModeratorForm from '~/components/forms/ed-moderator.vue'
+import edModeratorForm from "~/components/forms/ed-moderator.vue";
 export default {
   layout: "admin_layout",
   components: {
-      edModeratorForm
+    edModeratorForm
   },
   async mounted() {
     const res = await this.$axios.$get("/api/moderator/");
     this.data = res.data;
+    this.loading = false
   },
   computed: {
     modalActive: function() {
@@ -75,6 +82,7 @@ export default {
   },
   data() {
     return {
+      loading: true,
       data: [],
       select_edit: null
     };

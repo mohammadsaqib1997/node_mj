@@ -9,35 +9,70 @@
         .columns.main-prd-cont
           .column.is-4
             .prd-list-cont
-              .cont.active.columns.is-mobile.is-gapless
+              .cont.columns.is-mobile.is-gapless(v-on:click.prevent="actPrd(0)" :class="{ active: prd_act === 0 }")
                 .img-cont.column.is-narrow
                   img(src="~/assets/img/hm-pd-img-1.png")
                 .title.column SUPREME CARD
-              .cont.columns.is-mobile.is-gapless
+              .cont.columns.is-mobile.is-gapless(v-on:click.prevent="actPrd(1)" :class="{ active: prd_act === 1 }")
                 .img-cont.column.is-narrow
                   img(src="~/assets/img/hm-pd-img-2.png")
                 .title.column MOTORCYCLE
-              .cont.columns.is-mobile.is-gapless
+              .cont.columns.is-mobile.is-gapless(v-on:click.prevent="actPrd(2)" :class="{ active: prd_act === 2 }")
                 .img-cont.column.is-narrow
                   img(src="~/assets/img/hm-pd-img-3.png")
-                .title.column SPI INSSURANCE
+                .title.column Medical Insurance
           .column
             .prd-det-cont
-              .prd-cont
-                .img-cont
-                  img(src="~/assets/img/hm-img-1.jpg")
-                .info-cont.level.is-mobile
-                  .level-left
-                    nuxt-link.button.more-info(to="/product-details") More Info
-                  .level-right
-                    button.button.reg-now Register Now
-                      b-icon(icon="angle-right")
-              .desc-cont
-                h2.title-2 Description
-                p Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-                  | incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                  | quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                  | Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+              template(v-if="prd_act === 0")
+                .prd-cont
+                  .img-cont
+                    img(src="~/assets/img/hm-img-1.jpg")
+                  .info-cont.level.is-mobile
+                    .level-left
+                      nuxt-link.button.more-info(to="/product-details") More Info
+                    .level-right
+                      nuxt-link.button.reg-now(to="/signup") Register Now
+                        b-icon(icon="angle-right")
+                .desc-cont
+                  h2.title-2 Description
+                  p 
+                    | Up to 50% discount could be availed on the everyday necessities such as groceries, garments, restaurants, resorts, tourism, educational institutions etc.
+                    br
+                    | The distribution of stuff would be made much easier for our registered members and even more facilities yet to be introduced in the times to come.
+
+              template(v-if="prd_act === 1")
+                .prd-cont
+                  .img-cont
+                    img(src="~/assets/img/hm-img-1.jpg")
+                  .info-cont.level.is-mobile
+                    .level-left
+                      nuxt-link.button.more-info(to="/product-details") More Info
+                    .level-right
+                      nuxt-link.button.reg-now(to="/signup") Register Now
+                        b-icon(icon="angle-right")
+                .desc-cont
+                  h2.title-2 Description
+                  p 
+                    | Our registered members would be given an opportunity to own a brand new bike and benefits will be awarded to the buyer without any further changes.  The details of the same would be provided by MJ Supreme.
+              template(v-if="prd_act === 2")
+                .prd-cont
+                  .img-cont
+                    img(src="~/assets/img/hm-img-1.jpg")
+                  .info-cont.level.is-mobile
+                    .level-left
+                      nuxt-link.button.more-info(to="/product-details") More Info
+                    .level-right
+                      nuxt-link.button.reg-now(to="/signup") Register Now
+                        b-icon(icon="angle-right")
+                .desc-cont
+                  h2.title-2 Description
+                  p 
+                    | MJ Supreme would be providing you with a year of complete health care.
+                    br
+                    | In case of any emergency or accidents, our registered members would be eligible for free medication from any hospital in the country. 
+                    br
+                    | The allocated amount for the insurance is limited to 80,000 to 100,000 PKR.
+
     upcoming-prod-section
     subscribe-section
 </template>
@@ -52,7 +87,12 @@ export default {
   },
   data() {
     return {
-
+      prd_act: 0
+    }
+  },
+  methods: {
+    actPrd: function (act) {
+      this.prd_act = act
     }
   }
 }

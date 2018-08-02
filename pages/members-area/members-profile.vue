@@ -28,7 +28,7 @@
                                 button.button
                                     b-icon(icon="eye" pack="fas")
                                     | &nbsp;&nbsp;&nbsp;VIEW
-                    b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10")
+                    b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10" :loading="loading")
                         template(slot-scope="props")
                             b-table-column.ed-con(width="50")
                                 button.button.ed-btn(v-on:click.prevent="o_e_mem_m(props.row.user_asn_id)")
@@ -73,6 +73,7 @@ export default {
   async mounted() {
     const res = await this.$axios.$get("/api/member/");
     this.data = res.data;
+    this.loading = false;
   },
   computed: {
     modalActive: function() {
@@ -88,6 +89,7 @@ export default {
   },
   data() {
     return {
+      loading: true,
       data: [],
       select_edit: null
     };

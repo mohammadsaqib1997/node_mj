@@ -9,23 +9,10 @@
           .tile.is-vertical.is-parent
             .tile.is-child
               h1.title-1 About Mj Supreme
-            .tile.is-child
               .cont-1
                 p
-                  | Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                  | Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
-                  | when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                  | It has survived not only five centuries, but also the leap into electronic typesetting,
-                  | remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
-                  | and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-                h3.tag-title "At Mj, we all come to work every day because we want to solve the biggestp problem of Middle Peoples in Pakistan."
-                p
-                  | Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                  | Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
-                  | when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                  | It has survived not only five centuries, but also the leap into electronic typesetting,
-                  | remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
-                  | and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                  | MJ Supreme is a platform to resolve the problems faced by a common man. The issues related to food, health, education and transportation arises due to the shortage of wealth and our mission is to overcome those drawbacks and provide our services for the management of the financial stability required for the betterment of a quality lifestyle to our registered members.
+                h3.tag-title "At Mj, we all come to work every day because we want to solve the biggest problem of Middle Peoples in Pakistan."
           .tile.is-4.is-parent
             .tile.is-child
               .img-con
@@ -108,6 +95,7 @@ export default {
   .sct-2
     padding-bottom: 0
     .cont-1
+      margin-top: 4rem
       padding-right: 2rem
       p
         color: #4c4c4c

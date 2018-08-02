@@ -7,7 +7,7 @@
             h1.title-1.lt Discount Card
             p.cnt
               | A marketing product in which we provide discounts in different outlets along with complete solution of house hold to the people of Pakistan.
-            button.button.btn More Info
+            nuxt-link.button.btn(to="/about-us") More Info
     .section.sct-2
       .container
         h1.title-1.center Products
@@ -18,72 +18,69 @@
                 img(src="~/assets/img/hm-pd-img-1.png")
               .title SUPREME CARD
               .detail-txt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              button.button View More
+                | Up to 50% discount could be availed on the everyday necessities such as groceries...
+              nuxt-link.button(to="/product-details") View More
           .column
             .box-pro-det
               .img-con
                 img(src="~/assets/img/hm-pd-img-2.png")
               .title MOTORCYCLE
               .detail-txt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              button.button View More
+                | Our registered members would be given an opportunity to own a brand new bike...
+              nuxt-link.button(to="/product-details") View More
           .column
             .box-pro-det
               .img-con
                 img(src="~/assets/img/hm-pd-img-3.png")
-              .title SPI INSSURANCE
+              .title Medical Insurance
               .detail-txt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              button.button View More
+                | MJ Supreme would be providing you with a year of complete health care...
+              nuxt-link.button(to="/product-details") View More
     upcoming-prod-section
-    .section.sct-4
-      .container
-        .columns.is-gapless
-          .column.is-7
-            .winner-cont
-              h1.title-1.lt
-                | Winner Of
-                br
-                | The Month
-              .columns.is-gapless.is-desktop
-                .column.is-narrow
-                  .img-cont
-                    img(src="~/assets/img/default.png")
-                  .lvl-cont
-                    span LVL 4
-                .column.detail-cont
-                  .columns.is-gapless.is-mobile
-                    .column.awd-img.is-narrow
-                      img(src="~/assets/img/awrd.png")
-                    .column.name.is-narrow
-                      span
-                        | AMIR
-                        br
-                        | MUNEER
-                  .score-cont
-                    span Score:
-                    span  1200
-          .column
-            .next-winner-cont
-              .announce-date-cont
-                h3.title-3.acnt
-                  | NEXT WINNER
-                  br
-                  | ANNOUNCEMENT
-                .month-cont
-                  .counter 02
-                  .txt Month
-                .dw-cont.columns.is-gapless.is-mobile
-                  .days-cont.column
-                    .counter 15
-                    .txt Days
-                  .week-cont.column
-                    .counter 04
-                    .txt Weeks
+    // .section.sct-4
+    //   .container
+    //     .columns.is-gapless
+    //       .column.is-7
+    //         .winner-cont
+    //           h1.title-1.lt
+    //             | Winner Of
+    //             br
+    //             | The Month
+    //           .columns.is-gapless.is-desktop
+    //             .column.is-narrow
+    //               .img-cont
+    //                 img(src="~/assets/img/default.png")
+    //               .lvl-cont
+    //                 span LVL 4
+    //             .column.detail-cont
+    //               .columns.is-gapless.is-mobile
+    //                 .column.awd-img.is-narrow
+    //                   img(src="~/assets/img/awrd.png")
+    //                 .column.name.is-narrow
+    //                   span
+    //                     | AMIR
+    //                     br
+    //                     | MUNEER
+    //               .score-cont
+    //                 span Score:
+    //                 span  1200
+    //       .column
+    //         .next-winner-cont
+    //           .announce-date-cont
+    //             h3.title-3.acnt
+    //               | NEXT WINNER
+    //               br
+    //               | ANNOUNCEMENT
+    //             .month-cont
+    //               .counter 02
+    //               .txt Month
+    //             .dw-cont.columns.is-gapless.is-mobile
+    //               .days-cont.column
+    //                 .counter 15
+    //                 .txt Days
+    //               .week-cont.column
+    //                 .counter 04
+    //                 .txt Weeks
     .section.sct-5
       .container
         .columns
@@ -94,17 +91,12 @@
                 br
                 | WITH SUPREME
               p.txt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt
-                | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                | sed do eiusmod tempor incididunt
-              a(href="#") More Info
+                | In just Rs.5000,
+                br
+                | register to MJ Supreme and make yourselves eligible for the most attractive awards,
+                br
+                | rewards and bonuses for a safe n sound future...
+              nuxt-link(to="/about-us") More Info
           .column
             .img-cont
               img(src="~/assets/img/hm-op-img-1.png")
@@ -144,7 +136,7 @@ export default {
       color: #c5c5c7
       padding: 3rem 5rem 3rem 0
       font-size: 18px
-    button.btn
+    .button.btn
       background-color: transparent
       border: 1px solid #d9bd68
       color: #d9bd68

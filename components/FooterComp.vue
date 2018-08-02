@@ -7,7 +7,7 @@
                         .logo-footer
                             img.brand-logo(src="~/assets/img/logo-footer.png")
                         .divider
-                        p Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                        p MJ Supreme is a platform to resolve the problems faced by a common man. Our mission is to overcome those drawbacks and provide our services.
                         .divider
                         ul.social_icons
                             li.sc_icon
@@ -24,31 +24,31 @@
                         h1.title Company
                         ul.footer-links
                             li.item
-                                nuxt-link(to="/") About us
+                                nuxt-link(to="/about-us") About us
                             li.item
-                                nuxt-link(to="/") Business Plan
+                                nuxt-link(to="/coming-soon") Business Plan
                             li.item
-                                nuxt-link(to="/") Supreme Partners & Associates
+                                nuxt-link(to="/coming-soon") Supreme Partners & Associates
                             li.item
-                                nuxt-link(to="/") Members
+                                nuxt-link(to="/coming-soon") Members
                     .column.is-2
                         h1.title Products
                         ul.footer-links
                             li.item
-                                nuxt-link(to="/") Discount Products
+                                nuxt-link(to="/coming-soon") Discount Products
                             li.item
-                                nuxt-link(to="/") Upcoming Products
+                                nuxt-link(to="/coming-soon") Upcoming Products
                     .column.is-2
                         h1.title Useful links
                         ul.footer-links
                             li.item
-                                nuxt-link(to="/") Blog
+                                nuxt-link(to="/coming-soon") Blog
                             li.item
-                                nuxt-link(to="/") Career
+                                nuxt-link(to="/career") Career
                             li.item
-                                nuxt-link(to="/") Help Center
+                                nuxt-link(to="/coming-soon") Help Center
                             li.item
-                                nuxt-link(to="/") Media
+                                nuxt-link(to="/coming-soon") Media
 
                 copyrights
 </template>

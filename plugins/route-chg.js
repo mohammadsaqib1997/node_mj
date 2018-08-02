@@ -22,6 +22,16 @@ const unAuthRoutes = [
     'signup'
 ]
 
+const visible = [
+    'index',
+    'products',
+    // 'product-details',
+    'about-us',
+    'contact',
+    'coming-soon',
+    'career'
+]
+
 export default ({ app }) => {
 
     app.router.beforeEach((to, from, next) => {
@@ -41,7 +51,11 @@ export default ({ app }) => {
             if (_.indexOf(authRoutes, to.name) > -1) {
                 app.router.push('/')
             }else{
-                app.store.commit('pageLoadingSet', false)
+                if(_.indexOf(visible, to.name) < 0) {
+                    app.router.push('/coming-soon')
+                }else{
+                    app.store.commit('pageLoadingSet', false)
+                }
             }
         }else{
             if (_.indexOf(unAuthRoutes, to.name) > -1) {

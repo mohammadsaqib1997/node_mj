@@ -11,7 +11,7 @@ const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
 const io = require('socket.io')(server)
 
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 const apis = require('./apis')

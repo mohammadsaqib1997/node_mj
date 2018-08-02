@@ -7,11 +7,11 @@
             .column
                 ul.bottom-link
                     li.item
-                        nuxt-link(to="/") Site Map
+                        nuxt-link(to="/coming-soon") Site Map
                     li.item
-                        nuxt-link(to="/") Privacy Policy
+                        nuxt-link(to="/coming-soon") Privacy Policy
                     li.item
-                        nuxt-link(to="/") Terms & Conditions
+                        nuxt-link(to="/coming-soon") Terms & Conditions
 
 
 </template>

@@ -33,6 +33,7 @@ export default {
     });
   },
   destroyed() {
+    this.$store.commit("jwtTokenSet", null);
     this.socket ? this.socket.disconnect() : "";
   },
   components: {
