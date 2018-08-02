@@ -50,18 +50,26 @@ export default ({ app }) => {
         if (app.store.state.user === null) {
             if (_.indexOf(authRoutes, to.name) > -1) {
                 app.router.push('/')
-            }else{
-                if(_.indexOf(visible, to.name) < 0) {
+            } else {
+                if (_.indexOf(visible, to.name) < 0) {
                     app.router.push('/coming-soon')
-                }else{
+                } else {
                     app.store.commit('pageLoadingSet', false)
                 }
             }
-        }else{
+        } else {
             if (_.indexOf(unAuthRoutes, to.name) > -1) {
                 app.router.push('/dashboard')
-            }else{
-                app.store.commit('pageLoadingSet', false)
+            } else {
+                if (_.indexOf(authRoutes, to.name) > -1) {
+                    app.store.commit('pageLoadingSet', false)
+                } else {
+                    if (_.indexOf(visible, to.name) < 0) {
+                        app.router.push('/coming-soon')
+                    } else {
+                        app.store.commit('pageLoadingSet', false)
+                    }
+                }
             }
         }
     })
