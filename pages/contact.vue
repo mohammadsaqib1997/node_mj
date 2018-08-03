@@ -5,8 +5,17 @@
         .columns
           .column.info-cont.is-4
             h1.title-1 Contact
-            p.txt-wrp Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-              | Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+            p.txt-wrp 
+              | TOGETHER WE FORM
+              br
+              | AN UNSHAKABLE ETHOS
+              br
+              | OF COLLABORATION.
+              br
+              | MJ SUPREME Elegantly doing business.
+              br
+              | Feel free to Contact us should you require any further information or Queries.
+
             .img-cont
               img(src="~/assets/img/support-img.png")
           .column.form-cont.is-6.is-offset-1
@@ -43,13 +52,13 @@
         h1.title-1.center SOCIALIZE WITH US
         ul.social_icons
           li.sc_icon
-            a
+            a(href="https://www.facebook.com/mjsupremepk" target="_blank")
               b-icon(icon="facebook-f" size="is-small" pack="fab")
+          // li.sc_icon
+          //   a
+          //     b-icon(icon="twitter" size="is-small" pack="fab")
           li.sc_icon
-            a
-              b-icon(icon="twitter" size="is-small" pack="fab")
-          li.sc_icon
-            a
+            a(href="https://plus.google.com/u/1/117264538400098931844" target="_blank")
               b-icon(icon="google-plus-g" size="is-small" pack="fab")
 </template>
 

@@ -24,10 +24,20 @@
             img(src="~/assets/img/au_img_1.png")
           .column
             .tile.is-ancestor.li-cont
-              .tile.is-vertical.is-parent(v-for="n in 2")
-                .tile.is-child(v-for="n in 2")
+              .tile.is-vertical.is-parent
+                .tile.is-child
                   .li
-                    p Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                    p GENERATION BONUS
+                .tile.is-child
+                  .li
+                    p AUTO REWARDS
+              .tile.is-vertical.is-parent
+                .tile.is-child
+                  .li
+                    p SELF REWARDS
+                .tile.is-child
+                  .li
+                    p GLOBAL BONUS
     .section.sct-4
       .container
         .columns

@@ -11,13 +11,13 @@
                         .divider
                         ul.social_icons
                             li.sc_icon
-                                a
+                                a(href="https://www.facebook.com/mjsupremepk" target="_blank")
                                     b-icon(icon="facebook-f" size="is-small" pack="fab")
+                            // li.sc_icon
+                            //     a
+                            //         b-icon(icon="twitter" size="is-small" pack="fab")
                             li.sc_icon
-                                a
-                                    b-icon(icon="twitter" size="is-small" pack="fab")
-                            li.sc_icon
-                                a
+                                a(href="https://plus.google.com/u/1/117264538400098931844" target="_blank")
                                     b-icon(icon="google-plus-g" size="is-small" pack="fab")
                     .column
                     .column.is-2

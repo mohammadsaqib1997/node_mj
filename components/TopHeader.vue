@@ -6,7 +6,7 @@
                     .navbar-start
                         a.navbar-item(href='#')
                             b-icon.flip-y(icon="phone" size="is-small")
-                            span.fs-14 &nbsp;+92 331 2286074
+                            span.fs-14 &nbsp;+92 021 3 4835054
                         .navbar-item.px-0.hidden-tablet
                             span.sm-line
                         a.navbar-item(href='#')
@@ -17,13 +17,13 @@
                         .navbar-item
                             ul.social_icons
                                 li.sc_icon
-                                    a
+                                    a(href="https://www.facebook.com/mjsupremepk" target="_blank")
                                         b-icon(icon="facebook-f" size="is-small" pack="fab")
+                                // li.sc_icon
+                                //     a
+                                //         b-icon(icon="twitter" size="is-small" pack="fab")
                                 li.sc_icon
-                                    a
-                                        b-icon(icon="twitter" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a
+                                    a(href="https://plus.google.com/u/1/117264538400098931844" target="_blank")
                                         b-icon(icon="google-plus-g" size="is-small" pack="fab")
                         .navbar-item.has-dropdown.is-hoverable.p-0.profile_con_nav
                             .navbar-item
