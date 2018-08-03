@@ -28,28 +28,39 @@
                                 button.button
                                     b-icon(icon="eye" pack="fas")
                                     | &nbsp;&nbsp;&nbsp;VIEW
-                    b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10" :loading="loading")
-                        template(slot-scope="props")
-                            b-table-column.ed-con(width="50")
-                                button.button.ed-btn(v-on:click.prevent="o_e_mod_m(props.row.id)")
-                                    b-icon(icon="edit")
-                                    | &nbsp;&nbsp;&nbsp;EDIT
-                            b-table-column(field="id" label="ID" width="40" centered)
-                                | {{ props.row.id }}
-                            b-table-column(field="email" label="Email" )
-                                | {{ props.row.email }}
-                            b-table-column(field="name" label="Name" )
-                                | {{ props.row.full_name }}
-                            b-table-column(field="status" label="Status" )
-                                | {{ props.row.active_sts===0 ? 'Suspended':'Active' }}
-                        template(slot="bottom-left")
-                            p.page-result-txt Showing 15 of  430 results
-                        template(slot="empty")
-                            section.section
-                                .content.has-text-grey.has-text-centered
-                                    p
-                                        b-icon(icon="frown" pack="far" size="is-large")
-                                    p Nothing here.
+
+                    .table-des-1
+                        template(v-if="data.length > 0")
+                            table.table.is-fullwidth.is-bordered
+                                thead
+                                    tr
+                                        th(width="50px")
+                                        th ID
+                                        th Email
+                                        th Name
+                                        th Status
+                                tbody
+                                    tr(v-for="row in data")
+                                        td.ed-con
+                                            button.button.ed-btn(v-on:click.prevent="o_e_mod_m(row.id)")
+                                                b-icon(icon="edit")
+                                                | &nbsp;&nbsp;&nbsp;EDIT
+                                        td {{ row.id }}
+                                        td {{ row.email }}
+                                        td {{ row.full_name }}
+                                        td {{ (row.active_sts === 1) ? 'Active':'Suspended' }}
+                            .level
+                                .level-left
+                                    p.page-result-txt Showing 15 of  430 results
+                                .level-right
+                                    b-pagination(:total="100" :per-page="10" :current.sync="currentPg")
+                        section.section.em-sec(v-else)
+                            .content.has-text-grey.has-text-centered
+                                p
+                                    b-icon(icon="frown" pack="far" size="is-large")
+                                p Nothing here.
+                        b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
+
         b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
             .modal-card
                 #ed-moderator-con.modal-card-body
@@ -64,9 +75,10 @@ export default {
     edModeratorForm
   },
   async mounted() {
+    this.loading = true;
     const res = await this.$axios.$get("/api/moderator/");
     this.data = res.data;
-    this.loading = false
+    this.loading = false;
   },
   computed: {
     modalActive: function() {

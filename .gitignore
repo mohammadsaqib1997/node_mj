@@ -22,3 +22,7 @@ README.md
 
 *-lock.json
 yarn.lock
+
+
+server/uploads/*/*.jpg
+server/uploads/*/*.png

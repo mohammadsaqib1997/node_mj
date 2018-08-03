@@ -63,9 +63,6 @@ export default {
     },
     loginModalActive: function(val) {
       this.$store.commit("loginModalActiveSet", val);
-    },
-    isForgotPass: function(val) {
-      console.log(val);
     }
   },
   methods: {

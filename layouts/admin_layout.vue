@@ -288,56 +288,59 @@ export default {
                                     line-height: 1.5rem
 
             .table-des-1
-                &>.table-wrapper
-                    &>table
-                        color: #666666
-                        thead
-                            th
-                                text-transform: uppercase
-                                padding: 1rem
-                                border-color: #eeeeee
-                        tbody
-                            td
-                                padding: 1rem
-                                vertical-align: middle
-                                border-color: #eeeeee
-                                &.ed-con
-                                    padding: 0
-                                    .ed-btn
-                                        color: #666666
-                                        border: none
-                                        height: 4rem
-                                        width: 6.5rem
-                                        font-weight: 500
-                                        -webkit-border-radius: 0
-                                        -moz-border-radius: 0
-                                        border-radius: 0
-                                        &:focus, &:hover
-                                            -webkit-box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                            -moz-box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                            box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                        &>.icon
-                                            color: $primary
-                                &.receipt_con
-                                    padding: 0
-                                    .anch
-                                        margin-left: 1rem
-                                        margin-right: 1rem
-                                    .upload
-                                        cursor: pointer
-                                        width: 100%
-                                        height: 4rem
-                                        text-align: left
-                                        display: flex
-                                        padding-left: 1rem
-                                        padding-right: 1rem
-                                        align-items: center
-                                        &:hover
-                                            -webkit-box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                            -moz-box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                            box-shadow: 0 0 0 0.12em #bbbbbb !important
-                                        &>.icon
-                                            color: $primary
+                &>table
+                    color: #666666
+                    thead
+                        th
+                            text-transform: uppercase
+                            padding: 1rem
+                            border-color: #eeeeee
+                    tbody
+                        td
+                            padding: 1rem
+                            vertical-align: middle
+                            border-color: #eeeeee
+                            &.ed-con
+                                padding: 0
+                                .ed-btn
+                                    color: #666666
+                                    border: none
+                                    height: 4rem
+                                    width: 6.5rem
+                                    font-weight: 500
+                                    -webkit-border-radius: 0
+                                    -moz-border-radius: 0
+                                    border-radius: 0
+                                    &:focus, &:hover
+                                        -webkit-box-shadow: 0 0 0 0.12em inset #bbbbbb !important
+                                        -moz-box-shadow: 0 0 0 0.12em inset #bbbbbb !important
+                                        box-shadow: 0 0 0 0.12em inset #bbbbbb !important
+                                    &>.icon
+                                        color: $primary
+                            &.receipt_con
+                                padding: 0
+                                .anch
+                                    margin-left: 1rem
+                                    margin-right: 1rem
+                                .upload
+                                    cursor: pointer
+                                    width: 100%
+                                    height: 4rem
+                                    text-align: left
+                                    display: flex
+                                    padding-left: 1rem
+                                    padding-right: 1rem
+                                    align-items: center
+                                    &:hover
+                                        -webkit-box-shadow: 0 0 0 0.12em inset #bbbbbb !important
+                                        -moz-box-shadow: 0 0 0 0.12em inset #bbbbbb !important
+                                        box-shadow: 0 0 0 0.12em inset #bbbbbb !important
+                                    &>.icon
+                                        color: $primary
+                                    &>.del
+                                        position: absolute
+                                        right: 8px
+                                        color: #ff3860
                 .pagination
                     a
                         &[role=button]
@@ -365,6 +368,8 @@ export default {
                 .page-result-txt
                     font-size: 14px
                     color: #757575
+                .em-sec
+                  border: 1px solid #dbdbdb
 
             
             .btn-des-1
