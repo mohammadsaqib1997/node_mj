@@ -6,15 +6,15 @@
           h1 Add Members
       .body
         .section
-          form#form.form(v-on:submit.prevent="submit")
+          form.form(v-on:submit.prevent="submit")
             p.error(v-if="form.err !== ''") {{ form.err }}
             p.success(v-if="form.suc !== ''") {{ form.suc }}
             .columns.is-variable.is-1
               .column.is-3
                 label ID
               .column
-                b-field(:type="(validation.hasError('f_data.id')) ? 'is-danger':''" :message="validation.firstError('f_data.id')")
-                  b-input(type="text" placeholder="992233557" v-model="f_data.id" :loading="validation.isValidating('f_data.id')")
+                b-field(:type="(validation.hasError('f_data.user_asn_id')) ? 'is-danger':''" :message="validation.firstError('f_data.user_asn_id')")
+                  b-input(type="text" placeholder="992233557" v-model="f_data.user_asn_id" :loading="validation.isValidating('f_data.user_asn_id')")
               .column
                 b-field
                   b-input(type="text" placeholder="Generated Username" readonly v-bind:value="genusername")
@@ -113,6 +113,20 @@
                   b-icon(icon="plus-circle" style="margin-top: 2px;")
                   | &nbsp;&nbsp;&nbsp;&nbsp;Add Member
           b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
+        b-modal.confirm_modal(:active="modalAct" :canCancel="false")
+          .box.main-box
+            .header.columns.is-gapless
+              .column
+                  h1 Confirmation
+            .body
+              .section
+                .show-info
+                  label Yau are assign the manual user id so please confirm it this is paid user?
+                button.button.btn-des-1(@click.prevent="modalAct=false")
+                  | No
+                button.button.btn-des-1(@click.prevent="modalAct=false;is_paid_user=true;submit();" style="margin-left:10px")
+                  | Yes
+
 </template>
 
 <script>
@@ -128,8 +142,12 @@ export default {
         .toLowerCase()
         .split(" ")
         .join("");
-      let id = this.f_data.id.slice(-9) && !isNaN(this.f_data.id.slice(-9)) ? parseInt(this.f_data.id.slice(-9)) : '';
-      return full_name + id;
+      let user_asn_id =
+        this.f_data.user_asn_id.slice(-9) &&
+        !isNaN(this.f_data.user_asn_id.slice(-9))
+          ? parseInt(this.f_data.user_asn_id.slice(-9))
+          : "";
+      return full_name + user_asn_id;
     }
   },
   async mounted() {
@@ -139,6 +157,8 @@ export default {
   },
   data() {
     return {
+      modalAct: false,
+      is_paid_user: false,
       b_type_list: [
         { code: 1, name: "Individual" },
         { code: 2, name: "Reseller" }
@@ -152,7 +172,7 @@ export default {
       ref_name: "",
       con_pass: "",
       f_data: {
-        id: "",
+        user_asn_id: "",
         full_name: "",
         email: "",
         password: "",
@@ -178,16 +198,19 @@ export default {
     };
   },
   validators: {
-    "f_data.id": {
+    "f_data.user_asn_id": {
       cache: false,
       debounce: 500,
       validator: function(value) {
-        return Validator.value(value)
-          .required()
+        const self = this;
+        let validator = Validator.value(value)
           .digit()
-          .length(9)
-          .custom(() => {
-            const self = this;
+          .length(9);
+
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
             if (!Validator.isEmpty(value)) {
               return self.$axios
                 .post("/api/member/mjIdCheck", {
@@ -200,6 +223,7 @@ export default {
                 });
             }
           });
+        }
       }
     },
     "f_data.full_name": function(value) {
@@ -213,25 +237,32 @@ export default {
           }
         });
     },
-    "f_data.email": function(value) {
-      return Validator.value(value)
-        .required()
-        .email()
-        .maxLength(100);
-      // .custom(() => {
-      //   const self = this;
-      //   if (!Validator.isEmpty(value)) {
-      //     return self.$axios
-      //       .post("/api/member/emailCheck", {
-      //         email: value
-      //       })
-      //       .then(res => {
-      //         if (res.data.count > 0) {
-      //           return "This email is already in use.";
-      //         }
-      //       });
-      //   }
-      // });
+    "f_data.email": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        let validator = Validator.value(value)
+          .required()
+          .email()
+          .maxLength(100);
+
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
+            return self.$axios
+              .post("/api/web/check_email", {
+                email: value
+              })
+              .then(res => {
+                if (res.data.count > 0) {
+                  return "This email is already in use.";
+                }
+              });
+          });
+        }
+      }
     },
     "f_data.password": function(value) {
       return Validator.value(value)
@@ -254,13 +285,33 @@ export default {
     "f_data.dob": function(value) {
       return Validator.value(value).required();
     },
-    "f_data.cont_num": function(value) {
-      return Validator.value(value)
-        .required()
-        .regex(
-          /^\92-\d{3}-\d{3}-\d{4}$/,
-          "Invalid Contact Number(e.g 92-000-000-0000)"
-        );
+    "f_data.cont_num": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        let validator = Validator.value(value)
+          .required()
+          .regex(
+            /^\92-\d{3}-\d{3}-\d{4}$/,
+            "Invalid Contact Number(e.g 92-000-000-0000)"
+          );
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
+            return self.$axios
+              .post("/api/web/check_cont_num", {
+                cont_num: value
+              })
+              .then(res => {
+                if (res.data.count > 0) {
+                  return "This Contact Number is already in use.";
+                }
+              });
+          });
+        }
+      }
     },
     "f_data.address": function(value) {
       return Validator.value(value)
@@ -272,26 +323,35 @@ export default {
       cache: false,
       debounce: 500,
       validator: function(value) {
-        this.ref_name = "";
-        return Validator.value(value)
+        const self = this;
+        self.ref_name = "";
+        let validator = Validator.value(value)
           .digit()
-          .length(9)
-          .custom(() => {
-            const self = this;
+          .length(9);
+
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
             if (!Validator.isEmpty(value)) {
-              return self.$axios
-                .post("/api/member/refIdCheck", {
-                  id: value
-                })
-                .then(res => {
-                  if (!res.data.status) {
-                    return res.data.message;
-                  } else {
-                    self.ref_name = res.data.user.full_name;
-                  }
-                });
+              if (value !== self.f_data.user_asn_id) {
+                return self.$axios
+                  .post("/api/web/check_ref_id", {
+                    id: value
+                  })
+                  .then(res => {
+                    if (res.data.count < 1) {
+                      return "Invalid referral id.";
+                    } else {
+                      self.ref_name = res.data.user.full_name;
+                    }
+                  });
+              } else {
+                return "Invalid referral id.";
+              }
             }
           });
+        }
       }
     },
     "f_data.status": function(value) {
@@ -323,7 +383,7 @@ export default {
     mask
   },
   methods: {
-    submit: function() {
+    submit: async function() {
       const self = this;
       self.form.submitted = true;
       self.form.loading = true;
@@ -331,22 +391,36 @@ export default {
       self.form.err = "";
       self.$validate().then(function(success) {
         if (success) {
+          if (
+            !Validator.isEmpty(self.f_data.user_asn_id) &&
+            self.is_paid_user === false
+          ) {
+            self.modalAct = true;
+            self.form.loading = false;
+            return;
+          }
+
+          let mem_data = {
+            username: self.genusername,
+            full_name: self.f_data.full_name,
+            email: self.f_data.email,
+            password: self.f_data.password,
+            cnic_num: self.f_data.cnic_num,
+            dob: moment(self.f_data.dob).format("YYYY-MM-DD"),
+            contact_num: self.f_data.cont_num,
+            address: self.f_data.address,
+            ref_user_asn_id:
+              self.f_data.ref_code !== "" ? self.f_data.ref_code : null,
+            active_sts: self.f_data.status
+          };
+          if (self.is_paid_user === true) {
+            mem_data['is_paid_m'] = 1
+            mem_data['user_asn_id'] = self.f_data.user_asn_id
+          }
+
           self.$axios
             .post("/api/member/add", {
-              member_data: {
-                user_asn_id: self.f_data.id,
-                username: self.genusername,
-                full_name: self.f_data.full_name,
-                email: self.f_data.email,
-                password: self.f_data.password,
-                cnic_num: self.f_data.cnic_num,
-                dob: moment(self.f_data.dob).format("YYYY-MM-DD"),
-                contact_num: self.f_data.cont_num,
-                address: self.f_data.address,
-                ref_user_asn_id:
-                  self.f_data.ref_code !== "" ? self.f_data.ref_code : null,
-                active_sts: self.f_data.status
-              },
+              member_data: mem_data,
               prd_data: {
                 product_id: self.prd_data.prd,
                 buyer_type:
@@ -377,8 +451,11 @@ export default {
     },
     reset: function() {
       this.con_pass = "";
+      this.ref_name = "";
+      this.is_paid_user = false
+      this.form.submitted = false;
       this.f_data = {
-        id: "",
+        user_asn_id: "",
         full_name: "",
         email: "",
         password: "",
@@ -401,4 +478,5 @@ export default {
   }
 };
 </script>
+
 

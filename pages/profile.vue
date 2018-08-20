@@ -94,7 +94,7 @@
 
 <style scoped lang="sass">
   .profile /deep/
-
+  
     .profile-img
       margin-right: 5rem
       max-width: 20rem

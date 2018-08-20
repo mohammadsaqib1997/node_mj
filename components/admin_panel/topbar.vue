@@ -14,7 +14,7 @@
                     span(aria-hidden="true")
             #navTopMenu.navbar-menu
                 .navbar-end
-                    .navbar-item.has-dropdown.is-hoverable
+                    .navbar-item.has-dropdown.is-hoverable(v-if="u_type !== 0")
                         .navbar-item
                             .count-unread-msg
                                 | 6
@@ -38,22 +38,27 @@
 <script>
 export default {
   mounted() {
-    $(function () {
-      $("body").off('click', '#nBurgerTop')
+    $(function() {
+      $("body").off("click", "#nBurgerTop");
 
-      $("body").on('click', '#nBurgerTop', function () {
-        $(this).toggleClass("is-active")
-        $("#navTopMenu").toggleClass("is-active")
-      })
-    })
+      $("body").on("click", "#nBurgerTop", function() {
+        $(this).toggleClass("is-active");
+        $("#navTopMenu").toggleClass("is-active");
+      });
+    });
+  },
+  computed: {
+    u_type: function() {
+      return this.$store.state.user.data.type;
+    }
   },
   methods: {
-    navbarActToggle: function (e) {
-      e.target.closest(".navbar-burger").classList.toggle('is-active')
-      document.getElementById("navbar").classList.toggle('is-active')
+    navbarActToggle: function(e) {
+      e.target.closest(".navbar-burger").classList.toggle("is-active");
+      document.getElementById("navbar").classList.toggle("is-active");
     }
   }
-}
+};
 </script>
 
 <style scoped lang="sass">

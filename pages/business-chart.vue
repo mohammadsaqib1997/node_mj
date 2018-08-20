@@ -4,7 +4,7 @@
             .header.columns.is-gapless
                 .column
                     h1 Member Business Chart
-                .column
+                .column(v-if="u_type !== 0")
                     .field
                         p.control.has-icons-right
                             input.input(type="search" placeholder="Search by Member ID or Name")
@@ -15,16 +15,20 @@
                     .columns.is-gapless.sts_lvls
                         .column.is-narrow
                             h4 LEVEL:
-                                span  4
+                                span &nbsp;{{ getMF(tree, '0.level', 0) }}
                         .column
                             h4 TOTAL REFERRALS:
-                                span  4
+                                span &nbsp;{{ parseInt(getMF(tree, '0.direct_ref_count', 0)) + parseInt(getMF(tree, '0.in_direct_ref_count', 0)) }}
                         .column
-                            h4 DIRECT REFERRALS:
-                                span  4
+                            h4.refl
+                                span.toc.dir(@click.prevent="activeRefls(1)" :class="{active: refls == 1}")
+                                | DIRECT REFERRALS:
+                                span &nbsp;{{ getMF(tree, '0.direct_ref_count', 0) }}
                         .column
-                            h4 IN-DIRECT REFERRALS:
-                                span  4
+                            h4.refl
+                                span.toc.in-dir
+                                | IN-DIRECT REFERRALS:
+                                span &nbsp;{{ getMF(tree, '0.in_direct_ref_count', 0) }}
 
                     .separator.lvl-head
                         h5 HEAD
@@ -39,64 +43,222 @@
                         li
                             .box.profile-show
                                 .of-hide
-                                    .header
+                                    .header(:class="{ none: !getMF(tree, '0', false) }")
                                         b-icon(pack="fas" icon="user")
-                                        p.name Ahmed
+                                        p.name {{ getMF(tree, '0.full_name', 'Default') }}
                                     .footer
-                                        p.id 12345
-                                        p.lvl LVL 1
+                                        p.id {{ getMF(tree, '0.user_asn_id', '0') }}
+                                        p.lvl LVL {{ getMF(tree, '0.level', 0) }}
                             ul
                                 li(v-for="n1 in 4")
                                     .separator.mini
                                         h5 LEVEL 0
-                                    .box.profile-show(:class="{ 'direct-ref': n1===2 }")
+                                    .box.profile-show(@click.prevent="loadTreeData(getMF(tree, '0.childrens.'+(n1-1)+'.id', null))" :class="{ 'direct-ref': directIndirectCheck(tree, 1, (n1-1)) === 0, 'in-direct-ref': directIndirectCheck(tree, 1, (n1-1)) === 1 }")
                                         .of-hide
-                                            .header
+                                            .header(:class="{ none: !getMF(tree, '0.childrens.'+(n1-1)+'', false) }")
                                                 b-icon(pack="fas" icon="user")
-                                                p.name Ahmed
+                                                p.name {{ getMF(tree, '0.childrens.'+(n1-1)+'.full_name', 'Default') }}
                                             .footer
-                                                p.id 12345
-                                                p.lvl LVL 1
+                                                p.id {{ getMF(tree, '0.childrens.'+(n1-1)+'.user_asn_id', '0') }}
+                                                p.lvl LVL {{ getMF(tree, '0.childrens.'+(n1-1)+'.level', 0) }}
                                     ul
                                         .separator.mini
                                             h5 LEVEL 1
                                         li(v-for="n2 in 4")
-                                            .box.profile-show.mini(:class="{ 'in-direct-ref' : ((n1 === 1 && n2 === 4) || (n1 > 2 && (n2%2) === 0)), 'direct-ref': (n1 === 2) }")
-                                                .of-hide(v-on:click.prevent="activeProf")
-                                                    .header
+                                            .box.profile-show.mini(:class="{ 'active': getMF(popup_ind, ('l'+n1)+'.'+('l'+n2), false), 'direct-ref': directIndirectCheck(tree, 2, (n1-1), (n2-1)) === 0, 'in-direct-ref': directIndirectCheck(tree, 2, (n1-1), (n2-1)) === 1 }")
+                                                .of-hide(v-on:click.prevent="setPopup(('l'+n1)+'.'+('l'+n2), true)")
+                                                    .header(:class="{ none: !getMF(tree, '0.childrens.'+(n1-1)+'.childrens.'+(n2-1)+'', false) }")
                                                         b-icon(pack="fas" icon="user")
                                                 .dropup.box
-                                                    h3 Sohail Haris
-                                                    p ID: 10992
-                                                    p LVL 3
+                                                    h3 {{ getMF(tree, '0.childrens.'+(n1-1)+'.childrens.'+(n2-1)+'.full_name', 'Default') }}
+                                                    p ID: {{ getMF(tree, '0.childrens.'+(n1-1)+'.childrens.'+(n2-1)+'.user_asn_id', '0') }}
+                                                    p LVL {{ getMF(tree, '0.childrens.'+(n1-1)+'.childrens.'+(n2-1)+'.level', 0) }}
+                                                    a.link(@click.prevent="loadTreeData(getMF(tree, '0.childrens.'+(n1-1)+'.childrens.'+(n2-1)+'.id', null))") Load
+                    b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 
 </template>
 
 <script>
-    export default {
-        layout: 'admin_layout',
-        data() {
-            return {
-                curr_prof_active: null
-            }
-        },
-        methods: {
-            activeProf: function (e) {
-                let target = e.target.closest(".profile-show.mini")
-                if(this.curr_prof_active !== null && this.curr_prof_active !== target) {
-                    this.curr_prof_active.classList.remove("active")
-                }
-                if(this.curr_prof_active !== target) {
-                    this.curr_prof_active = target
-                    target.classList.add("active")
-                }else{
-                    this.curr_prof_active.classList.remove("active")
-                    this.curr_prof_active = null
-                }
-
-            }
-        }
+import _ from "lodash";
+export default {
+  layout: "admin_layout",
+  computed: {
+    u_type: function() {
+      return this.$store.state.user.data.type;
     }
+  },
+  async mounted() {
+    const self = this;
+
+    let loadId = null;
+
+    if (self.$store.state.user.data.type === 0) {
+      loadId = self.$store.state.user.data.user_id;
+    } else {
+      await self.$axios.get("/api/hierarchy/first_user").then(res => {
+        if (res.data.data.length > 0) {
+          loadId = res.data.data[0].member_id;
+        }
+      });
+    }
+
+    if (loadId !== null) {
+      await self.loadTreeData(loadId);
+    }
+  },
+  data() {
+    return {
+      tree: [],
+      def_tree: [],
+      loaded_tree_id: null,
+      loading: false,
+      refls: null,
+      popup_ind: {}
+    };
+  },
+  methods: {
+    loadTreeData: async function(id) {
+      const self = this;
+      self.popup_ind = {};
+      let param = {};
+      if (id === null) {
+        self.$toast.open({
+          duration: 1500,
+          message: "Invalid User Load!",
+          position: "is-bottom",
+          type: "is-danger"
+        });
+        return;
+      }
+      if (id) {
+        param = { id };
+      }
+      self.refls = null;
+      self.loading = true;
+      await self.$axios
+        .post("/api/hierarchy", param)
+        .then(res => {
+          const data = res.data.data;
+          self.loaded_tree_id = id;
+          self.tree = data.length > 0 ? self.treeGen(data, true) : [];
+          self.loading = false;
+        })
+        .catch(err => {
+          console.log(err);
+          self.loading = false;
+        });
+    },
+    treeGen: function(arr, tree_deep) {
+      let tree = arr;
+
+      let tree_direct = _.filter(tree, {
+        ref_user_asn_id: tree[0].user_asn_id
+      });
+      let tree_in_direct_results = [];
+
+      _.each(tree_direct, o => {
+        o["directRef"] = true;
+        let check_in = _.filter(tree, { ref_user_asn_id: o.user_asn_id });
+        if (check_in.length > 0) {
+          tree_in_direct_results.push(check_in);
+        }
+      });
+
+      for (let result of tree_in_direct_results) {
+        _.each(result, row => {
+          row["indirectRef"] = true;
+          let check_in = _.filter(tree, { ref_user_asn_id: row.user_asn_id });
+          if (check_in.length > 0) {
+            tree_in_direct_results.push(check_in);
+          }
+        });
+      }
+
+      if (tree_deep === true) {
+        _.each(tree, (o, ind) => {
+          _.set(tree[ind], "childrens", _.filter(tree, { parent_id: o.hm_id }));
+        });
+      }
+
+      return tree;
+    },
+    getMF: function(data, path, def) {
+      return _.get(data, path, def);
+    },
+    directIndirectCheck: function(data, lvl, inc1, inc2) {
+      if (lvl === 1) {
+        if (_.hasIn(data, "0.childrens." + inc1 + ".directRef")) {
+          return 0;
+        } else if (_.hasIn(data, "0.childrens." + inc1 + ".indirectRef")) {
+          return 1;
+        }
+      } else if (lvl === 2) {
+        if (
+          _.hasIn(
+            data,
+            "0.childrens." + inc1 + ".childrens." + inc2 + ".directRef"
+          )
+        ) {
+          return 0;
+        } else if (
+          _.hasIn(
+            data,
+            "0.childrens." + inc1 + ".childrens." + inc2 + ".indirectRef"
+          )
+        ) {
+          return 1;
+        }
+      }
+      return false;
+    },
+    activeRefls: async function(code) {
+      const self = this;
+      if (self.tree.length > 0) {
+        self.popup_ind = {};
+        if (self.refls == code) {
+          self.refls = null;
+          self.tree = _.cloneDeep(self.def_tree);
+          self.def_tree = [];
+        } else {
+          if (parseInt(self.tree[0].direct_ref_count) > 0) {
+            self.refls = code;
+            self.loading = true;
+            await self.$axios
+              .get("/api/hierarchy/refl/direct/" + self.loaded_tree_id)
+              .then(res => {
+                if (res.data.results) {
+                  self.def_tree = _.cloneDeep(self.tree);
+                  self.tree =
+                    res.data.results.length > 0 ? res.data.results : [];
+                }
+                self.loading = false;
+              })
+              .catch(err => {
+                console.log(err);
+                self.loading = false;
+              });
+          } else {
+            self.$toast.open({
+              duration: 1500,
+              message: "No direct referrals!",
+              position: "is-bottom",
+              type: "is-danger"
+            });
+          }
+        }
+      }
+    },
+    setPopup: function(path, val) {
+      const self = this;
+      if (!_.get(self.popup_ind, path, false)) {
+        self.popup_ind = {};
+        _.set(self.popup_ind, path, val);
+      } else {
+        self.popup_ind = {};
+      }
+    }
+  }
+};
 </script>
 
 <style scoped lang="sass">
@@ -219,7 +381,7 @@
                 min-width: 8rem
                 max-width: 12rem
                 margin-top: 1rem
-                margin-left: -110%
+                margin-left: -100%
                 z-index: 1
                 &:before
                     content: ' '
@@ -245,6 +407,11 @@
                     font-size: 14px
                     margin-bottom: 2px
                     color: #838383
+                a.link
+                    font-size: 14px
+                    color: #333
+                    font-weight: bold
+                    text-decoration: underline
             &.active
                 & > .dropup
                     display: block
@@ -254,6 +421,19 @@
             .header
                 color: #3f405b
                 padding: .6rem
+                &.none
+                    &>.icon
+                        position: relative
+                        &:after
+                            content: ''
+                            position: absolute
+                            width: calc(100% + 6px)
+                            height: 2px
+                            background-color: #db3279
+                            left: -3px
+                            top: 50%
+                            transform: rotate(130deg)
+
             .footer
                 background-color: #3d3e5a
                 padding: .6rem
@@ -295,6 +475,29 @@
                 margin-bottom: 0
                 span
                     color: #969595
+                &.refl
+                    position: relative
+                    padding-left: 15px
+                    .toc
+                        position: absolute
+                        width: 10px
+                        height: 10px
+                        top: 7px
+                        left: 0
+                        &.dir
+                            background-color: #db3279
+                        &.in-dir
+                            background-color: #f1e8cc
+                        &.active
+                            border: 2px solid black
+                            &:after
+                                content: ''
+                                position: absolute
+                                bottom: -7px
+                                left: -2px
+                                width: 10px
+                                height: 2px
+                                background-color: black
             @media screen and (max-width: 768px)
                 padding-right: 0 !important
                 margin-bottom: 1rem

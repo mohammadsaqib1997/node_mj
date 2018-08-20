@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 export const state = () => ({
   pageLoading: true,
   initAuth: false,
@@ -8,7 +10,7 @@ export const state = () => ({
 })
 
 export const mutations = {
-  pageLoadingSet (state, payload) {
+  pageLoadingSet(state, payload) {
     state.pageLoading = payload
   },
   initAuthSet(state, payload) {
@@ -28,6 +30,14 @@ export const mutations = {
   }
 }
 
+export const getters = {
+  formatDate(state) {
+    return function (strDate) {
+      return moment(strDate).format("DD-MM-YYYY")
+    }
+  },
+}
+
 export const actions = {
   // async nuxtServerInit ({ commit, dispatch }, { req, res }) {
   //    console.log(res.locals)
@@ -38,7 +48,7 @@ export const actions = {
       if (localStorage.getItem("user") !== "") {
         try {
           if (JSON.parse(localStorage.getItem('user')).hasOwnProperty("token")) {
-            await setTimeout(async ()=>{
+            await setTimeout(async () => {
               await this.$axios.post(
                 "/api/web/tokenLogin",
                 {
@@ -46,7 +56,7 @@ export const actions = {
                 }
               ).then(res => {
                 if (res.data.status) {
-                  commit("setUser", { token: res.data.token });
+                  commit("setUser", { token: res.data.token, data: res.data.user });
                 } else {
                   localStorage.removeItem("user")
                   commit('setUser', null)
@@ -55,7 +65,7 @@ export const actions = {
               commit("initAuthSet", true)
               resolve()
             }, 3000)
-          }else{
+          } else {
             commit("initAuthSet", true)
             resolve()
           }
@@ -63,11 +73,19 @@ export const actions = {
           commit("initAuthSet", true)
           resolve()
         }
-      }else{
+      } else {
         commit("initAuthSet", true)
         resolve()
       }
     })
+  },
+
+  login({ commit }, payload) {
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ token: payload.token })
+    );
+    commit('setUser', payload)
   },
 
   logout({ commit }) {

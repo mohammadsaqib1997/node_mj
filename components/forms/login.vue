@@ -65,11 +65,7 @@ export default {
             .then(res => {
               if (res.data.status) {
                 self.form.suc = "Successfully Login!";
-                self.$store.commit("setUser", { token: res.data.login_token });
-                localStorage.setItem(
-                  "user",
-                  JSON.stringify({ token: res.data.login_token })
-                );
+                self.$store.dispatch("login", { token: res.data.token, data: res.data.user });
                 setTimeout(() => {
                   self.form.loading = false;
                   self.$store.commit("loginModalActiveSet", false);

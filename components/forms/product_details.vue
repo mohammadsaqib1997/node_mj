@@ -1,19 +1,19 @@
 <template lang="pug">
   section.form
-    b-field(label="Bank Name" :type="(validation.hasError('bk_name')) ? 'is-danger':''" :message="validation.firstError('bk_name')")
-        b-input(type="text" v-model="bk_name" placeholder="Enter Bank Name")
+    b-field(label="Bank Name" :type="(validation.hasError('form.bk_name')) ? 'is-danger':''" :message="validation.firstError('form.bk_name')")
+        b-input(type="text" v-model="form.bk_name" placeholder="Enter Bank Name")
 
-    b-field(label="Account Number" :type="(validation.hasError('acc_number')) ? 'is-danger':''" :message="validation.firstError('acc_number')")
-        b-input(type="text" v-model="acc_number" placeholder="Enter Account Number")
+    b-field(label="Account Number" :type="(validation.hasError('form.acc_number')) ? 'is-danger':''" :message="validation.firstError('form.acc_number')")
+        b-input(type="text" v-model="form.acc_number" placeholder="Enter Account Number")
 
-    b-field(label="Account Title" :type="(validation.hasError('acc_title')) ? 'is-danger':''" :message="validation.firstError('acc_title')")
-        b-input(type="text" v-model="acc_title" placeholder="Enter Account Title")
+    b-field(label="Account Title" :type="(validation.hasError('form.acc_title')) ? 'is-danger':''" :message="validation.firstError('form.acc_title')")
+        b-input(type="text" v-model="form.acc_title" placeholder="Enter Account Title")
 
-    b-field(label="IBAN Number" :type="(validation.hasError('iban_num')) ? 'is-danger':''" :message="validation.firstError('iban_num')")
-        b-input(type="text" v-model="iban_num" placeholder="Enter IBAN Number")
+    b-field(label="IBAN Number" :type="(validation.hasError('form.iban_num')) ? 'is-danger':''" :message="validation.firstError('form.iban_num')")
+        b-input(type="text" v-model="form.iban_num" placeholder="Enter IBAN Number")
 
-    b-field(label="Branch Code" :type="(validation.hasError('br_code')) ? 'is-danger':''" :message="validation.firstError('br_code')")
-        b-input(type="text" v-model="br_code" placeholder="Enter Branch Code")
+    b-field(label="Branch Code" :type="(validation.hasError('form.br_code')) ? 'is-danger':''" :message="validation.firstError('form.br_code')")
+        b-input(type="text" v-model="form.br_code" placeholder="Enter Branch Code")
 </template>
 
 <script>
@@ -22,35 +22,37 @@ const Validator = SimpleVueValidation.Validator;
 export default {
   data() {
     return {
-      bk_name: "",
-      acc_number: "",
-      acc_title: "",
-      iban_num: "",
-      br_code: ""
+      form: {
+        bk_name: "",
+        acc_number: "",
+        acc_title: "",
+        iban_num: "",
+        br_code: ""
+      }
     };
   },
   validators: {
-    bk_name: function(value) {
+    "form.bk_name": function(value) {
       return Validator.value(value)
         .minLength(3)
         .maxLength(50);
     },
-    acc_number: function(value) {
+    "form.acc_number": function(value) {
       return Validator.value(value)
         .minLength(8)
         .maxLength(30);
     },
-    acc_title: function(value) {
+    "form.acc_title": function(value) {
       return Validator.value(value)
         .minLength(3)
         .maxLength(35);
     },
-    iban_num: function(value) {
+    "form.iban_num": function(value) {
       return Validator.value(value)
         .minLength(12)
         .maxLength(35);
     },
-    br_code: function(value) {
+    "form.br_code": function(value) {
       return Validator.value(value)
         .minLength(3)
         .maxLength(10);

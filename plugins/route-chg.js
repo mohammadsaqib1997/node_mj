@@ -1,38 +1,42 @@
 import _ from 'lodash'
-
 const authRoutes = [
-    'dashboard',
-    'business-chart',
-    'notifications',
-    'profile',
-    'system-level',
-    'fund-manager-supreme-finance-total-paid-commission',
-    'fund-manager-supreme-finance-total-unpaid-commission',
-    'fund-manager-commission-paid',
-    'fund-manager-commission-unpaid',
-    'members-area-total-members-active-members-report',
-    'members-area-total-members-inactive-members-report',
-    'members-area-add-new-member',
-    'members-area-members-profile',
-    'moderators-add-new-moderator',
-    'moderators-moderators-profile',
+    { name: "dashboard", type_allowed: [0, 1, 2] },
+    { name: "business-chart", type_allowed: [0, 1, 2] },
+    { name: "notifications", type_allowed: [1, 2] },
+    { name: "profile", type_allowed: [0, 1, 2] },
+    { name: "system-level", type_allowed: [0, 1, 2] },
+    { name: "fund-manager-supreme-finance-total-paid-commission", type_allowed: [1, 2] },
+    { name: "fund-manager-supreme-finance-total-unpaid-commission", type_allowed: [1, 2] },
+    { name: "fund-manager-commission-paid", type_allowed: [0, 1, 2] },
+    { name: "fund-manager-commission-unpaid", type_allowed: [1, 2] },
+    { name: "fund-manager-fund-details", type_allowed: [0] },
+    { name: "members-area-total-members-active-members-report", type_allowed: [1, 2] },
+    { name: "members-area-total-members-inactive-members-report", type_allowed: [1, 2] },
+    { name: "members-area-add-new-member", type_allowed: [1, 2] },
+    { name: "members-area-members-profile", type_allowed: [1, 2] },
+    { name: "moderators-add-new-moderator", type_allowed: [2] },
+    { name: "moderators-moderators-profile", type_allowed: [2] },
+    { name: "withdraw", type_allowed: [0] },
 ]
 
 const unAuthRoutes = [
-    'signup'
+    'signup',
+    'dev-signup'
 ]
 
 const visible = [
     'index',
     'products',
     // 'product-details',
+    // 'signup',
+    'dev-signup',
     'about-us',
     'contact',
     'coming-soon',
     'career'
 ]
 
-export default ({ app }) => {
+export default ({ app, error }) => {
 
     app.router.beforeEach((to, from, next) => {
         app.store.commit('pageLoadingSet', true)
@@ -47,27 +51,42 @@ export default ({ app }) => {
     })
 
     app.router.afterEach((to, from) => {
+
         if (app.store.state.user === null) {
-            if (_.indexOf(authRoutes, to.name) > -1) {
+            if (_.find(authRoutes, o => { return o.name === to.name })) {
                 app.router.push('/')
             } else {
                 if (_.indexOf(visible, to.name) < 0) {
                     app.router.push('/coming-soon')
                 } else {
-                    app.store.commit('pageLoadingSet', false)
+                    setTimeout(function () {
+                        app.store.commit('pageLoadingSet', false)
+                    }, 500)
                 }
             }
         } else {
             if (_.indexOf(unAuthRoutes, to.name) > -1) {
                 app.router.push('/dashboard')
             } else {
-                if (_.indexOf(authRoutes, to.name) > -1) {
-                    app.store.commit('pageLoadingSet', false)
+                let findAuthR = _.find(authRoutes, o => { return o.name === to.name })
+                if (findAuthR) {
+                    if (_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) {
+                        error({ statusCode: 403, message: "Not permission on this page!" })
+                        setTimeout(function () {
+                            app.store.commit('pageLoadingSet', false)
+                        }, 500)
+                    } else {
+                        setTimeout(function () {
+                            app.store.commit('pageLoadingSet', false)
+                        }, 500)
+                    }
                 } else {
                     if (_.indexOf(visible, to.name) < 0) {
                         app.router.push('/coming-soon')
                     } else {
-                        app.store.commit('pageLoadingSet', false)
+                        setTimeout(function () {
+                            app.store.commit('pageLoadingSet', false)
+                        }, 500)
                     }
                 }
             }

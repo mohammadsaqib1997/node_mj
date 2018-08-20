@@ -1,0 +1,58 @@
+.wrapper
+  /deep/
+    .m-dashboard
+      .flex
+        display: flex
+        height: 100%
+        align-items: center
+        justify-content: center
+      .level-cont
+        h1
+          color: #d9bd68
+          font-size: 6rem
+          font-weight: 100
+          text-align: left
+          line-height: normal
+        h5
+          color: #ffffff
+          text-transform: uppercase
+          font-size: 0.9rem
+          font-weight: bold
+          text-align: right
+      .ref-cont, .pack-cont
+        margin: 0
+        display: flex
+        text-align: left
+        .tile
+          &.is-parent
+            padding: 0
+            display: flex
+          &.is-child
+            &:not(:last-child)
+              margin-bottom: 10px !important
+        span.acc, h5
+          font-size: 1rem
+          font-weight: 600
+          text-transform: uppercase
+        span.acc
+          color: #d9bd68
+        h5
+          color: #ffffff
+          display: inline-block
+          margin-left: 5px
+      .pack-cont
+        .is-narrow
+          flex: none
+
+      
+
+    .content-des-1
+      margin-bottom: 1.2rem
+      h1
+        color: #3d3e5a
+        text-transform: uppercase
+        font-size: 24px
+        font-weight: bold
+        margin-bottom: 0.4rem
+      p
+        color: #969595
