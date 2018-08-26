@@ -45,7 +45,7 @@
                                 .of-hide
                                     .header(:class="{ none: !getMF(tree, '0', false) }")
                                         b-icon(pack="fas" icon="user")
-                                        p.name {{ getMF(tree, '0.full_name', 'Default') }}
+                                        p.name(:title="getMF(tree, '0.full_name', 'Default')") {{ getMF(tree, '0.full_name', 'Default') }}
                                     .footer
                                         p.id {{ getMF(tree, '0.user_asn_id', '0') }}
                                         p.lvl LVL {{ getMF(tree, '0.level', 0) }}
@@ -57,7 +57,7 @@
                                         .of-hide
                                             .header(:class="{ none: !getMF(tree, '0.childrens.'+(n1-1)+'', false) }")
                                                 b-icon(pack="fas" icon="user")
-                                                p.name {{ getMF(tree, '0.childrens.'+(n1-1)+'.full_name', 'Default') }}
+                                                p.name(:title="getMF(tree, '0.childrens.'+(n1-1)+'.full_name', 'Default')") {{ getMF(tree, '0.childrens.'+(n1-1)+'.full_name', 'Default') }}
                                             .footer
                                                 p.id {{ getMF(tree, '0.childrens.'+(n1-1)+'.user_asn_id', '0') }}
                                                 p.lvl LVL {{ getMF(tree, '0.childrens.'+(n1-1)+'.level', 0) }}
@@ -421,6 +421,10 @@ export default {
             .header
                 color: #3f405b
                 padding: .6rem
+                p
+                    overflow: hidden
+                    white-space: nowrap
+                    text-overflow: ellipsis
                 &.none
                     &>.icon
                         position: relative

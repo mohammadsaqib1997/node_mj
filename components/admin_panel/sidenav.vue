@@ -89,13 +89,20 @@ export default {
               active: false,
               url: "/fund-manager/commission-paid",
               title: "Commission Paid",
-              show: [0, 1, 2]
+              show: [1, 2]
             },
             {
-              name: "fund-details",
+              name: "finance-details",
               active: false,
-              url: "/fund-manager/fund-details",
-              title: "Fund Details",
+              url: "/fund-manager/finance-details",
+              title: "Finance Details",
+              show: [0]
+            },
+            {
+              name: "bank-details",
+              active: false,
+              url: "/fund-manager/bank-details",
+              title: "Bank Details",
               show: [0]
             },
             {
@@ -129,14 +136,14 @@ export default {
           img: "teamwork",
           url: false,
           title: "Members Area",
-          show: [1, 2],
+          show: [0, 1, 2],
           children: [
             {
               name: "add-new-member",
               active: false,
               url: "/members-area/add-new-member",
               title: "Add New Member",
-              show: [1, 2]
+              show: [0, 1, 2]
             },
             {
               name: "members-profile",
@@ -200,7 +207,8 @@ export default {
           img: "system-level",
           url: "/system-level",
           title: "System Level",
-          show: [0, 1, 2]
+          show: []
+          // show: [0, 1, 2]
         },
         {
           name: "profile",
@@ -216,7 +224,8 @@ export default {
           img: "bell",
           url: "/notifications",
           title: "Notifications",
-          show: [1, 2]
+          show: []
+          // show: [1, 2]
         }
       ]
     };

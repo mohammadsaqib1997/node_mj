@@ -135,7 +135,6 @@ export default {
                 msg = "Successfully Funds Transfer.";
                 await self.$store.dispatch("member/loadWallet");
                 await self.$store.dispatch('member/transactions/loadTransactions');
-                await self.$store.dispatch('member/commissions/loadCommissions');
               } else {
                 is_err = true;
                 msg = res.data.message;

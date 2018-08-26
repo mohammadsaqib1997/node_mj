@@ -1,10 +1,10 @@
 <template lang="pug">
-    .m-comission-paid
+    .wrapper
         walletShow
         .box.main-box
             .header.columns.is-gapless
                 .column
-                    h1 Commission Paid
+                    h1 Finance Details
             .body
                 .section
                     b-field.table-filter(grouped)
@@ -22,22 +22,24 @@
                         
                         b-field.total-count
                             p.control.has-text-right
-                                span Total Paid Comission:
-                                span.count {{ $store.state.member.commissions.total }}
+                                span Total Transaction Balance:
+                                span.count {{ $store.state.member.transactions.balance }}/-
                                 
-                    table-comp(:arr="com_list" :loading="loading" :striped="true")
+                    tableComp(:arr="trans_data" :loading="false" :striped="true" :paginate="false")
                         template(slot="thead")
                             tr
                                 th ID
+                                th Date
                                 th Description
-                                th Issue Date
-                                th Amount
+                                th Debit
+                                th Credit
                         template(slot="tbody")
-                            tr(v-for="row in com_list")
+                            tr(v-for="row in trans_data")
                                 td {{ row.id }}
-                                td {{ row.description }}
                                 td {{ $store.getters.formatDate(row.date) }}
-                                td {{ row.amount }}
+                                td {{ row.description }}
+                                td {{ row.debit }}
+                                td {{ row.credit }}
 </template>
 
 <script>
@@ -50,13 +52,13 @@ export default {
   },
   layout: "admin_layout",
   computed: {
-    com_list: function() {
-      return this.$store.state.member.commissions.list;
+    trans_data: function () {
+      return this.$store.state.member.transactions.list
     }
   },
   async mounted () {
       this.loading = true
-      await this.$store.dispatch('member/commissions/loadCommissions')
+      await this.$store.dispatch('member/transactions/loadTransactions');
       this.loading = false
   },
   data() {

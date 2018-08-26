@@ -7,18 +7,18 @@
             .column
               h5 LEVEL.
             .column
-              h1 4
+              h1 {{ level }}
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
           .flex
             .va
               .tile.is-ancestor.ref-cont.is-parent
                 .tile.is-vertical
                   .tile.is-child
-                    span.acc 12291
+                    span.acc {{ total_ref }}
                   .tile.is-child
-                    span.acc 1200
+                    span.acc {{ direct_ref }}
                   .tile.is-child
-                    span.acc 1200
+                    span.acc {{ in_direct_ref }}
                 .tile.is-vertical
                   .tile.is-child
                     h5 Referrals
@@ -26,12 +26,12 @@
                     h5 Direct
                   .tile.is-child
                     h5 Indirect
-                    
+                      
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
           .amount-wrapepr
             b Rs.
-            h1 1,563,000
-          h5 Comission Paid
+            h1 {{ wallet }}
+          h5 Wallet
 
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
           .flex
@@ -43,14 +43,15 @@
                   .tile.is-parent
                     .tile.is-vertical
                       .tile.is-child
-                        span.acc 25th Feb 2018
+                        span.acc {{ start_package }}
                       .tile.is-child
-                        span.acc 25th Dec 2018
+                        span.acc {{ end_package }}
                     .tile.is-vertical.is-narrow
                       .tile.is-child
                         h5 Start
                       .tile.is-child
                         h5 End
+      b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
     .box.main-box
       .header.columns.is-gapless
         .column
@@ -60,44 +61,114 @@
           .columns
             .column.is-4
               .content-des-1
-                h1 Approved
-                p 26,000
+                h1 Paid
+                p {{ tot_paid_r }}
               .content-des-1
                 h1 Pending
-                p 3,000
+                p {{ tot_pend_r }}
               .content-des-1
                 h1 Total
-                p 29,000
+                p {{ tot_paid_r + tot_pend_r }}
             .column
-              bar-chart(:height="300")
-    .box.main-box
-      .header.columns.is-gapless
-        .column
-          h1 Commission
-      .body
-        .section
-          .columns
-            .column.is-4
-              .content-des-1
-                h1 Paid Commissions
-                p 26,000
-              .content-des-1
-                h1 Pending Commissions
-                p 3,000
-              .content-des-1
-                h1 Total Paid
-                p 29,000
-            .column
-              pie-chart(:height="300")
+              bar-chart(:height="300" :ren_data="bar_data")
+          b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
 
 <script>
 import BarChart from "~/charts/BarChart.js";
-import PieChart from "~/charts/PieChart.js";
+import moment from "moment";
+import _ from "lodash";
 export default {
   components: {
-    BarChart,
-    PieChart
+    BarChart
+  },
+  async mounted() {
+    const self = this;
+    self.loading = true;
+    await self.$axios
+      .get("/api/member/user_info/" + self.$store.state.user.data.user_id)
+      .then(res => {
+        let data = res.data.data;
+        if (!_.isEmpty(data)) {
+          self.level = data.level;
+          self.wallet = data.wallet;
+          self.direct_ref = data.direct_ref_count;
+          self.in_direct_ref = data.in_direct_ref_count;
+          let pck_data = moment(data.package_act_date);
+          self.start_package = pck_data.format("DD MMM YYYY");
+          self.end_package = pck_data
+            .clone()
+            .add(1, "year")
+            .format("DD MMM YYYY");
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+    await self.$axios
+      .get("/api/member/get_referrals/" + self.$store.state.user.data.user_id)
+      .then(res => {
+        let data = res.data.data;
+        let labels = [];
+        let datasets = [
+          {
+            label: "Paid",
+            backgroundColor: "#dcdcdc",
+            data: []
+          },
+          {
+            label: "Pending",
+            backgroundColor: "#3d3e5a",
+            data: []
+          }
+        ];
+        for (let month in data) {
+          let m_text = moment()
+            .set("month", parseInt(month) - 1)
+            .format("MMMM");
+          labels.push(m_text);
+
+          self.tot_paid_r += _.get(data, month + ".paid", 0)
+          self.tot_pend_r += _.get(data, month + ".un_paid", 0)
+
+          datasets[0].data.push(_.get(data, month + ".paid", 0));
+          datasets[1].data.push(_.get(data, month + ".un_paid", 0));
+        }
+        self.bar_data = { labels, datasets };
+      })
+      .catch(err => {
+        console.log(err);
+      });
+    self.loading = false;
+  },
+  computed: {
+    total_ref: function() {
+      return this.direct_ref + this.in_direct_ref;
+    }
+  },
+  data() {
+    let date = moment();
+    return {
+      loading: false,
+      bar_data: {},
+      tot_paid_r: 0,
+      tot_pend_r: 0,
+      level: 0,
+      wallet: 0,
+      direct_ref: 0,
+      in_direct_ref: 0,
+      start_package: date.format("DD MMM YYYY"),
+      end_package: date
+        .clone()
+        .add(1, "year")
+        .format("DD MMM YYYY")
+    };
   }
 };
 </script>
+
+<style scoped lang="sass">
+.box.counter-box
+  position: relative
+</style>
+

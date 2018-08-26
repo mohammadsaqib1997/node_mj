@@ -15,7 +15,7 @@
                                     span.placeholder Rs.
                                     span {{ $store.state.member.wallet }}
                         .column
-                            bankDetComp
+                            bankDetComp(:has_header="true")
                     hr
                     form.form(@submit.prevent="withdraw")
                         .columns.is-variable.is-1

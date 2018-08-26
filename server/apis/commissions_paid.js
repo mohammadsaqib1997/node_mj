@@ -34,23 +34,31 @@ router.get("/:id", function (req, res, next) {
             if (err) {
                 res.status(500).json({ error })
             } else {
-                let opt = {
-                    sql: `SELECT id, remarks AS description, status, amount, issue_date AS date 
-                    FROM commission_paid_m
-                    WHERE member_id=?
-                    ORDER BY id DESC`
-                }
-                connection.query(opt, req.params.id, function (error, results, fields) {
-                    connection.release();
+                connection.query('SELECT SUM(amount) AS total FROM commission_paid_m WHERE member_id=?', req.params.id, function (error, results, fields) {
                     if (error) {
+                        connection.release();
                         res.status(500).json({ error })
                     } else {
-                        res.json({ data: results })
+                        let total = results[0].total
+                        let opt = {
+                            sql: `SELECT id, remarks AS description, amount, created_at AS date 
+                            FROM commission_paid_m
+                            WHERE member_id=?
+                            ORDER BY id DESC`
+                        }
+                        connection.query(opt, req.params.id, function (error, results, fields) {
+                            connection.release();
+                            if (error) {
+                                res.status(500).json({ error })
+                            } else {
+                                res.json({ data: results, total })
+                            }
+                        })
                     }
                 })
             }
         })
-    }else{
+    } else {
         next()
     }
 })
@@ -68,12 +76,12 @@ router.post("/withdraw", function (req, res) {
                     connection.release()
                     res.status(500).json({ err })
                 } else {
-                    let error_throw = null
+                    let throw_error = null
 
                     await new Promise(resolve => {
 
                         let mem_opt = {
-                            sql: `SELECT ivm.wallet, ivm.paid_com_total
+                            sql: `SELECT ivm.wallet
                             FROM info_var_m as ivm
                             WHERE ivm.member_id=?`
                         }
@@ -83,11 +91,9 @@ router.post("/withdraw", function (req, res) {
                                 return resolve()
                             } else {
                                 let mem_wallet = results[0].wallet
-                                let mem_com_totl = results[0].paid_com_total
 
                                 let info_param = {
-                                    wallet: parseInt(mem_wallet) - amount,
-                                    paid_com_total: parseInt(mem_com_totl) + amount
+                                    wallet: parseInt(mem_wallet) - amount
                                 }
                                 connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [info_param, id], function (error, results, fields) {
                                     if (error) {
@@ -102,21 +108,8 @@ router.post("/withdraw", function (req, res) {
                                         }, function (error, results, fields) {
                                             if (error) {
                                                 throw_error = error
-                                                return resolve()
-                                            } else {
-                                                
-                                                connection.query('INSERT INTO `commission_paid_m` SET ?', {
-                                                    member_id: id,
-                                                    remarks: "Withdraw Amount",
-                                                    status: 0,
-                                                    amount: amount
-                                                }, function (error, results, fields) {
-                                                    if (error) {
-                                                        throw_error = error
-                                                    }
-                                                    return resolve()
-                                                })
                                             }
+                                            return resolve()
                                         })
                                     }
                                 })
@@ -125,10 +118,10 @@ router.post("/withdraw", function (req, res) {
 
                     })
 
-                    if (error_throw) {
+                    if (throw_error) {
                         return connection.rollback(function () {
                             connection.release()
-                            res.status(500).json({ error_throw })
+                            res.status(500).json({ throw_error })
                         });
                     } else {
                         connection.commit(function (err) {
@@ -168,12 +161,12 @@ router.post("/transfer_funds", function (req, res) {
                             connection.release()
                             res.status(500).json({ err })
                         } else {
-                            let error_throw = null
+                            let throw_error = null
 
                             await new Promise(resolve => {
 
                                 let sender_opt = {
-                                    sql: `SELECT ivm.wallet, ivm.paid_com_total, m.user_asn_id
+                                    sql: `SELECT ivm.wallet, m.user_asn_id
                                     FROM members as m
                                     JOIN info_var_m as ivm
                                     ON m.id=ivm.member_id
@@ -186,7 +179,6 @@ router.post("/transfer_funds", function (req, res) {
                                     } else {
                                         let sender_user_asn_id = results[0].user_asn_id
                                         let sender_wallet = results[0].wallet
-                                        let sender_com_totl = results[0].paid_com_total
 
                                         let recv_opt = {
                                             sql: `SELECT ivm.wallet, ivm.member_id
@@ -214,7 +206,6 @@ router.post("/transfer_funds", function (req, res) {
                                                     } else {
                                                         let sender_params = {
                                                             wallet: parseInt(sender_wallet) - amount,
-                                                            paid_com_total: parseInt(sender_com_totl) + amount
                                                         }
 
                                                         connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [sender_params, id], function (error, results, fields) {
@@ -225,7 +216,7 @@ router.post("/transfer_funds", function (req, res) {
 
                                                                 connection.query('INSERT INTO `transactions_m` SET ?', {
                                                                     member_id: id,
-                                                                    remarks: "Funds Transfered - User ID " + recv_user_asn_id,
+                                                                    remarks: "Funds Transfered To User ID " + recv_user_asn_id,
                                                                     credit: amount
                                                                 }, function (error, results, fields) {
                                                                     if (error) {
@@ -235,27 +226,13 @@ router.post("/transfer_funds", function (req, res) {
 
                                                                         connection.query('INSERT INTO `transactions_m` SET ?', {
                                                                             member_id: recv_id,
-                                                                            remarks: "Funds Received - User ID " + sender_user_asn_id,
+                                                                            remarks: "Funds Received From User ID " + sender_user_asn_id,
                                                                             debit: amount
                                                                         }, function (error, results, fields) {
                                                                             if (error) {
                                                                                 throw_error = error
-                                                                                return resolve()
-                                                                            } else {
-
-                                                                                connection.query('INSERT INTO `commission_paid_m` SET ?', {
-                                                                                    member_id: id,
-                                                                                    remarks: "Funds Transfer",
-                                                                                    status: 2,
-                                                                                    amount: amount,
-                                                                                    issue_date: moment().format("YYYY-MM-DD HH:mm:ss")
-                                                                                }, function (error, results, fields) {
-                                                                                    if (error) {
-                                                                                        throw_error = error
-                                                                                    }
-                                                                                    return resolve()
-                                                                                })
                                                                             }
+                                                                            return resolve()
                                                                         })
                                                                     }
                                                                 })
@@ -267,13 +244,12 @@ router.post("/transfer_funds", function (req, res) {
                                         })
                                     }
                                 })
-
                             })
 
-                            if (error_throw) {
+                            if (throw_error) {
                                 return connection.rollback(function () {
                                     connection.release()
-                                    res.status(500).json({ error_throw })
+                                    res.status(500).json({ throw_error })
                                 });
                             } else {
                                 connection.commit(function (err) {

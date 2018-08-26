@@ -1,9 +1,15 @@
 export const state = () => ({
-    list: []
+    list: [],
+    balance: 0
 })
 
 export const mutations = {
     setList: (state, payload) => {
+        let blc = 0
+        for (let o of payload) {
+            blc += parseInt(o.debit)-parseInt(o.credit)
+        }
+        state.balance = blc
         state.list = payload
     }
 }

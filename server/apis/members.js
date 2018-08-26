@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const _ = require('lodash')
+const moment = require("moment")
 
 const multer = require('multer')
 const storage = multer.diskStorage({
@@ -27,7 +28,7 @@ router.get("/", function (req, res) {
 
   db.getConnection(function (err, connection) {
     if (err) {
-      res.status(500).json({ error })
+      res.status(500).json({ err })
     } else {
       connection.query(`SELECT COUNT(*) as total_rows FROM members`, function (error, results, fields) {
         if (error) {
@@ -69,7 +70,7 @@ router.get('/wallet/:id', function (req, res, next) {
   if (/^[0-9]*$/.test(req.params.id)) {
     db.getConnection(function (err, connection) {
       if (err) {
-        res.status(500).json({ error })
+        res.status(500).json({ err })
       } else {
         let options = {
           sql: `
@@ -86,7 +87,7 @@ router.get('/wallet/:id', function (req, res, next) {
             res.status(500).json({ error })
           } else {
             let wallet = 0
-            if(results.length > 0) {
+            if (results.length > 0) {
               wallet = results[0].wallet
             }
             res.json({ data: wallet })
@@ -100,32 +101,354 @@ router.get('/wallet/:id', function (req, res, next) {
   }
 })
 
-router.get("/:id", function (req, res) {
+router.get('/user_info/:id', function (req, res, next) {
+  if (/^[0-9]*$/.test(req.params.id)) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+        let options = {
+          sql: `
+        SELECT direct_ref_count, in_direct_ref_count, level, package_act_date, wallet
+        FROM info_var_m
+        WHERE member_id=?
+        `
+        }
+        connection.query(options, [req.params.id], function (error, results, fields) {
+          connection.release();
 
-  db.getConnection(function (err, connection) {
-    if (err) {
-      res.status(500).json({ error })
-    } else {
-      let options = {
-        sql: `
-      SELECT m.*, upd.buyer_pay_type, upd.buyer_qty_prd, upd.buyer_type, upd.product_id, upd.id
-      FROM members AS m
-      LEFT JOIN user_product_details as upd
-      ON m.id=upd.member_id
-      WHERE m.id=?
-      `, nestTables: true
+          if (error) {
+            res.status(500).json({ error })
+          } else {
+            let data = {}
+            if (results.length > 0) {
+              data = results[0]
+            }
+            res.json({ data })
+          }
+
+        });
       }
+    })
+  } else {
+    next()
+  }
+})
 
-      connection.query(options, [req.params.id], function (error, results, fields) {
+router.get('/get_referrals/:id', function (req, res, next) {
+  if (/^[0-9]*$/.test(req.params.id)) {
+    let grab_months = {
+      1: {},
+      2: {},
+      3: {},
+      4: {},
+      5: {},
+      6: {},
+      7: {},
+      8: {},
+      9: {},
+      10: {},
+      11: {},
+      12: {},
+    }
+
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({ error: err })
+      } else {
+        let throw_error = null
+        let user_asn_id = null
+        let mem_id = req.params.id
+
+        await new Promise(resolve => {
+          connection.query('SELECT id, user_asn_id FROM members WHERE id=?', mem_id, function (error, results) {
+            if (error) {
+              throw_error = error
+            } else {
+              if (results.length > 0 && results[0].user_asn_id !== null) {
+                user_asn_id = results[0].user_asn_id
+              }
+            }
+            resolve()
+          })
+        })
+
+        if (user_asn_id) {
+          let date = moment().set('M', 0).set('Y', moment().get('Y') - 1).endOf('Y')
+          for (month in grab_months) {
+            await new Promise(resolve => {
+              date.add(1, 'month')
+              let start = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss")
+              let end = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+
+              connection.query('SELECT COUNT(*) as count FROM members WHERE ref_user_asn_id = ? AND is_paid_m = 1 AND created_at >= ? AND created_at <= ?', [user_asn_id, start, end], function (error, results) {
+                if (error) {
+                  throw_error = error
+                  resolve()
+                } else {
+                  grab_months[month]['paid'] = results[0].count
+
+                  connection.query('SELECT COUNT(*) as count FROM members WHERE ref_user_asn_id = ? AND is_paid_m = 0 AND created_at >= ? AND created_at <= ?', [user_asn_id, start, end], function (error, results) {
+                    if (error) {
+                      throw_error = error
+                      resolve()
+                    } else {
+                      grab_months[month]['un_paid'] = results[0].count
+                      resolve()
+                    }
+                  })
+                }
+              })
+            })
+
+            if (throw_error) {
+              break
+            }
+          }
+        }
         connection.release();
 
-        if (error) {
-          res.status(500).json({ error })
+        if (throw_error) {
+          res.status(500).json({ error: throw_error })
         } else {
-          res.json({ data: results })
+          res.json({
+            data: grab_months
+          })
         }
 
-      });
+
+
+      }
+    })
+    // db.getConnection(function (err, connection) {
+    //   if (err) {
+    //     res.status(500).json({ error })
+    //   } else {
+    //     let options = {
+    //       sql: `
+    //     SELECT direct_ref_count, in_direct_ref_count, level, package_act_date, wallet
+    //     FROM info_var_m
+    //     WHERE member_id=?
+    //     `
+    //     }
+    //     connection.query(options, [req.params.id], function (error, results, fields) {
+    //       connection.release();
+
+    //       if (error) {
+    //         res.status(500).json({ error })
+    //       } else {
+    //         let data = {}
+    //         if (results.length > 0) {
+    //           data = results[0]
+    //         }
+    //         res.json({ data })
+    //       }
+
+    //     });
+    //   }
+    // })
+  } else {
+    next()
+  }
+})
+
+router.get("/user_id/:id", function (req, res, next) {
+  if (/^[0-9]*$/.test(req.params.id)) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+        let options = {
+          sql: `
+        SELECT user_asn_id
+        FROM members
+        WHERE id=?
+        `
+        }
+        connection.query(options, [req.params.id], function (error, results, fields) {
+          connection.release();
+
+          if (error) {
+            res.status(500).json({ error })
+          } else {
+            if (results.length > 0 && results[0].user_asn_id !== null) {
+              res.json({ user_asn_id: results[0].user_asn_id })
+            } else {
+              res.status(404).json({ message: "Not Found Id!" })
+            }
+          }
+        });
+      }
+    })
+  } else {
+    next()
+  }
+})
+
+router.get("/:id", function (req, res, next) {
+
+  if (/^[0-9]*$/.test(req.params.id)) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+        let options = {
+          sql: `
+        SELECT m.*, upd.buyer_pay_type, upd.buyer_qty_prd, upd.buyer_type, upd.product_id, upd.id
+        FROM members AS m
+        LEFT JOIN user_product_details as upd
+        ON m.id=upd.member_id
+        WHERE m.id=?
+        `, nestTables: true
+        }
+
+        connection.query(options, [req.params.id], function (error, results, fields) {
+          connection.release();
+
+          if (error) {
+            res.status(500).json({ error })
+          } else {
+            res.json({ data: results })
+          }
+
+        });
+      }
+    })
+  } else {
+    next()
+  }
+})
+
+router.post("/add_referral", function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({ err })
+    } else {
+      connection.beginTransaction(async function (err) {
+        if (err) {
+          connection.release()
+          res.status(500).json({ err })
+        } else {
+          let throw_error = null
+          await new Promise(resolve => {
+            connection.query('SELECT COUNT(*) as count FROM members WHERE id=? AND user_asn_id=?', [req.decoded.data.user_id, req.body.member_data.ref_user_asn_id], function (error, results, fields) {
+              if (error) {
+                throw_error = error
+                resolve()
+              } else {
+                if (results[0].count > 0) {
+
+                  // deduct amount from wallet
+                  connection.query('SELECT wallet FROM `info_var_m` WHERE member_id=?', req.decoded.data.user_id, function (error, results, fields) {
+                    if (error) {
+                      throw_error = error
+                      return resolve()
+                    } else {
+
+                      if (results.length > 0 && parseInt(results[0].wallet) >= 5000) {
+
+                        let set_w_params = {
+                          wallet: parseInt(results[0].wallet) - 5000
+                        }
+                        connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [set_w_params, req.decoded.data.user_id], function (error, results, fields) {
+                          if (error) {
+                            throw_error = error
+                            return resolve()
+                          } else {
+
+                            // grab last user asn id
+                            connection.query('SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1', function (error, results, fields) {
+                              if (error) {
+                                throw_error = error
+                                return resolve()
+                              } else {
+                                req.body.member_data['is_paid_m'] = 1
+                                req.body.member_data['active_sts'] = 1
+
+                                // if not find it first id assign
+                                if (results[0].user_asn_id === null) {
+                                  req.body.member_data['user_asn_id'] = '000010001'
+                                } else {
+                                  // id increament with last id
+                                  let new_inc = (parseInt(results[0].user_asn_id) + 1).toString()
+                                  new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
+                                  req.body.member_data['user_asn_id'] = new_inc
+                                }
+
+                                // insert member for new data
+                                connection.query('INSERT INTO members SET ?', req.body.member_data, function (error, results, fields) {
+                                  if (error) {
+                                    throw_error = error
+                                    return resolve()
+                                  } else {
+                                    let mem_id = results.insertId
+                                    req.body.prd_data['member_id'] = mem_id
+                                    connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
+                                      if (error) {
+                                        throw_error = error
+                                        return resolve()
+                                      } else {
+
+                                        connection.query('INSERT INTO `transactions_m` SET ?', {
+                                          member_id: req.decoded.data.user_id,
+                                          remarks: "Create New Referral Fees - User ID " + req.body.member_data['user_asn_id'],
+                                          credit: 5000
+                                        }, function (error, results, fields) {
+                                          if (error) {
+                                            throw_error = error
+                                            return resolve()
+                                          } else {
+                                            after_paid_member(connection, mem_id, function (err) {
+                                              if (err) {
+                                                throw_error = err
+                                              }
+                                              resolve()
+                                            })
+                                          }
+                                        })
+                                      }
+                                    })
+                                  }
+                                })
+                              }
+                            })
+                          }
+                        })
+                      } else {
+                        throw_error = "You have not Rs. 5000/- in your wallet!"
+                        return resolve()
+                      }
+                    }
+                  })
+                } else {
+                  throw_error = "Not valid user!"
+                  resolve()
+                }
+              }
+            })
+          })
+
+          if (throw_error) {
+            return connection.rollback(function () {
+              connection.release()
+              res.status(500).json({ throw_error })
+            });
+          } else {
+            connection.commit(function (err) {
+              if (err) {
+                return connection.rollback(function () {
+                  connection.release()
+                  res.status(500).json({ err })
+                });
+              } else {
+                connection.release()
+                res.json({ status: true })
+              }
+            })
+          }
+
+        }
+      })
     }
   })
 })
@@ -133,7 +456,7 @@ router.get("/:id", function (req, res) {
 router.post('/mjIdCheck', function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {
-      res.status(500).json({ error })
+      res.status(500).json({ err })
     } else {
       connection.query('SELECT user_asn_id FROM `members` where binary `user_asn_id`=?', [req.body.id], function (error, results, fields) {
         connection.release();
@@ -438,7 +761,8 @@ async function after_paid_member(connection, mem_id, cb) {
     connection.query('INSERT INTO `transactions_m` SET ?', {
       member_id: mem_id,
       remarks: "Activation Fees",
-      credit: 5000
+      credit: 5000,
+      debit: 5000
     }, function (error, results, fields) {
       if (error) {
         throw_error = error
@@ -592,22 +916,16 @@ async function after_paid_member(connection, mem_id, cb) {
 
                       if (direct_inc === 1) {
                         set_param['direct_ref_count'] = parseInt(results[0].direct_ref_count) + 1
-                        if (results[0].level <= 9) {
-                          commission_amount = 1000
-                          set_param['wallet'] = parseInt(results[0].wallet) + 1000
-                        }
+                        commission_amount = 1000
+                        set_param['wallet'] = parseInt(results[0].wallet) + 1000
                       } else if (direct_inc === 2) {
                         set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
-                        if (results[0].level <= 9) {
-                          commission_amount = 300
-                          set_param['wallet'] = parseInt(results[0].wallet) + 300
-                        }
+                        commission_amount = 300
+                        set_param['wallet'] = parseInt(results[0].wallet) + 300
                       } else {
                         set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
-                        if (results[0].level <= 9) {
-                          commission_amount = 200
-                          set_param['wallet'] = parseInt(results[0].wallet) + 200
-                        }
+                        commission_amount = 200
+                        set_param['wallet'] = parseInt(results[0].wallet) + 200
                       }
 
                       connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, c_mem_id], function (error, results, fields) {
@@ -618,14 +936,26 @@ async function after_paid_member(connection, mem_id, cb) {
                           // apply commission - transaction
                           connection.query('INSERT INTO `transactions_m` SET ?', {
                             member_id: c_mem_id,
-                            remarks: "Issued Commission - User ID " + from_user_asn_id,
+                            remarks: "Issued Commission From User ID " + from_user_asn_id,
                             debit: commission_amount
                           }, function (error, results, fields) {
                             if (error) {
                               throw_error = error
+                              return resolve2()
+                            } else {
+                              // insert commission paid row
+                              connection.query('INSERT INTO `commission_paid_m` SET ?', {
+                                member_id: c_mem_id,
+                                remarks: "Issued Commission From User ID " + from_user_asn_id,
+                                amount: commission_amount
+                              }, function (error, results, fields) {
+                                if (error) {
+                                  throw_error = error
+                                }
+                                // release await promise
+                                return resolve2()
+                              })
                             }
-                            // release the await...
-                            return resolve2()
                           })
                         }
                       })

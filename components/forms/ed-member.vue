@@ -85,21 +85,6 @@ export default {
       default: null
     }
   },
-  computed: {
-    genusername: function() {
-      let full_name = this.f_data.full_name
-        .toLowerCase()
-        .split(" ")
-        .join("");
-      let user_asn_id =
-        this.f_data.user_asn_id.slice(-9) &&
-        !isNaN(this.f_data.user_asn_id.slice(-9))
-          ? parseInt(this.f_data.user_asn_id.slice(-9))
-          : "";
-
-      return full_name + user_asn_id;
-    }
-  },
   async mounted() {
     this.form.loading = true;
     const list_pds = await this.$axios.$get("/api/product/");
@@ -378,7 +363,6 @@ export default {
           }
 
           let mem_data = {
-            username: self.genusername,
             full_name: self.f_data.full_name,
             email: self.f_data.email,
             password: self.f_data.password,

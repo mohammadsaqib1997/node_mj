@@ -11,7 +11,7 @@ router.get("/:id", function (req, res, next) {
                 res.status(500).json({ error })
             } else {
                 let opt = {
-                    sql: `SELECT id, remarks as description, (debit - credit) as detail, created_at as date 
+                    sql: `SELECT id, remarks as description, debit, credit, created_at as date 
                     FROM transactions_m 
                     WHERE member_id=? 
                     ORDER BY id DESC`

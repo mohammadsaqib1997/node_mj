@@ -14,7 +14,7 @@
                     span(aria-hidden="true")
             #navTopMenu.navbar-menu
                 .navbar-end
-                    .navbar-item.has-dropdown.is-hoverable(v-if="u_type !== 0")
+                    .navbar-item.has-dropdown.is-hoverable
                         .navbar-item
                             .count-unread-msg
                                 | 6
@@ -28,7 +28,7 @@
                     .navbar-item.has-dropdown.is-hoverable
                         .navbar-item.profile
                             img.profile-ic(src="~/assets/img/profile.png")
-                            |Username
+                            span.name(:title="$store.state.profile.name") {{ $store.state.profile.name }}
                             img.arrow-ic(src="~/assets/img/arrow.png")
                         .navbar-dropdown
                             nuxt-link.navbar-item(to="/profile") PROFILE
@@ -37,7 +37,8 @@
 
 <script>
 export default {
-  mounted() {
+  async mounted() {
+      await this.$store.dispatch('profile/loadName')
     $(function() {
       $("body").off("click", "#nBurgerTop");
 
@@ -98,6 +99,12 @@ export default {
                 .profile
                     .profile-ic
                         margin-right: 1rem
+                    .name
+                        max-width: 110px
+                        text-overflow: ellipsis
+                        overflow: hidden
+                        display: inline-block
+                        white-space: nowrap
                     .arrow-ic
                         margin-left: 3rem
                         -webkit-transform: rotate(90deg)
