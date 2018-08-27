@@ -98,11 +98,35 @@ router.post('/check_cont_num', (req, res) => {
       sendDBError(res, err)
     } else {
       connection.query('SELECT contact_num FROM `members` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
-        connection.release();
         if (error) {
+          connection.release();
           sendDBError(res, error)
         } else {
-          res.json({ count: results.length })
+          if (results.length > 0) {
+            connection.release();
+            res.json({ count: results.length })
+          } else {
+            connection.query('SELECT contact_num FROM `moderators` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
+              if (error) {
+                connection.release();
+                sendDBError(res, error)
+              } else {
+                if (results.length > 0) {
+                  connection.release();
+                  res.json({ count: results.length })
+                } else {
+                  connection.query('SELECT contact_num FROM `admins` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
+                    connection.release();
+                    if (error) {
+                      sendDBError(res, error)
+                    } else {
+                      res.json({ count: results.length })
+                    }
+                  })
+                }
+              }
+            })
+          }
         }
       });
     }

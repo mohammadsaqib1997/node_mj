@@ -57,11 +57,11 @@
                   template(v-if="row.ur.receipt")
                     a.anch(href="#") REF {{ "#"+row.ur.receipt }}
                   template(v-else)
-                    .upload(v-if="sel_file.hasOwnProperty(row.m.id)" v-on:click.prevent="uploadFile(row.m.id)")
+                    .upload(v-if="$store.getters['receipts_upload/hasFile'](row.m.id)" @click.prevent="uploadFile(row.m.id)")
                       span UPLOAD&nbsp;&nbsp;&nbsp;
                       b-icon(icon="upload")
-                      b-icon.del(icon="times-circle" v-on:click.prevent.stop.native="delFile(row.m.id)")
-                    b-upload(v-else v-on:input="fileChange($event, row.m.id)")
+                      b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.m.id)")
+                    b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.m.id})")
                       span UPLOAD&nbsp;&nbsp;&nbsp;
                       b-icon(icon="plus-circle")
 
@@ -89,6 +89,9 @@ export default {
       return this.$store.state.edMemModal.modalActive;
     }
   },
+  destroyed() {
+    this.$store.commit("receipts_upload/resetFile");
+  },
   watch: {
     modalActive: function(val) {
       if (val === false) {
@@ -102,25 +105,26 @@ export default {
       data: [],
       num_rows: 0,
       select_edit: null,
-      sel_file: {},
-      page_active : 1
+      page_active: 1
     };
   },
   methods: {
     dataLoad: async function(page) {
-      if(!page) {
-        this.page_active = 1
-      }else{
-        this.page_active = page
+      if (!page) {
+        this.page_active = 1;
+      } else {
+        this.page_active = page;
       }
       this.loading = true;
-      const result = await this.$axios.$get("/api/member?page="+this.page_active);
+      const result = await this.$axios.$get(
+        "/api/member?page=" + this.page_active
+      );
       this.num_rows = result.total_rows;
       this.data = result.data;
       this.loading = false;
     },
-    pageLoad: function (page) {
-      this.dataLoad(page)
+    pageLoad: function(page) {
+      this.dataLoad(page);
     },
     payUser: function(id) {
       const self = this;
@@ -131,7 +135,7 @@ export default {
           if (res.data.status === true) {
             self.dataLoad(this.page_active);
           } else {
-            console.log("Extra Code!", res.data);
+            console.log("Error! ", res.data);
           }
         })
         .catch(err => {
@@ -148,49 +152,25 @@ export default {
       this.select_edit = id;
       this.$store.commit("edMemModal/setModalActive", true);
     },
-    fileChange: function(e, id) {
-      if (e[0].type === "image/png" || e[0].type === "image/jpeg") {
-        if (e[0].size <= 5000000) {
-          this.$set(this.sel_file, id, e);
-        } else {
-          this.$toast.open({
-            duration: 3000,
-            message: "Maximum Upload File Size Is 5MB!",
-            position: "is-bottom",
-            type: "is-danger"
-          });
-        }
-      } else {
-        this.$toast.open({
-          duration: 3000,
-          message: "Invalid File Selected!",
-          position: "is-bottom",
-          type: "is-danger"
-        });
-      }
-    },
-    delFile: function(id) {
-      this.$delete(this.sel_file, id);
-    },
+
     uploadFile: function(id) {
       const self = this;
       self.loading = true;
       let form_data = new FormData();
-      form_data.append("member_id", id);
-      form_data.append("type", 0);
+      form_data.append("id", id);
       form_data.append(
         "receipt",
-        this.sel_file[id][0],
-        this.sel_file[id][0].name
+        self.$store.state.receipts_upload.sel_file[id],
+        self.$store.state.receipts_upload.sel_file[id].name
       );
       let config = {
         headers: { "content-type": "multipart/form-data" }
       };
       this.$axios
-        .post("/api/member/receipt_add", form_data, config)
+        .post("/api/receipt/upload_pd_rcp", form_data, config)
         .then(res => {
           if (res.data.status === true) {
-            self.delFile(id);
+            self.$store.commit("receipts_upload/remFile", id);
             self.dataLoad(self.page_active);
           } else {
             self.loading = false;

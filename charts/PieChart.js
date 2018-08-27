@@ -1,22 +1,24 @@
-import {Pie} from 'vue-chartjs'
+import { Pie } from 'vue-chartjs'
 
 export default {
   extends: Pie,
-  mounted () {
-    this.renderChart(this.data, this.options)
+  mounted() {
+    this.renderChart(this.ren_data, this.options)
   },
-  data () {
+  watch: {
+    ren_data: function (val) {
+      this.renderChart(val, this.options)
+    }
+  },
+  props: {
+    ren_data: {
+      default: () => ({}),
+      type: Object
+    }
+  },
+  data() {
     return {
-      data: {
-        labels: ['Paid Commission', 'UnPaid Commission'],
-        datasets: [
-          {
-            backgroundColor: ['#d9bd68', '#3d3e5a'],
-            data: [60, 100]
-          },
-        ]
-      },
-      options: {responsive: true, maintainAspectRatio: false}
+      options: { responsive: true, maintainAspectRatio: false }
     }
   }
 }

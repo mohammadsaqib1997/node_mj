@@ -20,92 +20,35 @@
                   img(src="~/assets/img/plus-icon.png")
                   span Upload image
             .column
-              .profile-info-con
-                .columns.is-variable.is-1
-                  .column
-                    label ID
-                  .column
-                    h2 {{ profile.user_asn_id }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Full Name
-                  .column
-                    h2 {{ profile.full_name }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Date Of Birth
-                  .column
-                    h2 {{ $store.getters.formatDate(profile.dob) }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label CNIC
-                  .column
-                    h2 {{ profile.cnic_num }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Email
-                  .column
-                    h2 {{ profile.email }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Contact Number
-                  .column
-                    h2 {{ profile.contact_num }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Address
-                  .column
-                    h2 {{ profile.address }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Referral ID
-                  .column
-                    h2 {{ profile.ref_user_asn_id }}
-
-                .columns.is-variable.is-1
-                  .column
-                    label Status
-                  .column
-                    h2 {{ (profile.active_sts == 0) ? "Suspended":"Approved" }}
-
-                .columns.is-variable.is-1
-                  .column
-                    nuxt-link.button.btn-des-1(to="/fund-manager/finance-details")
-                      img(src="~/assets/img/btn-coin.png")
-                      | &nbsp;&nbsp;&nbsp;&nbsp;View Finances
+              profileInfoMem(v-if="$store.state.user.data.type === 0")
+              profileInfoAdm(v-else)
     b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
       .modal-card
         #ed-prof-con.modal-card-body
-          profileEd(@close_modal="modalActive=false")
+          profileEdMem(v-if="$store.state.user.data.type === 0" @close_modal="modalActive=false")
+          profileEdAdm(v-else @close_modal="modalActive=false")
 </template>
 
 <script>
-import profileEd from "~/components/forms/ed-profile.vue";
+import profileEdMem from "~/components/forms/ed-profile.vue";
+import profileEdAdm from "~/components/admin_panel/admin/ed-profile.vue";
+import profileInfoMem from "~/components/admin_panel/member/profile-info.vue";
+import profileInfoAdm from "~/components/admin_panel/admin/profile-info.vue";
 export default {
   layout: "admin_layout",
   components: {
-    profileEd
-  },
-  computed: {
-    profile: function() {
-      return this.$store.state.profile.profile;
-    }
+    profileEdMem,
+    profileEdAdm,
+    profileInfoMem,
+    profileInfoAdm
   },
   async mounted() {
     const self = this;
     this.loading = true;
-    await this.$store.dispatch("profile/loadProfile");
     await this.$axios({
       url: "/api/profile/file/" + this.$store.state.user.data.user_id,
       method: "GET",
-      responseType: "blob" // important
+      responseType: "blob"
     })
       .then(res => {
         let c_img_url = window.URL.createObjectURL(new Blob([res.data]));

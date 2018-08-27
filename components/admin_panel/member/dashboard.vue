@@ -143,7 +143,7 @@ export default {
   },
   computed: {
     total_ref: function() {
-      return this.direct_ref + this.in_direct_ref;
+      return parseInt(this.direct_ref) + parseInt(this.in_direct_ref);
     }
   },
   data() {

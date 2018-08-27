@@ -106,27 +106,11 @@ export default {
               show: [0]
             },
             {
-              name: "supreme-finance",
+              name: "total-finances",
               active: false,
-              url: false,
-              title: "Supreme Finances",
-              show: [1, 2],
-              children: [
-                {
-                  name: "total-paid-commission",
-                  active: false,
-                  url: "/fund-manager/supreme-finance/total-paid-commission",
-                  title: "Total Paid Commission",
-                  show: [1, 2]
-                },
-                {
-                  name: "total-unpaid-commission",
-                  active: false,
-                  url: "/fund-manager/supreme-finance/total-unpaid-commission",
-                  title: "Total UnPaid Commission",
-                  show: [1, 2]
-                }
-              ]
+              url: "/fund-manager/total-finances",
+              title: "Total Finances",
+              show: [1, 2]
             }
           ]
         },
@@ -155,25 +139,9 @@ export default {
             {
               name: "total-members",
               active: false,
-              url: false,
+              url: '/members-area/total-members',
               title: "Total Members",
               show: [1, 2],
-              children: [
-                {
-                  name: "active-members-report",
-                  active: false,
-                  url: "/members-area/total-members/active-members-report",
-                  title: "Active Members Report",
-                  show: [1, 2]
-                },
-                {
-                  name: "inactive-members-report",
-                  active: false,
-                  url: "/members-area/total-members/inactive-members-report",
-                  title: "InActive Members Report",
-                  show: [1, 2]
-                }
-              ]
             }
           ]
         },

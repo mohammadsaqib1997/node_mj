@@ -401,7 +401,7 @@ export default {
                 h3
                     font-size: 15px
                     font-weight: 500
-                    white-space: nowrap
+                    white-space: pre-line
                     color: #454545
                 p
                     font-size: 14px

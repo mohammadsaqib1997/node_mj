@@ -79,7 +79,7 @@ router.get('/refl/direct/:id', function (req, res) {
                                 ON m.id=hm.member_id
                                 LEFT JOIN info_var_m AS ivm
                                 ON m.id=ivm.member_id
-                                WHERE m.ref_user_asn_id = ${member.user_asn_id}
+                                WHERE m.ref_user_asn_id = ${member.user_asn_id} AND m.is_paid_m=1
                                 ORDER BY hm_id ASC LIMIT 20`
                         }
                         connection.query(opt, async function (error, results, fields) {

@@ -220,33 +220,6 @@ router.get('/get_referrals/:id', function (req, res, next) {
 
       }
     })
-    // db.getConnection(function (err, connection) {
-    //   if (err) {
-    //     res.status(500).json({ error })
-    //   } else {
-    //     let options = {
-    //       sql: `
-    //     SELECT direct_ref_count, in_direct_ref_count, level, package_act_date, wallet
-    //     FROM info_var_m
-    //     WHERE member_id=?
-    //     `
-    //     }
-    //     connection.query(options, [req.params.id], function (error, results, fields) {
-    //       connection.release();
-
-    //       if (error) {
-    //         res.status(500).json({ error })
-    //       } else {
-    //         let data = {}
-    //         if (results.length > 0) {
-    //           data = results[0]
-    //         }
-    //         res.json({ data })
-    //       }
-
-    //     });
-    //   }
-    // })
   } else {
     next()
   }
@@ -941,21 +914,8 @@ async function after_paid_member(connection, mem_id, cb) {
                           }, function (error, results, fields) {
                             if (error) {
                               throw_error = error
-                              return resolve2()
-                            } else {
-                              // insert commission paid row
-                              connection.query('INSERT INTO `commission_paid_m` SET ?', {
-                                member_id: c_mem_id,
-                                remarks: "Issued Commission From User ID " + from_user_asn_id,
-                                amount: commission_amount
-                              }, function (error, results, fields) {
-                                if (error) {
-                                  throw_error = error
-                                }
-                                // release await promise
-                                return resolve2()
-                              })
                             }
+                            return resolve2()
                           })
                         }
                       })

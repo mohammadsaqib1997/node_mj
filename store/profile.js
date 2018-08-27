@@ -1,8 +1,6 @@
 export const state = () => ({
     name: 'DEFAULT',
-    profile: {
-
-    }
+    profile: {}
 })
 
 export const mutations = {
@@ -21,7 +19,7 @@ export const actions = {
     },
     async loadProfile({ commit, rootState, dispatch }) {
         await dispatch('loadName')
-        let result = await this.$axios.$get('/api/profile/' + rootState.user.data.user_id)
+        let result = await this.$axios.$get('/api/profile/')
         commit("setProfile", (result.data ? result.data : {}))
     }
 }

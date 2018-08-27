@@ -82,19 +82,22 @@ router.get("/file/:id", function (req, res) {
     })
 })
 
-router.get("/:id", function (req, res, next) {
+router.get("/", function (req, res) {
 
-    if (/^[0-9]*$/.test(req.params.id)) {
+    if (req.decoded.data.user_id) {
         db.getConnection(function (err, connection) {
             if (err) {
                 res.status(500).json({ error })
             } else {
-                let opt = {
-                    sql: `SELECT user_asn_id, email, password, full_name, contact_num, cnic_num, dob, address, ref_user_asn_id, active_sts
-                    FROM members 
-                    WHERE id=?`
+                let query = ''
+                if (req.decoded.data.type === 0) {
+                    query = "SELECT user_asn_id, email, password, full_name, contact_num, cnic_num, dob, address, ref_user_asn_id, active_sts FROM members WHERE id=?"
+                } else if (req.decoded.data.type === 1) {
+                    query = "SELECT email, password, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
+                } else {
+                    query = "SELECT email, password, full_name, contact_num, cnic_num, address FROM admins WHERE id=?"
                 }
-                connection.query(opt, req.params.id, function (error, results, fields) {
+                connection.query(query, req.decoded.data.user_id, function (error, results, fields) {
                     connection.release();
 
                     if (error) {
@@ -107,28 +110,35 @@ router.get("/:id", function (req, res, next) {
             }
         })
     } else {
-        next()
+        res.json({ status: false, message: "No User Found!" })
     }
 })
 
 router.post("/update", function (req, res) {
-    if (req.body.update_id === req.decoded.data.user_id) {
+    if (req.decoded.data.user_id) {
         db.getConnection(function (err, connection) {
             if (err) {
                 res.status(500).json({ error })
             } else {
-                let opt = {
-                    sql: `UPDATE members SET ? WHERE id=?`
-                }
-                connection.query(opt, [{
+                let query = '', params = {
                     "address": req.body.data.address,
                     "cnic_num": req.body.data.cnic_num,
                     "contact_num": req.body.data.cont_num,
-                    "dob": moment(req.body.data.dob).format("YYYY-MM-DD"),
                     "email": req.body.data.email,
                     "full_name": req.body.data.full_name,
                     "password": req.body.data.password
-                }, req.body.update_id], function (error, results, fields) {
+                }
+                if (req.decoded.data.type === 0) {
+                    query = "UPDATE members SET ? WHERE id=?"
+                    params["dob"] = moment(req.body.data.dob).format("YYYY-MM-DD")
+
+                } else if (req.decoded.data.type === 1) {
+                    query = "UPDATE moderators SET ? WHERE id=?"
+                } else {
+                    query = "UPDATE admins SET ? WHERE id=?"
+                }
+
+                connection.query(query, [params, req.decoded.data.user_id], function (error, results, fields) {
                     connection.release();
 
                     if (error) {
@@ -141,7 +151,7 @@ router.post("/update", function (req, res) {
             }
         })
     } else {
-        res.json({ status: false, message: "Invalid user!" })
+        res.json({ status: false, message: "No User Found!" })
     }
 })
 
