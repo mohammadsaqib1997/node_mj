@@ -66,6 +66,33 @@ router.get("/", function (req, res) {
   })
 })
 
+router.get('/get_level_info', function (req, res) {
+  if (req.decoded.data.user_id) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ error: err })
+      } else {
+        connection.query("SELECT h_childs_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+          connection.release()
+          if (error) {
+            res.status(500).json({ error })
+          } else {
+            if (results.length > 0) {
+              res.json({
+                child_count: results[0].h_childs_count
+              })
+            } else {
+              res.json({ status: false, message: "You are not active member!" })
+            }
+          }
+        })
+      }
+    })
+  } else {
+    res.json({ status: false, message: "No user found!" })
+  }
+})
+
 router.get('/wallet/:id', function (req, res, next) {
   if (/^[0-9]*$/.test(req.params.id)) {
     db.getConnection(function (err, connection) {

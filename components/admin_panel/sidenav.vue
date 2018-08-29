@@ -175,8 +175,7 @@ export default {
           img: "system-level",
           url: "/system-level",
           title: "System Level",
-          show: []
-          // show: [0, 1, 2]
+          show: [0]
         },
         {
           name: "profile",

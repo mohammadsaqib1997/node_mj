@@ -4,7 +4,7 @@ const authRoutes = [
     { name: "business-chart", type_allowed: [0, 1, 2] },
     { name: "notifications", type_allowed: [0, 1, 2] },
     { name: "profile", type_allowed: [0, 1, 2] },
-    { name: "system-level", type_allowed: [0, 1, 2] },
+    { name: "system-level", type_allowed: [0] },
     { name: "fund-manager-total-finances", type_allowed: [1, 2] },
     { name: "fund-manager-commission-paid", type_allowed: [1, 2] },
     { name: "fund-manager-commission-unpaid", type_allowed: [1, 2] },
