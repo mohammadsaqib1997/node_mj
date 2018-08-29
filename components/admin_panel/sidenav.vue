@@ -139,9 +139,9 @@ export default {
             {
               name: "total-members",
               active: false,
-              url: '/members-area/total-members',
+              url: "/members-area/total-members",
               title: "Total Members",
-              show: [1, 2],
+              show: [1, 2]
             }
           ]
         },
@@ -192,8 +192,7 @@ export default {
           img: "bell",
           url: "/notifications",
           title: "Notifications",
-          show: []
-          // show: [1, 2]
+          show: [0, 1, 2]
         }
       ]
     };

@@ -32,19 +32,19 @@ router.get('/monthly_data', function (req, res) {
                     let start = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss")
                     let end = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
 
-                    connection.query('SELECT COUNT(*) as count FROM commissions WHERE status = 1 AND created_at >= ? AND created_at <= ?', [start, end], function (error, results) {
+                    connection.query('SELECT SUM(amount) as total FROM commissions WHERE status = 1 AND created_at >= ? AND created_at <= ?', [start, end], function (error, results) {
                         if (error) {
                             throw_error = error
                             resolve()
                         } else {
-                            grab_months[month]['paid'] = results[0].count
+                            grab_months[month]['paid'] = results[0].total !== null ? results[0].total : 0
 
-                            connection.query('SELECT COUNT(*) as count FROM commissions WHERE status = 0 AND created_at >= ? AND created_at <= ?', [start, end], function (error, results) {
+                            connection.query('SELECT SUM(amount) as total FROM commissions WHERE status = 0 AND created_at >= ? AND created_at <= ?', [start, end], function (error, results) {
                                 if (error) {
                                     throw_error = error
                                     resolve()
                                 } else {
-                                    grab_months[month]['un_paid'] = results[0].count
+                                    grab_months[month]['un_paid'] = results[0].total !== null ? results[0].total : 0
                                     resolve()
                                 }
                             })
@@ -75,10 +75,10 @@ router.get("/un_paid", function (req, res) {
             res.status(500).json({ error })
         } else {
             query = `
-            SELECT id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
+            SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
             FROM commissions
             WHERE status=0
-            ORDER BY id DESC
+            ORDER BY trans_id DESC
             `
             connection.query(query, function (error, results) {
                 connection.release()
@@ -98,10 +98,10 @@ router.get("/paid", function (req, res) {
             res.status(500).json({ error })
         } else {
             query = `
-            SELECT id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
+            SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
             FROM commissions
             WHERE status=1
-            ORDER BY id DESC
+            ORDER BY trans_id DESC
             `
             connection.query(query, function (error, results) {
                 connection.release()
@@ -134,7 +134,7 @@ router.post('/set_sts', function (req, res) {
                         let throw_error = null
 
                         await new Promise(resolve => {
-                            connection.query('UPDATE commissions SET ? WHERE id=?', [{
+                            connection.query('UPDATE commissions SET ? WHERE trans_id=?', [{
                                 status: type
                             }, id], function (error, results) {
                                 if (error) {
@@ -142,7 +142,7 @@ router.post('/set_sts', function (req, res) {
                                     return resolve()
                                 } else {
                                     if (type === 2) {
-                                        connection.query('SELECT member_id, amount FROM commissions WHERE id=?', id, function (error, results) {
+                                        connection.query('SELECT member_id, amount FROM commissions WHERE trans_id=?', id, function (error, results) {
                                             if (error) {
                                                 throw_error = error
                                                 return resolve()
@@ -291,6 +291,7 @@ router.post("/withdraw", function (req, res) {
                                             } else {
 
                                                 connection.query('INSERT INTO `commissions` SET ?', {
+                                                    trans_id: results.insertId,
                                                     member_id: id,
                                                     remarks: "Withdraw Request From User ID " + mem_asn_id,
                                                     amount: amount

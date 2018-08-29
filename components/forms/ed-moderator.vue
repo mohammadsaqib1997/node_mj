@@ -59,6 +59,7 @@ export default {
       sts_list: [{ code: 1, name: "Active" }, { code: 0, name: "Suspended" }],
       update_id: null,
       v_email: null,
+      v_contact_num: null,
       f_data: {
         full_name: "",
         email: "",
@@ -91,26 +92,28 @@ export default {
       cache: false,
       debounce: 500,
       validator: function(value) {
-        return Validator.value(value)
+        const self = this;
+        let validator = Validator.value(value)
           .required()
           .email()
-          .maxLength(100)
-          .custom(() => {
-            const self = this;
-            if (!Validator.isEmpty(value)) {
-              if (value !== self.v_email) {
-                return self.$axios
-                  .post("/api/moderator/emailCheck", {
-                    email: value
-                  })
-                  .then(res => {
-                    if (res.data.count > 0) {
-                      return "This email is already in use.";
-                    }
-                  });
-              }
+          .maxLength(100);
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
+            if (value !== self.v_email) {
+              return self.$axios
+                .post("/api/web/check_email", {
+                  email: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This email is already in use.";
+                  }
+                });
             }
           });
+        }
       }
     },
     "f_data.password": function(value) {
@@ -124,13 +127,35 @@ export default {
         .required()
         .regex(/^\d{5}-\d{7}-\d$/, "Invalid NIC Number(e.g 12345-1234567-1)");
     },
-    "f_data.cont_num": function(value) {
-      return Validator.value(value)
-        .required()
-        .regex(
-          /^\92-\d{3}-\d{3}-\d{4}$/,
-          "Invalid Contact Number(e.g 92-000-000-0000)"
-        );
+    "f_data.cont_num": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        let validator = Validator.value(value)
+          .required()
+          .regex(
+            /^\92-\d{3}-\d{3}-\d{4}$/,
+            "Invalid Contact Number(e.g 92-000-000-0000)"
+          );
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
+            if (value !== self.v_contact_num) {
+              return self.$axios
+                .post("/api/web/check_cont_num", {
+                  cont_num: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This Contact Number is already in use.";
+                  }
+                });
+            }
+          });
+        }
+      }
     },
     "f_data.address": function(value) {
       return Validator.value(value)
@@ -149,6 +174,7 @@ export default {
     setFData: function(data) {
       this.update_id = data.id;
       this.v_email = data.email;
+      this.v_contact_num = data.contact_num;
       this.f_data = {
         full_name: data.full_name,
         email: data.email,
@@ -180,6 +206,8 @@ export default {
               }
             })
             .then(res => {
+              self.v_email = self.f_data.email;
+              self.v_contact_num = self.f_data.cont_num;
               $("#ed-moderator-con").animate({ scrollTop: 0 }, 500);
               self.form.loading = false;
               self.form.suc = "Successfully Moderator Updated.";

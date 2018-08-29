@@ -2,7 +2,7 @@ import _ from 'lodash'
 const authRoutes = [
     { name: "dashboard", type_allowed: [0, 1, 2] },
     { name: "business-chart", type_allowed: [0, 1, 2] },
-    // { name: "notifications", type_allowed: [1, 2] },
+    { name: "notifications", type_allowed: [0, 1, 2] },
     { name: "profile", type_allowed: [0, 1, 2] },
     { name: "system-level", type_allowed: [0, 1, 2] },
     { name: "fund-manager-total-finances", type_allowed: [1, 2] },

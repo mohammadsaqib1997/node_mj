@@ -4,11 +4,31 @@ const moment = require("moment")
 
 const db = require('../db.js')
 
+router.get('/wallet', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({ err })
+    } else {
+      connection.query('SELECT wallet FROM `company_var` WHERE id=1', function (error, results, fields) {
+        connection.release();
+
+        if (error) {
+          res.status(500).json({ error })
+        } else {
+          res.json({
+            wallet: results[0].wallet !== null ? results[0].wallet : 0
+          })
+        }
+      });
+    }
+  })
+})
+
 router.get("/member_counts", function (req, res) {
 
   db.getConnection(function (err, connection) {
     if (err) {
-      res.status(500).json({ error })
+      res.status(500).json({ err })
     } else {
       connection.query('SELECT COUNT(*) AS total, SUM(is_paid_m) as paid_total FROM `members`', function (error, results, fields) {
         connection.release();
@@ -31,7 +51,7 @@ router.get("/member_counts", function (req, res) {
 router.get("/monthly_reg_members", function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
-      res.status(500).json({ error })
+      res.status(500).json({ err })
     } else {
       let throw_error = null
       let grab_months = {
@@ -96,20 +116,20 @@ router.get("/monthly_reg_members", function (req, res) {
 router.get('/total_cm', function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
-      res.status(500).json({ error })
+      res.status(500).json({ err })
     } else {
       connection.query("SELECT SUM(amount) as total_paid FROM commissions WHERE status=1", function (error, results) {
         if (error) {
           connection.release()
           res.status(500).json({ error })
         } else {
-          let total_paid = results[0].total_paid
+          let total_paid = results[0].total_paid !== null ? results[0].total_paid : 0
           connection.query("SELECT SUM(amount) as total_un_paid FROM commissions WHERE status=0", function (error, results) {
             connection.release()
             if (error) {
               res.status(500).json({ error })
             } else {
-              let total_un_paid = results[0].total_un_paid
+              let total_un_paid = results[0].total_un_paid !== null ? results[0].total_un_paid : 0
               res.json({
                 paid: total_paid,
                 un_paid: total_un_paid

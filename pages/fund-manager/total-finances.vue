@@ -53,7 +53,7 @@ export default {
           let m_text = moment()
             .set("month", parseInt(month) - 1)
             .format("MMMM");
-					labels.push(m_text);
+          labels.push(m_text);
 
           datasets[0].data.push(_.get(data, month + ".paid", 0));
           datasets[1].data.push(_.get(data, month + ".un_paid", 0));

@@ -2,20 +2,37 @@
     .box.counter-box
         .columns.is-gapless.is-multiline
             .column.is-12-mobile.is-6-tablet.is-3-widescreen
-                h1 {{ paid_mem }}
-                h5 Paid Members
-            .column.is-12-mobile.is-6-tablet.is-3-widescreen
-                h1 {{ un_paid_mem }}
-                h5 Pending Members
+                //- h1 {{ paid_mem }}
+                //- h5 Paid Members
+                .flex
+                    div
+                        .tile.is-ancestor.c-tile.is-parent
+                            .tile.is-vertical.is-narrow
+                                .tile.is-child
+                                    h5 {{ paid_mem }}
+                                .tile.is-child
+                                    h5 {{ un_paid_mem }}
+                            .tile.is-vertical
+                                .tile.is-child
+                                    span Paid Members
+                                .tile.is-child
+                                    span Pending Members
+                                
+                
             .column.is-12-mobile.is-6-tablet.is-3-widescreen
                 .amount-wrapepr
                     b Rs.
-                    h1 {{ paid_cm }}
+                    h1 {{ wallet }}/-
+                h5 Wallet
+            .column.is-12-mobile.is-6-tablet.is-3-widescreen
+                .amount-wrapepr
+                    b Rs.
+                    h1 {{ paid_cm }}/-
                 h5 Paid Commissions
             .column.is-12-mobile.is-6-tablet.is-3-widescreen
                 .amount-wrapepr
                     b Rs.
-                    h1 {{ un_paid_cm }}
+                    h1 {{ un_paid_cm }}/-
                 h5 Un-Paid Commissions
         b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
@@ -44,6 +61,14 @@ export default {
       .catch(err => {
         console.log(err);
       });
+    await self.$axios
+      .get("/api/admin/wallet")
+      .then(res => {
+        self.wallet = res.data.wallet;
+      })
+      .catch(err => {
+        console.log(err);
+      });
     self.loading = false;
   },
   data() {
@@ -52,7 +77,8 @@ export default {
       paid_mem: 0,
       un_paid_mem: 0,
       paid_cm: 0,
-      un_paid_cm: 0
+      un_paid_cm: 0,
+      wallet: 0
     };
   }
 };
@@ -61,6 +87,42 @@ export default {
 <style scoped>
 .box.counter-box {
   position: relative;
+}
+
+.flex {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.c-tile {
+  margin: 0;
+  display: flex;
+  text-align: left;
+}
+
+.c-tile h5,
+.c-tile span {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.c-tile h5 {
+  color: #d9bd68;
+}
+.c-tile span {
+  color: #ffffff;
+  display: inline-block;
+  margin-left: 10px;
+}
+.c-tile .tile.is-vertical > .is-child:not(:last-child) {
+  margin-bottom: 10px !important;
+}
+.c-tile .is-narrow {
+  flex: none;
+  text-align: right;
 }
 </style>
 

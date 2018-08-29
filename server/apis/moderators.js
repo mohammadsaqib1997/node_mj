@@ -44,27 +44,6 @@ router.get("/:id", function (req, res) {
     })
 })
 
-router.post('/emailCheck', function (req, res) {
-
-    db.getConnection(function (err, connection) {
-        if (err) {
-            res.status(500).json({ error })
-        } else {
-            connection.query('SELECT email FROM `moderators` where binary `email`=?', [req.body.email], function (error, results, fields) {
-                connection.release();
-
-                if (error) {
-                    res.status(500).json({ error })
-                } else {
-                    res.json({ count: results.length })
-                }
-
-            });
-        }
-    })
-
-})
-
 router.post('/add', function (req, res) {
 
     db.getConnection(function (err, connection) {

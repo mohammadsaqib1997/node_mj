@@ -853,6 +853,8 @@ async function after_paid_member(connection, mem_id, cb) {
     return cb(throw_error)
   }
 
+  // initial amount wallet
+  let add_to_c_wallet = 5000
   // now finance goes here
   await new Promise(resolve => {
     // select ref user and apply comissions and set wallet and direct or indirect count increament
@@ -889,16 +891,25 @@ async function after_paid_member(connection, mem_id, cb) {
 
                       if (direct_inc === 1) {
                         set_param['direct_ref_count'] = parseInt(results[0].direct_ref_count) + 1
-                        commission_amount = 1000
-                        set_param['wallet'] = parseInt(results[0].wallet) + 1000
+
+                        if (parseInt(results[0].level) <= 9) {
+                          commission_amount = 1000
+                          set_param['wallet'] = parseInt(results[0].wallet) + 1000
+                        }
                       } else if (direct_inc === 2) {
                         set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
-                        commission_amount = 300
-                        set_param['wallet'] = parseInt(results[0].wallet) + 300
+
+                        if (parseInt(results[0].level) <= 9) {
+                          commission_amount = 300
+                          set_param['wallet'] = parseInt(results[0].wallet) + 300
+                        }
                       } else {
                         set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
-                        commission_amount = 200
-                        set_param['wallet'] = parseInt(results[0].wallet) + 200
+
+                        if (parseInt(results[0].level) <= 9) {
+                          commission_amount = 200
+                          set_param['wallet'] = parseInt(results[0].wallet) + 200
+                        }
                       }
 
                       connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, c_mem_id], function (error, results, fields) {
@@ -906,17 +917,41 @@ async function after_paid_member(connection, mem_id, cb) {
                           throw_error = error
                           return resolve2()
                         } else {
-                          // apply commission - transaction
-                          connection.query('INSERT INTO `transactions_m` SET ?', {
-                            member_id: c_mem_id,
-                            remarks: "Issued Commission From User ID " + from_user_asn_id,
-                            debit: commission_amount
-                          }, function (error, results, fields) {
-                            if (error) {
-                              throw_error = error
-                            }
+                          if (commission_amount > 0) {
+
+                            add_to_c_wallet = add_to_c_wallet - commission_amount
+
+                            // apply commission - transaction
+                            connection.query('INSERT INTO `transactions_m` SET ?', {
+                              member_id: c_mem_id,
+                              remarks: "Issued Commission From User ID " + from_user_asn_id,
+                              debit: commission_amount
+                            }, function (error, results, fields) {
+                              if (error) {
+                                throw_error = error
+                                return resolve2()
+                              } else {
+
+                                // insert into commission - paid entry
+                                connection.query('INSERT INTO `commissions` SET ?', {
+                                  trans_id: results.insertId,
+                                  member_id: c_mem_id,
+                                  remarks: "Commission Paid From User ID " + usr_asn_id,
+                                  amount: commission_amount,
+                                  status: 1
+                                }, function (error, results) {
+                                  if (error) {
+                                    throw_error = error
+                                  }
+                                  return resolve2()
+                                })
+
+                              }
+                            })
+
+                          } else {
                             return resolve2()
-                          })
+                          }
                         }
                       })
                     }
@@ -934,6 +969,30 @@ async function after_paid_member(connection, mem_id, cb) {
       }
     })
   })
+
+  if (throw_error) {
+    return cb(throw_error)
+  }
+
+  // add amount to company wallet after all commission issued
+  await new Promise(resolve => {
+    connection.query('SELECT wallet FROM company_var WHERE id=1', function (error, results) {
+      if (error) {
+        throw_error = error
+        return resolve()
+      } else {
+        let g_wallet = parseInt(results[0].wallet) + (add_to_c_wallet)
+
+        connection.query('UPDATE company_var SET wallet=? WHERE id=1', g_wallet, function (error, results) {
+          if (error) {
+            throw_error = error
+          }
+          return resolve()
+        })
+      }
+    })
+  })
+
 
   return cb(throw_error)
 }

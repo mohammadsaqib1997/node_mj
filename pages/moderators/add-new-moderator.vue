@@ -112,15 +112,22 @@ export default {
       cache: false,
       debounce: 500,
       validator: function(value) {
-        return Validator.value(value)
-          .required()
-          .email()
-          .maxLength(100)
-          .custom(() => {
-            const self = this;
-            if (!Validator.isEmpty(value)) {
+        const self = this;
+        if (
+          self.form.submitted ||
+          self.validation.isTouched("f_data.email")
+        ) {
+          let validator = Validator.value(value)
+            .required()
+            .email()
+            .maxLength(100);
+
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
               return self.$axios
-                .post("/api/moderator/emailCheck", {
+                .post("/api/web/check_email", {
                   email: value
                 })
                 .then(res => {
@@ -128,8 +135,9 @@ export default {
                     return "This email is already in use.";
                   }
                 });
-            }
-          });
+            });
+          }
+        }
       }
     },
     "f_data.password": function(value) {
@@ -150,13 +158,38 @@ export default {
         .required()
         .regex(/^\d{5}-\d{7}-\d$/, "Invalid NIC Number(e.g 12345-1234567-1)");
     },
-    "f_data.cont_num": function(value) {
-      return Validator.value(value)
-        .required()
-        .regex(
-          /^\92-\d{3}-\d{3}-\d{4}$/,
-          "Invalid Contact Number(e.g 92-000-000-0000)"
-        );
+    "f_data.cont_num": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        if (
+          self.form.submitted ||
+          self.validation.isTouched("f_data.cont_num")
+        ) {
+          let validator = Validator.value(value)
+            .required()
+            .regex(
+              /^\92-\d{3}-\d{3}-\d{4}$/,
+              "Invalid Contact Number(e.g 92-000-000-0000)"
+            );
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
+              return self.$axios
+                .post("/api/web/check_cont_num", {
+                  cont_num: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This Contact Number is already in use.";
+                  }
+                });
+            });
+          }
+        }
+      }
     },
     "f_data.address": function(value) {
       return Validator.value(value)

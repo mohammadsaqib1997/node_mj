@@ -28,40 +28,34 @@
                                 button.button
                                     b-icon(icon="times-circle" pack="fas")
                                     | &nbsp;&nbsp;&nbsp;DELETE
-                    b-table.table-des-1(:data="data" :bordered="true" paginated :per-page="10")
-                        template(slot-scope="props")
-                          b-table-column.sts-con(width="50" label="MARK READ/ UNREAD" :class="{ active: (!props.row.read_status) }")
-                            button.button.r-sts-btn
-                              span
-                                | {{ (props.row.read_status) ? "READ" : "UNREAD" }}
-                          b-table-column(label="From" :class="{ active: (!props.row.read_status) }")
-                              | {{ props.row.email }}
-                          b-table-column(label="Message" :class="{ active: (!props.row.read_status) }")
-                              | Pending members list needs to be updated ...
-                          b-table-column(label="Date" :class="{ active: (!props.row.read_status) }")
-                              | 16-4-2018
-                        template(slot="bottom-left")
-                            p.page-result-txt Showing 15 of  430 results
+
+                    
+                    //- b-table.table-des-1(:data="ren_data" :bordered="true" paginated :per-page="10")
+                    //-     template(slot-scope="props")
+                    //-       b-table-column.sts-con(width="50" label="MARK READ/ UNREAD" :class="{ active: (!props.row.read_status) }")
+                    //-         button.button.r-sts-btn
+                    //-           span
+                    //-             | {{ (props.row.read_status) ? "READ" : "UNREAD" }}
+                    //-       b-table-column(label="From" :class="{ active: (!props.row.read_status) }")
+                    //-           | {{ props.row.email }}
+                    //-       b-table-column(label="Message" :class="{ active: (!props.row.read_status) }")
+                    //-           | Pending members list needs to be updated ...
+                    //-       b-table-column(label="Date" :class="{ active: (!props.row.read_status) }")
+                    //-           | 16-4-2018
+                    //-     template(slot="bottom-left")
+                    //-         p.page-result-txt Showing 15 of  430 results
         br
 </template>
 
 <script>
-    export default {
-        layout: 'admin_layout',
-        data () {
-            const data = [
-                { 'id': 1, 'name': 'Jesse', 'read_status': true, 'email': 'abc@domain.com' },
-                { 'id': 2, 'name': 'John', 'read_status': false, 'email': 'abc@domain.com' },
-                { 'id': 3, 'name': 'Tina', 'read_status': false, 'email': 'abc@domain.com' },
-                { 'id': 4, 'name': 'Clarence', 'read_status': true, 'email': 'abc@domain.com' },
-                { 'id': 5, 'name': 'Anne', 'read_status': true, 'email': 'abc@domain.com' },
-            ]
-
-            return {
-                data
-            }
-        }
-    }
+export default {
+  layout: "admin_layout",
+  data() {
+    return {
+      ren_data: []
+    };
+  }
+};
 </script>
 
 <style lang="sass" scoped>
