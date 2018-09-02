@@ -227,52 +227,72 @@ router.post('/signup', (req, res) => {
     if (err) {
       sendDBError(res, err)
     } else {
-      connection.beginTransaction(function (err) {
+      connection.beginTransaction(async function (err) {
         if (err) {
           connection.release();
           sendDBError(res, err)
         } else {
-          req.body.member_data['active_sts'] = 1
-          connection.query('INSERT INTO `members` SET ?', req.body.member_data, function (error, results, fields) {
-            if (error) {
-              return connection.rollback(function () {
-                connection.release()
-                sendDBError(res, error)
-              })
-            } else {
-              req.body.prd_data['member_id'] = results.insertId
-              req.body.bank_data['member_id'] = results.insertId
-              connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
-                if (error) {
-                  return connection.rollback(function () {
-                    connection.release()
-                    sendDBError(res, error)
-                  })
-                } else {
-                  connection.query('INSERT INTO `user_bank_details` SET ?', req.body.bank_data, function (error, results, fields) {
-                    if (error) {
-                      return connection.rollback(function () {
-                        connection.release()
-                        sendDBError(res, error)
-                      })
-                    } else {
-                      connection.commit(function (err) {
-                        if (err) {
-                          return connection.rollback(function () {
-                            connection.release()
-                            sendDBError(res, err)
-                          });
-                        } else {
-                          connection.release()
-                          res.json({ status: true })
-                        }
-                      })
-                    }
-                  })
-                }
-              })
-            }
+          let throw_error = null
+
+          await new Promise(resolve => {
+            req.body.member_data['active_sts'] = 1
+            connection.query('INSERT INTO `members` SET ?', req.body.member_data, function (error, results, fields) {
+              if (error) {
+                throw_error = error
+                return resolve()
+              } else {
+                let mem_id = results.insertId
+                req.body.prd_data['member_id'] = mem_id
+                req.body.bank_data['member_id'] = mem_id
+                connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
+                  if (error) {
+                    throw_error = error
+                    return resolve()
+                  } else {
+                    connection.query('INSERT INTO `user_bank_details` SET ?', req.body.bank_data, function (error, results, fields) {
+                      if (error) {
+                        throw_error = error
+                        return resolve()
+                      } else {
+                        connection.query('INSERT INTO `notifications` SET ?', {
+                          from_type: 0,
+                          to_type: 1,
+                          from_id: mem_id,
+                          to_id: 1, // admin id
+                          message: "New member added in members list. Approve it.",
+                          notify_type: 1
+                        }, function (error, results, fields) {
+                          if (error) {
+                            throw_error = error
+                          }
+                          return resolve()
+                        })
+                      }
+                    })
+                  }
+                })
+              }
+            })
           })
+
+          if (throw_error) {
+            return connection.rollback(function () {
+              connection.release()
+              sendDBError(res, throw_error)
+            })
+          } else {
+            connection.commit(function (err) {
+              if (err) {
+                return connection.rollback(function () {
+                  connection.release()
+                  sendDBError(res, err)
+                });
+              } else {
+                connection.release()
+                res.json({ status: true })
+              }
+            })
+          }
         }
       })
     }

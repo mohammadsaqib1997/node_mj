@@ -312,6 +312,7 @@ export default {
       max-height: 100%
       overflow-x: visible
       overflow-y: auto
+      padding-bottom: 1rem
       &>li
         position: static
         &>.nav-item

@@ -47,8 +47,8 @@ export default {
             }
           }
         } else {
-					self.per_deny = true;
-					self.pd_msg = res.data.message
+          self.per_deny = true;
+          self.pd_msg = res.data.message;
         }
       })
       .catch(err => {
@@ -141,7 +141,7 @@ export default {
       }
     }
     return {
-			pd_msg: '',
+      pd_msg: "",
       per_deny: false,
       loading: true,
       gen_data
@@ -201,7 +201,7 @@ export default {
               left: 0;
             }
             .tooltip {
-              display: inline-block;
+              display: block;
               position: relative;
               float: right;
               bottom: 6px;

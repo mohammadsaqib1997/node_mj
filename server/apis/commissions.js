@@ -141,8 +141,13 @@ router.post('/set_sts', function (req, res) {
                                     throw_error = error
                                     return resolve()
                                 } else {
-                                    if (type === 2) {
-                                        connection.query('SELECT member_id, amount FROM commissions WHERE trans_id=?', id, function (error, results) {
+                                    connection.query(`
+                                    SELECT cm.member_id, cm.amount, m.user_asn_id
+                                    FROM commissions as cm
+                                    INNER JOIN members as m
+                                    ON cm.member_id = m.id
+                                    WHERE cm.trans_id=?
+                                    `, id, function (error, results) {
                                             if (error) {
                                                 throw_error = error
                                                 return resolve()
@@ -150,38 +155,96 @@ router.post('/set_sts', function (req, res) {
                                                 let mem_id = results[0].member_id
                                                 let mem_amount = results[0].amount
 
-                                                connection.query('INSERT INTO transactions_m SET ?', {
-                                                    member_id: mem_id,
-                                                    remarks: "Your Withdraw Request Has Been Canceled!",
-                                                    debit: mem_amount,
+                                                connection.query('INSERT INTO transactions_comp SET ?', {
+                                                    remarks: "Withdrawal Liability Amount Deduct In Your Wallet User ID " + results[0].user_asn_id,
+                                                    credit: mem_amount
                                                 }, function (error, results) {
                                                     if (error) {
                                                         throw_error = error
                                                         return resolve()
                                                     } else {
-                                                        connection.query('SELECT wallet FROM info_var_m WHERE member_id=?', mem_id, function (error, results) {
+
+                                                        connection.query('SELECT wallet FROM company_var WHERE id=1', function (error, results, fields) {
                                                             if (error) {
                                                                 throw_error = error
                                                                 return resolve()
                                                             } else {
-                                                                let set_wallet = parseInt(results[0].wallet) + parseInt(mem_amount)
-                                                                connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [{
-                                                                    wallet: set_wallet
-                                                                }, mem_id], function (error, results) {
+                                                                let upd_wallet = parseInt(results[0].wallet) - mem_amount
+                                                                connection.query('UPDATE company_var SET wallet=? WHERE id=1', upd_wallet, function (error, results, fields) {
                                                                     if (error) {
                                                                         throw_error = error
+                                                                        return resolve()
+                                                                    } else {
+                                                                        if (type === 2) {
+
+                                                                            connection.query('INSERT INTO transactions_m SET ?', {
+                                                                                member_id: mem_id,
+                                                                                remarks: "Your Withdraw Request Has Been Canceled!",
+                                                                                debit: mem_amount,
+                                                                            }, function (error, results) {
+                                                                                if (error) {
+                                                                                    throw_error = error
+                                                                                    return resolve()
+                                                                                } else {
+                                                                                    connection.query('SELECT wallet FROM info_var_m WHERE member_id=?', mem_id, function (error, results) {
+                                                                                        if (error) {
+                                                                                            throw_error = error
+                                                                                            return resolve()
+                                                                                        } else {
+                                                                                            let set_wallet = parseInt(results[0].wallet) + parseInt(mem_amount)
+                                                                                            connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [{
+                                                                                                wallet: set_wallet
+                                                                                            }, mem_id], function (error, results) {
+                                                                                                if (error) {
+                                                                                                    throw_error = error
+                                                                                                    return resolve()
+                                                                                                } else {
+                                                                                                    connection.query('INSERT INTO notifications SET ?', {
+                                                                                                        from_type: 1,
+                                                                                                        to_type: 0,
+                                                                                                        from_id: 1,
+                                                                                                        to_id: mem_id,
+                                                                                                        from_txt: "Admin",
+                                                                                                        message: "Your Withdrawal Request Has Been Canceled Transaction ID " + id,
+                                                                                                        notify_type: 0
+                                                                                                    }, function (error, results) {
+                                                                                                        if (error) {
+                                                                                                            throw_error = error
+                                                                                                        }
+                                                                                                        return resolve()
+                                                                                                    })
+                                                                                                }
+                                                                                            })
+                                                                                        }
+                                                                                    })
+                                                                                }
+                                                                            })
+
+                                                                        } else {
+                                                                            connection.query('INSERT INTO notifications SET ?', {
+                                                                                from_type: 1,
+                                                                                to_type: 0,
+                                                                                from_id: 1,
+                                                                                to_id: mem_id,
+                                                                                from_txt: "Admin",
+                                                                                message: "Your Withdrawal Request Has Been Approved Transaction ID " + id,
+                                                                                notify_type: 0
+                                                                            }, function (error, results) {
+                                                                                if (error) {
+                                                                                    throw_error = error
+                                                                                }
+                                                                                return resolve()
+                                                                            })
+                                                                        }
                                                                     }
-                                                                    return resolve()
                                                                 })
                                                             }
                                                         })
                                                     }
                                                 })
+
                                             }
                                         })
-                                    } else {
-                                        return resolve()
-                                    }
                                 }
                             })
                         })
@@ -257,7 +320,7 @@ router.post("/withdraw", function (req, res) {
                     await new Promise(resolve => {
 
                         let mem_opt = {
-                            sql: `SELECT ivm.wallet, m.user_asn_id
+                            sql: `SELECT ivm.wallet, m.user_asn_id, m.email
                             FROM info_var_m as ivm
                             INNER JOIN members as m
                             ON ivm.member_id=m.id
@@ -270,6 +333,7 @@ router.post("/withdraw", function (req, res) {
                             } else {
                                 let mem_wallet = results[0].wallet
                                 let mem_asn_id = results[0].user_asn_id
+                                let mem_email = results[0].email
 
                                 let info_param = {
                                     wallet: parseInt(mem_wallet) - amount
@@ -289,19 +353,76 @@ router.post("/withdraw", function (req, res) {
                                                 throw_error = error
                                                 return resolve()
                                             } else {
+                                                let trans_id = results.insertId
 
-                                                connection.query('INSERT INTO `commissions` SET ?', {
-                                                    trans_id: results.insertId,
-                                                    member_id: id,
-                                                    remarks: "Withdraw Request From User ID " + mem_asn_id,
-                                                    amount: amount
+                                                connection.query('INSERT INTO `notifications` SET ?', {
+                                                    from_type: 1,
+                                                    to_type: 0,
+                                                    from_id: 1,
+                                                    to_id: id,
+                                                    from_txt: "Admin",
+                                                    message: `Deduct Amount Rs.${amount}/- in your wallet.`,
+                                                    notify_type: 0
                                                 }, function (error, results, fields) {
                                                     if (error) {
                                                         throw_error = error
-                                                    }
-                                                    return resolve()
-                                                })
+                                                        return resolve()
+                                                    } else {
+                                                        connection.query('INSERT INTO `commissions` SET ?', {
+                                                            trans_id: trans_id,
+                                                            member_id: id,
+                                                            remarks: "Withdrawal Request From User ID " + mem_asn_id,
+                                                            amount: amount
+                                                        }, function (error, results, fields) {
+                                                            if (error) {
+                                                                throw_error = error
+                                                                return resolve()
+                                                            } else {
+                                                                connection.query('INSERT INTO `notifications` SET ?', {
+                                                                    from_type: 0,
+                                                                    to_type: 1,
+                                                                    from_id: id,
+                                                                    to_id: 1,
+                                                                    from_txt: mem_email,
+                                                                    message: `Withdrawal Request From User ID ${mem_asn_id} Amount Rs.${amount}/- Transaction ID ${trans_id}`,
+                                                                    notify_type: 2
+                                                                }, function (error, results, fields) {
+                                                                    if (error) {
+                                                                        throw_error = error
+                                                                        return resolve()
+                                                                    } else {
+                                                                        connection.query('INSERT INTO `transactions_comp` SET ?', {
+                                                                            remarks: `Withdrawal Liability Amount Add In Your Wallet From User ID ${mem_asn_id}`,
+                                                                            debit: amount
+                                                                        }, function (error, results, fields) {
+                                                                            if (error) {
+                                                                                throw_error = error
+                                                                                return resolve()
+                                                                            } else {
 
+                                                                                connection.query('SELECT wallet FROM company_var WHERE id=1', function (error, results, fields) {
+                                                                                    if (error) {
+                                                                                        throw_error = error
+                                                                                        return resolve()
+                                                                                    } else {
+                                                                                        let upd_wallet = parseInt(results[0].wallet) + amount
+                                                                                        connection.query('UPDATE company_var SET wallet=? WHERE id=1', upd_wallet, function (error, results, fields) {
+                                                                                            if (error) {
+                                                                                                throw_error = error
+                                                                                            }
+                                                                                            return resolve()
+                                                                                        })
+                                                                                    }
+                                                                                })
+
+                                                                            }
+                                                                        })
+                                                                    }
+                                                                })
+                                                            }
+                                                        })
+                                                    }
+                                                })
                                             }
                                         })
                                     }
@@ -359,7 +480,7 @@ router.post("/transfer_funds", function (req, res) {
                             await new Promise(resolve => {
 
                                 let sender_opt = {
-                                    sql: `SELECT ivm.wallet, m.user_asn_id
+                                    sql: `SELECT ivm.wallet, m.user_asn_id, m.email
                                     FROM members as m
                                     JOIN info_var_m as ivm
                                     ON m.id=ivm.member_id
@@ -371,42 +492,37 @@ router.post("/transfer_funds", function (req, res) {
                                         return resolve()
                                     } else {
                                         let sender_user_asn_id = results[0].user_asn_id
-                                        let sender_wallet = results[0].wallet
-
-                                        let recv_opt = {
-                                            sql: `SELECT ivm.wallet, ivm.member_id
-                                            FROM members as m
-                                            JOIN info_var_m as ivm
-                                            ON m.id=ivm.member_id
-                                            WHERE m.user_asn_id=?`
+                                        let sender_email = results[0].email
+                                        let sender_params = {
+                                            wallet: parseInt(results[0].wallet) - amount,
                                         }
 
-                                        connection.query(recv_opt, recv_user_asn_id, function (error, results, fields) {
+                                        connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [sender_params, id], function (error, results, fields) {
                                             if (error) {
                                                 throw_error = error
                                                 return resolve()
                                             } else {
-                                                let recv_id = results[0].member_id
-                                                let recv_wallet = results[0].wallet
-                                                let recv_params = {
-                                                    wallet: parseInt(recv_wallet) + amount
+                                                let recv_opt = {
+                                                    sql: `SELECT ivm.wallet, ivm.member_id
+                                                    FROM members as m
+                                                    JOIN info_var_m as ivm
+                                                    ON m.id=ivm.member_id
+                                                    WHERE m.user_asn_id=?`
                                                 }
-
-                                                connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [recv_params, recv_id], function (error, results, fields) {
+                                                connection.query(recv_opt, recv_user_asn_id, function (error, results, fields) {
                                                     if (error) {
                                                         throw_error = error
                                                         return resolve()
                                                     } else {
-                                                        let sender_params = {
-                                                            wallet: parseInt(sender_wallet) - amount,
+                                                        let recv_id = results[0].member_id
+                                                        let recv_params = {
+                                                            wallet: parseInt(results[0].wallet) + amount
                                                         }
-
-                                                        connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [sender_params, id], function (error, results, fields) {
+                                                        connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [recv_params, recv_id], function (error, results, fields) {
                                                             if (error) {
                                                                 throw_error = error
                                                                 return resolve()
                                                             } else {
-
                                                                 connection.query('INSERT INTO `transactions_m` SET ?', {
                                                                     member_id: id,
                                                                     remarks: "Funds Transfered To User ID " + recv_user_asn_id,
@@ -417,15 +533,45 @@ router.post("/transfer_funds", function (req, res) {
                                                                         return resolve()
                                                                     } else {
 
-                                                                        connection.query('INSERT INTO `transactions_m` SET ?', {
-                                                                            member_id: recv_id,
-                                                                            remarks: "Funds Received From User ID " + sender_user_asn_id,
-                                                                            debit: amount
+                                                                        connection.query('INSERT INTO `notifications` SET ?', {
+                                                                            from_type: 1,
+                                                                            to_type: 0,
+                                                                            from_id: 1,
+                                                                            to_id: id,
+                                                                            from_txt: "Admin",
+                                                                            message: "Successfully Funds Transfered To User ID " + recv_user_asn_id,
+                                                                            notify_type: 0
                                                                         }, function (error, results, fields) {
                                                                             if (error) {
                                                                                 throw_error = error
+                                                                                return resolve()
+                                                                            } else {
+                                                                                connection.query('INSERT INTO `transactions_m` SET ?', {
+                                                                                    member_id: recv_id,
+                                                                                    remarks: "Funds Received From User ID " + sender_user_asn_id,
+                                                                                    debit: amount
+                                                                                }, function (error, results, fields) {
+                                                                                    if (error) {
+                                                                                        throw_error = error
+                                                                                        return resolve()
+                                                                                    } else {
+                                                                                        connection.query('INSERT INTO `notifications` SET ?', {
+                                                                                            from_type: 0,
+                                                                                            to_type: 0,
+                                                                                            from_id: id,
+                                                                                            to_id: recv_id,
+                                                                                            from_txt: sender_email,
+                                                                                            message: "Funds Received From User ID " + sender_user_asn_id,
+                                                                                            notify_type: 0
+                                                                                        }, function (error, results, fields) {
+                                                                                            if (error) {
+                                                                                                throw_error = error
+                                                                                            }
+                                                                                            return resolve()
+                                                                                        })
+                                                                                    }
+                                                                                })
                                                                             }
-                                                                            return resolve()
                                                                         })
                                                                     }
                                                                 })

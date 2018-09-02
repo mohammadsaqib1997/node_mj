@@ -32,5 +32,11 @@
     "receipts_types": {
         "paid_user": 0,
         "paid_commission": 1
+    },
+    "notification": {
+        "from_type": "0=member|1=comapny",
+        "to_type": "0=member|1=comapny",
+        "notify_type": "0=simple|1=new_member|2=withdrawal_request",
+        "seen": "0=unseen|1=seen"
     }
 }
