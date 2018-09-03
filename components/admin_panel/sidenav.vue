@@ -96,7 +96,7 @@ export default {
               active: false,
               url: "/fund-manager/finance-details",
               title: "Finance Details",
-              show: [0]
+              show: [0, 1, 2]
             },
             {
               name: "bank-details",

@@ -24,6 +24,94 @@ router.get('/wallet', function (req, res) {
   })
 })
 
+router.post('/withdraw', function (req, res) {
+  if (/^[1-9]+[0-9]*$/.test(req.body.amount)) {
+    let amount = parseInt(req.body.amount)
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+
+        connection.beginTransaction(async function (err) {
+          if (err) {
+            connection.release()
+            res.status(500).json({ err })
+          } else {
+            let throw_error = null
+
+            await new Promise(resolve => {
+
+              connection.query("INSERT INTO `transactions_comp` SET ?", {
+                remarks: `Deduct amount in your wallet Rs.${amount}/- From Withdrawal.`,
+                credit: amount
+              }, function (error, results) {
+                if (error) {
+                  throw_error = error
+                  return resolve()
+                } else {
+                  connection.query('INSERT INTO `notifications` SET ?', {
+                    from_type: 1,
+                    to_type: 1,
+                    from_id: 1,
+                    to_id: 1,
+                    message: `Successfully Withdrawal Amount Rs.${amount}/-`,
+                    notify_type: 0
+                  }, function (error, results) {
+                    if (error) {
+                      throw_error = error
+                      return resolve()
+                    } else {
+                      connection.query('SELECT wallet FROM company_var WHERE id=1', function (error, results, fields) {
+                        if (error) {
+                          throw_error = error
+                          return resolve()
+                        } else {
+                          let upd_wallet = parseInt(results[0].wallet) - amount
+                          connection.query('UPDATE company_var SET wallet=? WHERE id=1', upd_wallet, function (error, results, fields) {
+                            if (error) {
+                              throw_error = error
+                            }
+                            return resolve()
+                          })
+                        }
+                      })
+                    }
+                  })
+                }
+              })
+            })
+
+            if (throw_error) {
+              return connection.rollback(function () {
+                connection.release()
+                res.status(500).json({ throw_error })
+              });
+            } else {
+              connection.commit(function (err) {
+                if (err) {
+                  return connection.rollback(function () {
+                    connection.release()
+                    res.status(500).json({ err })
+                  });
+                } else {
+                  connection.release()
+                  res.json({ status: true })
+                }
+              })
+            }
+          }
+        })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid parameters!"
+    })
+  }
+
+})
+
 router.get("/member_counts", function (req, res) {
 
   db.getConnection(function (err, connection) {
@@ -135,6 +223,25 @@ router.get('/total_cm', function (req, res) {
                 un_paid: total_un_paid
               })
             }
+          })
+        }
+      })
+    }
+  })
+})
+
+router.get('/trans_list', function (req, res) {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({ err })
+    } else {
+      connection.query("SELECT * FROM transactions_comp ORDER BY id DESC", function (error, results) {
+        connection.release()
+        if (error) {
+          res.status(500).json({ error })
+        } else {
+          res.json({
+            results
           })
         }
       })
