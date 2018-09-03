@@ -12,7 +12,7 @@ router.post("/", function (req, res) {
     } else {
         db.getConnection(async function (err, connection) {
             if (err) {
-                res.status(500).json({ error })
+                res.status(500).json({ err })
             } else {
                 h_users(connection, id, function (err, result) {
                     connection.release()
@@ -131,6 +131,37 @@ router.get('/refl/direct/:id', function (req, res) {
 
 })
 
+router.get('/find/:param', function (req, res) {
+    let param = req.params.param
+    db.getConnection(async function (err, connection) {
+        if (err) {
+            res.status(500).json({ err })
+        } else {
+            connection.query(`
+            SELECT h_m.member_id AS id, m.email, m.user_asn_id, m.full_name
+            FROM hierarchy_m AS h_m
+            LEFT JOIN members AS m
+            ON h_m.member_id = m.id
+            WHERE 
+            m.user_asn_id LIKE ?
+            OR
+            m.email LIKE ?
+            OR
+            m.full_name LIKE ?
+            ORDER BY h_m.id DESC
+            LIMIT 10
+            `, ['%'+param+'%', '%'+param+'%', '%'+param+'%'], function (err, result) {
+                    connection.release()
+                    if (err) {
+                        res.status(500).json({ err })
+                    } else {
+                        res.json({ result: result })
+                    }
+                })
+        }
+    })
+})
+
 module.exports = router
 
 async function h_users(connection, id, cb) {
@@ -164,7 +195,7 @@ async function h_users(connection, id, cb) {
                 grab_data.push(row)
                 if (grab_data.length < 21) {
                     await new Promise(resolve2 => {
-                        connection.query(gen_h_sql('parent_id', row.hm_id, (21-grab_data.length)), async function (error, results, fields) {
+                        connection.query(gen_h_sql('parent_id', row.hm_id, (21 - grab_data.length)), async function (error, results, fields) {
                             if (error) {
                                 throw_err = error
                                 resolve2()
@@ -176,7 +207,7 @@ async function h_users(connection, id, cb) {
                             }
                         })
                     })
-                    if(throw_err) {
+                    if (throw_err) {
                         resolve()
                         break row_loop
                     }
@@ -188,7 +219,7 @@ async function h_users(connection, id, cb) {
             }
             resolve()
         })
-        if(throw_err || is_full) {
+        if (throw_err || is_full) {
             break
         }
     }
