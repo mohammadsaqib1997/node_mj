@@ -26,10 +26,10 @@
               b-field(label="Email")
                 b-input(type="email" placeholder="Your Email ID")
 
-              b-field(label="Subject")
-                b-select(placeholder="Select Type" expanded)
-                  option(value="1") Check 1
-                  option(value="2") Check 2
+              //- b-field(label="Subject")
+              //-   b-select(placeholder="Select Type" expanded)
+              //-     option(value="1") Check 1
+              //-     option(value="2") Check 2
 
               b-field(label="Message")
                 b-input(type="textarea" placeholder="Type your message here ...")

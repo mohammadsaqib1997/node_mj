@@ -163,60 +163,69 @@ router.post('/login', (req, res) => {
       sendDBError(res, err)
     } else {
 
-      connection.query('SELECT id, email FROM `members` where BINARY `email`=? and BINARY `password`=?', [req.body.email, req.body.password], function (error, results, fields) {
-        if (error) {
-          connection.release();
-          sendDBError(res, error)
-        } else {
-          if (results.length === 1) {
+      connection.query(
+        'SELECT id, email FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
+        [req.body.email, req.body.email, req.body.password],
+        function (error, results, fields) {
+          if (error) {
             connection.release();
-            let token = tokenGen(results[0], 0)
-            res.json({
-              status: true,
-              token: token,
-              user: userData(results[0], 0)
-            })
+            sendDBError(res, error)
           } else {
-            connection.query('SELECT id, email FROM `moderators` where BINARY `email`=? and BINARY `password`=?', [req.body.email, req.body.password], function (error, results, fields) {
-              if (error) {
-                connection.release();
-                sendDBError(res, error)
-              } else {
-                if (results.length === 1) {
-                  connection.release();
-                  let token = tokenGen(results[0], 1)
-                  res.json({
-                    status: true,
-                    token: token,
-                    user: userData(results[0], 1)
-                  })
-                } else {
-                  connection.query('SELECT id, email FROM `admins` where BINARY `email`=? and BINARY `password`=?', [req.body.email, req.body.password], function (error, results, fields) {
+            if (results.length === 1) {
+              connection.release();
+              let token = tokenGen(results[0], 0)
+              res.json({
+                status: true,
+                token: token,
+                user: userData(results[0], 0)
+              })
+            } else {
+              connection.query(
+                'SELECT id, email FROM `moderators` WHERE BINARY `email`=? and BINARY `password`=?',
+                [req.body.email, req.body.password],
+                function (error, results, fields) {
+                  if (error) {
                     connection.release();
-                    if (error) {
-                      sendDBError(res, error)
+                    sendDBError(res, error)
+                  } else {
+                    if (results.length === 1) {
+                      connection.release();
+                      let token = tokenGen(results[0], 1)
+                      res.json({
+                        status: true,
+                        token: token,
+                        user: userData(results[0], 1)
+                      })
                     } else {
-                      if (results.length === 1) {
-                        let token = tokenGen(results[0], 2)
-                        res.json({
-                          status: true,
-                          token: token,
-                          user: userData(results[0], 2)
+                      connection.query(
+                        'SELECT id, email FROM `admins` where BINARY `email`=? and BINARY `password`=?',
+                        [req.body.email, req.body.password],
+                        function (error, results, fields) {
+                          connection.release();
+                          if (error) {
+                            sendDBError(res, error)
+                          } else {
+                            if (results.length === 1) {
+                              let token = tokenGen(results[0], 2)
+                              res.json({
+                                status: true,
+                                token: token,
+                                user: userData(results[0], 2)
+                              })
+                            } else {
+                              res.json({
+                                status: false,
+                                message: "Invalid Credentials!"
+                              })
+                            }
+                          }
                         })
-                      } else {
-                        res.json({
-                          status: false,
-                          message: "Invalid Credentials!"
-                        })
-                      }
                     }
-                  })
-                }
-              }
-            })
+                  }
+                })
+            }
           }
-        }
-      })
+        })
     }
   })
 

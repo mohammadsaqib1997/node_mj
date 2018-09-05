@@ -169,7 +169,7 @@ export default {
         self.tree_load_ids.push(self.load_id);
       }
 
-      if (self.tree_load_ids.indexOf(id) > -1) {
+      if (self.tree_load_ids.indexOf(id) === (self.tree_load_ids.length-1)) {
         _.remove(self.tree_load_ids, function(id_l) {
           return id_l === id;
         });

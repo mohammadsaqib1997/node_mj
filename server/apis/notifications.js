@@ -8,10 +8,70 @@ router.get('/', function (req, res) {
   if (req.decoded.data.user_id) {
     let type = req.decoded.data.type === 2 || req.decoded.data.type === 1 ? 1 : 0
     let id = type === 1 ? 1 : req.decoded.data.user_id
-    let limit = 5
-    if (/^[1-9][0-9]?$|^100$/.test(req.query.limit)) {
+
+    let offset = 0, limit = 10, search = ""
+    if (/^5$|^10$|^20$|^50$|^100$/.test(req.query.limit)) {
       limit = req.query.limit
     }
+
+    if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+      offset = (parseInt(req.query.page) - 1) * limit
+    }
+
+    if (req.query.search) {
+      search = req.query.search
+    }
+
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+        connection.query('SELECT COUNT(*) as total FROM notifications WHERE to_id=? AND to_type=? AND seen=0', [id, type], function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({ error })
+          } else {
+            let un_read = result[0].total
+
+            connection.query(
+              `SELECT COUNT(*) as total_rows FROM notifications WHERE to_id=? AND to_type=?`,
+              [id, type],
+              function (error, result) {
+                if (error) {
+                  connection.release()
+                  res.status(500).json({ error })
+                } else {
+                  let total_rows = result[0].total_rows
+
+                  connection.query(`
+                  SELECT id, from_id, from_txt, from_type, message as msg, seen as \`read\`, created_at as date, notify_type as type 
+                  FROM notifications 
+                  WHERE to_id=? AND to_type=?
+                  ORDER BY id DESC LIMIT ${limit}
+                  `, [id, type], function (error, result) {
+                      connection.release()
+                      if (error) {
+                        res.status(500).json({ error })
+                      } else {
+                        res.json({ result, un_read, total_rows })
+                      }
+                    })
+                }
+              })
+          }
+        })
+      }
+    })
+  } else {
+    res.json({ status: false, message: "Invalid User!" })
+  }
+})
+
+router.get('/top_5', function (req, res) {
+  if (req.decoded.data.user_id) {
+    let type = req.decoded.data.type === 2 || req.decoded.data.type === 1 ? 1 : 0
+    let id = type === 1 ? 1 : req.decoded.data.user_id
+
     db.getConnection(async function (err, connection) {
       if (err) {
         res.status(500).json({ err })
@@ -27,7 +87,7 @@ router.get('/', function (req, res) {
             SELECT id, from_id, from_txt, from_type, message as msg, seen as \`read\`, created_at as date, notify_type as type 
             FROM notifications 
             WHERE to_id=? AND to_type=?
-            ORDER BY id DESC LIMIT ${limit}
+            ORDER BY id DESC LIMIT 5
             `, [id, type], function (error, result) {
                 connection.release()
                 if (error) {
@@ -40,8 +100,9 @@ router.get('/', function (req, res) {
         })
       }
     })
+
   } else {
-    res.json({ status: false, message: "Invalid Request!" })
+    res.json({ status: false, message: "Invalid User!" })
   }
 })
 

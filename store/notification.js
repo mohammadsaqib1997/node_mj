@@ -5,8 +5,14 @@ export const state = () => ({
   n_list: [],
   n_list_loader: false,
   total_unread: 0,
+  total_s_rows: 1,
   a_item: {},
-  load_data: false
+  load_data: false,
+  load_params: {
+    limit: 10,
+    page: 1,
+    search: ""
+  }
 })
 
 export const mutations = {
@@ -30,16 +36,23 @@ export const mutations = {
   },
   set_tot_un_read: (state, payload) => {
     state.total_unread = payload
+  },
+  set_tot_s_rows: (state, pld) => {
+    state.total_s_rows = pld
+  },
+  set_load_params: (state, pld) => {
+    _.set(state.load_params, pld.param, pld.value)
   }
 }
 
 export const actions = {
-  async n_list_load({ commit }, payload) {
-    let limit = _.get(payload, 'limit', 100)
+  async n_list_load({ commit, state }, payload) {
     await this.$axios
-      .get("/api/notification?limit=" + limit)
+      .get("/api/notification", { params: state.load_params })
       .then(res => {
         if (!res.data.status) {
+          // console.log(res.data)
+          commit('set_tot_s_rows', res.data.total_rows)
           commit('set_tot_un_read', res.data.un_read)
           commit('set_n_list', res.data.result)
         } else {

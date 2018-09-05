@@ -6,29 +6,8 @@
 					h1 Notifications
 			.body
 				.section
-					b-field.table-filter(grouped)
-						b-field.sort-fields
-							p.control
-								button.button
-									b-icon(icon="sort-amount-down" pack="fas")
-							p.control
-								button.button
-									b-icon(icon="sort-amount-up" pack="fas")
-							b-select(placeholder="By Field")
-								option(value="email") By Email
-								option(value="name") By Name
-								option(value="id") By ID
-						b-field.search-field(expanded)
-							p.control.has-icons-right
-								input.input(type="search" placeholder="Search")
-								span.icon.is-right
-									i.fas.fa-search
-						b-field.view-field
-							p.control
-								button.button
-									b-icon(icon="times-circle" pack="fas")
-									| &nbsp;&nbsp;&nbsp;DELETE
-					tableComp(:arr="ren_data" :loading="loading" :paginate="false")
+					tblTopFilter
+					tableComp(:arr="ren_data" :loading="loading" :total_record="tot_rows")
 						template(slot="thead")
 							tr
 								th(width="50px") Mark Read / UnRead
@@ -47,10 +26,12 @@
 
 <script>
 import tableComp from "~/components/html_comp/tableComp.vue";
+import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 export default {
   layout: "admin_layout",
   components: {
-    tableComp
+    tableComp,
+    tblTopFilter
   },
   async mounted() {
     await this.$store.dispatch("notification/n_list_load");
@@ -61,10 +42,15 @@ export default {
     },
     loading: function() {
       return this.$store.state.notification.n_list_loader;
+    },
+    tot_rows: function () {
+      return this.$store.state.notification.total_s_rows;
     }
   },
   data() {
-    return {};
+    return {
+      
+    };
   }
 };
 </script>

@@ -6,8 +6,8 @@
       form.form(v-on:submit.prevent="submit")
         p.error(v-if="form.err !== ''") {{ form.err }}
         p.success(v-if="form.suc !== ''") {{ form.suc }}
-        b-field(label="Email / Username" :type="(validation.hasError('email')) ? 'is-danger':''" :message="validation.firstError('email')")
-          b-input(type="text" placeholder="(example: shabirahmed)" v-model="email")
+        b-field(label="Email / MJ Supreme ID" :type="(validation.hasError('email')) ? 'is-danger':''" :message="validation.firstError('email')")
+          b-input(type="text" placeholder="example@app.com/000010001" v-model="email")
 
         b-field(label="Password" :addons="false" :type="(validation.hasError('password')) ? 'is-danger':''" :message="validation.firstError('password')")
           a.control.fp_link(@click.prevent="$store.commit('isForgotPasswordSet', true)") Forgot ?
@@ -37,7 +37,6 @@ export default {
     email: function(value) {
       return Validator.value(value)
         .required()
-        .email()
         .maxLength(100);
     },
     password: function(value) {
@@ -65,7 +64,10 @@ export default {
             .then(res => {
               if (res.data.status) {
                 self.form.suc = "Successfully Login!";
-                self.$store.dispatch("login", { token: res.data.token, data: res.data.user });
+                self.$store.dispatch("login", {
+                  token: res.data.token,
+                  data: res.data.user
+                });
                 setTimeout(() => {
                   self.form.loading = false;
                   self.$store.commit("loginModalActiveSet", false);
@@ -87,24 +89,29 @@ export default {
 };
 </script>
 
-<style lang="sass" scoped>
-.wrapper
-    .logo
-        text-align: center
-        padding: 20px
-        margin-bottom: 1rem
-        border-bottom: 2px solid #ebeced
-        &:after
-            content: ' '
-            display: block
-            width: 50px
-            height: 2px
-            background: #d9bd68
-            position: relative
-            bottom: -22px
-            margin: 0 auto
-    .section
-        position: relative
-        padding: 1.5rem 4rem 0
-                
+<style lang="scss" scoped>
+.wrapper {
+  .logo {
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ebeced;
+
+    &:after {
+      content: " ";
+      display: block;
+      width: 50px;
+      height: 2px;
+      background: #d9bd68;
+      position: relative;
+      bottom: -22px;
+      margin: 0 auto;
+    }
+  }
+
+  .section {
+    position: relative;
+    padding: 1.5rem 4rem 0;
+  }
+}
 </style>

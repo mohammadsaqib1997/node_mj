@@ -7,7 +7,7 @@
 			thead
 				tr
 					th Level
-					th Commission
+					//- th Commission
 					th Rewards
 					th Total No. People Possible
 			tbody
@@ -15,7 +15,7 @@
 					td 
 						b-icon(v-if="row.active === true" pack="fas" icon="caret-right")
 						| {{ row.lvl }}
-					td {{ row.cm }}
+					//- td {{ row.cm }}
 					td {{ row.rwd }}
 					td 
 						| {{ row.pp }}

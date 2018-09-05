@@ -6,30 +6,8 @@
             h1 Members Profile
       .body
         .section
-          b-field.table-filter(grouped)
-            b-field.sort-fields
-              p.control
-                button.button
-                  b-icon(icon="sort-amount-down" pack="fas")
-              p.control
-                button.button
-                  b-icon(icon="sort-amount-up" pack="fas")
-              b-select(placeholder="By Field")
-                option(value="email") By Email
-                option(value="name") By Name
-                option(value="id") By ID
-            b-field.search-field(expanded)
-              p.control.has-icons-right
-                input.input(type="search" placeholder="Search")
-                span.icon.is-right
-                  i.fas.fa-search
-            b-field.view-field
-              p.control
-                button.button
-                  b-icon(icon="eye" pack="fas")
-                  | &nbsp;&nbsp;&nbsp;VIEW
-          
-          table-comp(:arr="data" :loading="loading" :total_record="num_rows" @page_change="pageLoad")
+          tblTopFilter(:act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="updateFilter('limit', $event)" @change_s_txt="updateFilter('search', $event)")
+          table-comp(:arr="data" :loading="loading" :total_record="num_rows" :per_page="parseInt(load_params.limit)" :page_set="load_params.page" @page_change="pageLoad")
             template(slot="thead")
               tr
                 th(width="50px")
@@ -68,18 +46,21 @@
     b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
       .modal-card
         #ed-member-con.modal-card-body
-          ed-member-form(:edit_id="select_edit" v-on:update_member="dataLoad(page_active)")
+          ed-member-form(:edit_id="select_edit" v-on:update_member="dataLoad")
 </template>
 
 <script>
 import edMemberForm from "~/components/forms/ed-member.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
+import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
+import _ from "lodash";
 
 export default {
   layout: "admin_layout",
   components: {
     edMemberForm,
-    tableComp
+    tableComp,
+    tblTopFilter
   },
   async mounted() {
     this.dataLoad();
@@ -103,29 +84,53 @@ export default {
     return {
       loading: false,
       data: [],
-      num_rows: 0,
+      num_rows: 1,
       select_edit: null,
-      page_active: 1
+      load_params: {
+        limit: "10",
+        search: "",
+        page: 1
+      }
     };
   },
   methods: {
-    dataLoad: async function(page) {
-      if (!page) {
-        this.page_active = 1;
-      } else {
-        this.page_active = page;
-      }
+    dataLoad: async function() {
       this.loading = true;
-      const result = await this.$axios.$get(
-        "/api/member?page=" + this.page_active
-      );
-      this.num_rows = result.total_rows;
-      this.data = result.data;
+      try {
+        const result = await this.$axios.$get("/api/member", {
+          params: this.load_params
+        });
+        this.num_rows = result.total_rows;
+        this.data = result.data;
+      } catch (err) {
+        console.log(err);
+      }
+
       this.loading = false;
     },
+
     pageLoad: function(page) {
-      this.dataLoad(page);
+      this.load_params.page = page;
+      this.dataLoad();
     },
+
+    updateFilter: function(param, val) {
+      let new_params = _.cloneDeep(this.load_params);
+      if (new_params[param] !== val) {
+        this.num_rows = 1;
+        _.set(new_params, "page", 1);
+        _.set(new_params, param, val);
+        this.load_params = new_params;
+        this.loading = true;
+        console.log(this.load_params)
+        this.after_f_settle();
+      }
+    },
+
+    after_f_settle: _.debounce(function() {
+      this.dataLoad();
+    }, 1000),
+
     payUser: function(id) {
       const self = this;
       self.loading = true;
@@ -133,7 +138,7 @@ export default {
         .post("/api/member/pay_user", { id })
         .then(res => {
           if (res.data.status === true) {
-            self.dataLoad(this.page_active);
+            self.dataLoad();
           } else {
             console.log("Error! ", res.data);
           }
@@ -148,6 +153,7 @@ export default {
           });
         });
     },
+
     o_e_mem_m: function(id) {
       this.select_edit = id;
       this.$store.commit("edMemModal/setModalActive", true);
@@ -171,7 +177,7 @@ export default {
         .then(res => {
           if (res.data.status === true) {
             self.$store.commit("receipts_upload/remFile", id);
-            self.dataLoad(self.page_active);
+            self.dataLoad();
           } else {
             self.loading = false;
             self.$toast.open({

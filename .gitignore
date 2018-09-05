@@ -26,3 +26,6 @@ yarn.lock
 
 server/uploads/*/*.jpg
 server/uploads/*/*.png
+
+static/docs
+static/gallery

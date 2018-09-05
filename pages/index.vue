@@ -19,7 +19,7 @@
               .title SUPREME CARD
               .detail-txt
                 | Up to 50% discount could be availed on the everyday necessities such as groceries...
-              nuxt-link.button(to="/product-details") View More
+              nuxt-link.button(to="/products") View More
           .column
             .box-pro-det
               .img-con
@@ -27,7 +27,7 @@
               .title MOTORCYCLE
               .detail-txt
                 | Our registered members would be given an opportunity to own a brand new bike...
-              nuxt-link.button(to="/product-details") View More
+              nuxt-link.button(to="/products") View More
           .column
             .box-pro-det
               .img-con
@@ -35,7 +35,7 @@
               .title Medical Insurance
               .detail-txt
                 | MJ Supreme would be providing you with a year of complete health care...
-              nuxt-link.button(to="/product-details") View More
+              nuxt-link.button(to="/products") View More
     upcoming-prod-section
     // .section.sct-4
     //   .container

@@ -21,47 +21,60 @@ const upload = multer({ storage })
 const db = require('../db.js')
 
 router.get("/", function (req, res) {
-  let offset = 0
-  if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
-    offset = (parseInt(req.query.page) - 1) * 10
+  let offset = 0, limit = 10, search = ""
+  if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+    limit = req.query.limit
   }
+
+  if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+    offset = (parseInt(req.query.page) - 1) * limit
+  }
+
+  if (req.query.search) {
+    search = req.query.search
+  }
+
 
   db.getConnection(function (err, connection) {
     if (err) {
       res.status(500).json({ err })
     } else {
-      connection.query(`SELECT COUNT(*) as total_rows FROM members`, function (error, results, fields) {
-        if (error) {
-          connection.release();
-          res.status(500).json({ error })
-        } else {
-          let rows_count = results[0].total_rows
-          if (rows_count > 0) {
-            let opt = {
-              sql: `SELECT m.id, m.user_asn_id, m.email, m.full_name, m.active_sts, m.is_paid_m, ur.id as receipt 
+      connection.query(
+        `SELECT COUNT(*) as total_rows FROM members ${(search !== '') ? 'WHERE user_asn_id LIKE ? OR email LIKE ? OR full_name LIKE ?' : ''}`,
+        ['%' + search + '%', '%' + search + '%', '%' + search + '%'],
+        function (error, results, fields) {
+          if (error) {
+            connection.release();
+            res.status(500).json({ error })
+          } else {
+            let rows_count = results[0].total_rows
+            if (rows_count > 0) {
+              let opt = {
+                sql: `SELECT m.id, m.user_asn_id, m.email, m.full_name, m.active_sts, m.is_paid_m, ur.id as receipt 
                 FROM members as m
                 LEFT JOIN user_receipts as ur
                 ON m.id=ur.member_id
-                LIMIT 10
+                ${(search !== '') ? 'WHERE m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ?' : ''}
+                LIMIT ${limit}
                 OFFSET ${offset}
                 `, nestTables: true
-            }
-            connection.query(opt, function (error, results, fields) {
-              connection.release();
-              if (error) {
-                res.status(500).json({ error })
-              } else {
-                res.json({ data: results, total_rows: rows_count })
               }
+              connection.query(opt, ['%' + search + '%', '%' + search + '%', '%' + search + '%'], function (error, results, fields) {
+                connection.release();
+                if (error) {
+                  res.status(500).json({ error })
+                } else {
+                  res.json({ data: results, total_rows: rows_count })
+                }
 
-            });
+              });
 
-          } else {
-            connection.release();
-            res.json({ data: [], total_rows: rows_count })
+            } else {
+              connection.release();
+              res.json({ data: [], total_rows: rows_count })
+            }
           }
-        }
-      })
+        })
     }
   })
 })

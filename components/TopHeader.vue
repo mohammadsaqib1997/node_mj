@@ -6,7 +6,7 @@
                     .navbar-start
                         a.navbar-item(href='#')
                             b-icon.flip-y(icon="phone" size="is-small")
-                            span.fs-14 &nbsp;+92 021 3 4835054
+                            span.fs-14 &nbsp;+92 213 4835 054
                         .navbar-item.px-0.hidden-tablet
                             span.sm-line
                         a.navbar-item(href='#')

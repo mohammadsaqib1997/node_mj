@@ -3,15 +3,15 @@
   .container
     h1.title-1.center Upcoming PRoDUCTS
     .columns.is-multiline.fpd-cont
-      // .column.is-4
-      //   .box-fpd-cont
-      //     .img-cont
-      //       img(src="~/assets/img/hm-fpd-img-1.png")
-      //     .det-cont
-      //       .title Bikes
-      //       .detail-txt
-      //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-      //         | sed do eiusmod tempor incididunt
+      //- // .column.is-4
+      //- //   .box-fpd-cont
+      //- //     .img-cont
+      //- //       img(src="~/assets/img/hm-fpd-img-1.png")
+      //- //     .det-cont
+      //- //       .title Bikes
+      //- //       .detail-txt
+      //- //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      //- //         | sed do eiusmod tempor incididunt
       .column.is-4
         .box-fpd-cont
           .img-cont
@@ -20,8 +20,8 @@
             .title New Cars
             .detail-txt
               | Our registered members would be given an opportunity to own a brand. 
-              br
-              a.link Read more...
+              //- br
+              //- a.link Read more...
       .column.is-4
         .box-fpd-cont
           .img-cont
@@ -30,17 +30,17 @@
             .title Used Cars
             .detail-txt
               | Our valued members would also be facilitated to buy a variety.
-              br
-              a.link Read more...
-      // .column.is-4
-      //   .box-fpd-cont
-      //     .img-cont
-      //       img(src="~/assets/img/hm-fpd-img-4.png")
-      //     .det-cont
-      //       .title Vans
-      //       .detail-txt
-      //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-      //         | sed do eiusmod tempor incididunt
+              //- br
+              //- a.link Read more...
+      //- // .column.is-4
+      //- //   .box-fpd-cont
+      //- //     .img-cont
+      //- //       img(src="~/assets/img/hm-fpd-img-4.png")
+      //- //     .det-cont
+      //- //       .title Vans
+      //- //       .detail-txt
+      //- //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      //- //         | sed do eiusmod tempor incididunt
       .column.is-4
         .box-fpd-cont
           .img-cont
@@ -49,26 +49,26 @@
             .title Plots
             .detail-txt
               | Apart from the different luxuries, MJ Supreme has also been planning.
-              br
-              a.link Read more...
-      // .column.is-4
-      //   .box-fpd-cont
-      //     .img-cont
-      //       img(src="~/assets/img/hm-fpd-img-6.png")
-      //     .det-cont
-      //       .title One Story Bunglow
-      //       .detail-txt
-      //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-      //         | sed do eiusmod tempor incididunt
-      // .column.is-4
-      //   .box-fpd-cont
-      //     .img-cont
-      //       img(src="~/assets/img/hm-fpd-img-7.png")
-      //     .det-cont
-      //       .title 2 Story Bunglow
-      //       .detail-txt
-      //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-      //         | sed do eiusmod tempor incididunt
+              //- br
+              //- a.link Read more...
+      //- // .column.is-4
+      //- //   .box-fpd-cont
+      //- //     .img-cont
+      //- //       img(src="~/assets/img/hm-fpd-img-6.png")
+      //- //     .det-cont
+      //- //       .title One Story Bunglow
+      //- //       .detail-txt
+      //- //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      //- //         | sed do eiusmod tempor incididunt
+      //- // .column.is-4
+      //- //   .box-fpd-cont
+      //- //     .img-cont
+      //- //       img(src="~/assets/img/hm-fpd-img-7.png")
+      //- //     .det-cont
+      //- //       .title 2 Story Bunglow
+      //- //       .detail-txt
+      //- //         | Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      //- //         | sed do eiusmod tempor incididunt
 </template>
 
 <style lang="sass" scoped>

@@ -33,6 +33,6 @@ export default {
 };
 </script>
 
-<style lang="sass" scoped src="~/assets/sass/admin_layout.sass">
+<style lang="scss" scoped src="~/assets/sass/admin_layout.scss">
  
 </style>

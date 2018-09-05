@@ -27,12 +27,12 @@
                 .prd-cont
                   .img-cont
                     img(src="~/assets/img/hm-img-1.jpg")
-                  .info-cont.level.is-mobile
-                    .level-left
-                      nuxt-link.button.more-info(to="/product-details") More Info
-                    .level-right
-                      nuxt-link.button.reg-now(to="/signup") Register Now
-                        b-icon(icon="angle-right")
+                  //- .info-cont.level.is-mobile
+                  //-   .level-left
+                  //-     nuxt-link.button.more-info(to="/product-details") More Info
+                  //-   .level-right
+                  //-     nuxt-link.button.reg-now(to="/signup") Register Now
+                  //-       b-icon(icon="angle-right")
                 .desc-cont
                   h2.title-2 Description
                   p 
@@ -43,13 +43,13 @@
               template(v-if="prd_act === 1")
                 .prd-cont
                   .img-cont
-                    img(src="~/assets/img/hm-img-1.jpg")
-                  .info-cont.level.is-mobile
-                    .level-left
-                      nuxt-link.button.more-info(to="/product-details") More Info
-                    .level-right
-                      nuxt-link.button.reg-now(to="/signup") Register Now
-                        b-icon(icon="angle-right")
+                    img(src="~/assets/img/hm-img-3.jpg")
+                  //- .info-cont.level.is-mobile
+                  //-   .level-left
+                  //-     nuxt-link.button.more-info(to="/product-details") More Info
+                  //-   .level-right
+                  //-     nuxt-link.button.reg-now(to="/signup") Register Now
+                  //-       b-icon(icon="angle-right")
                 .desc-cont
                   h2.title-2 Description
                   p 
@@ -57,13 +57,13 @@
               template(v-if="prd_act === 2")
                 .prd-cont
                   .img-cont
-                    img(src="~/assets/img/hm-img-1.jpg")
-                  .info-cont.level.is-mobile
-                    .level-left
-                      nuxt-link.button.more-info(to="/product-details") More Info
-                    .level-right
-                      nuxt-link.button.reg-now(to="/signup") Register Now
-                        b-icon(icon="angle-right")
+                    img(src="~/assets/img/hm-img-2.jpg")
+                  //- .info-cont.level.is-mobile
+                  //-   .level-left
+                  //-     nuxt-link.button.more-info(to="/product-details") More Info
+                  //-   .level-right
+                  //-     nuxt-link.button.reg-now(to="/signup") Register Now
+                  //-       b-icon(icon="angle-right")
                 .desc-cont
                   h2.title-2 Description
                   p 
