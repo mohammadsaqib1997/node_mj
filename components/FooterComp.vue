@@ -26,18 +26,18 @@
                             li.item
                                 nuxt-link(to="/about-us") About us
                             li.item
-                                nuxt-link(to="/coming-soon") Business Plan
+                                nuxt-link(to="/about-us") Business Plan
                             li.item
                                 nuxt-link(to="/coming-soon") Supreme Partners & Associates
                             li.item
-                                nuxt-link(to="/coming-soon") Members
+                                a(@click.prevent="move_to_member") Members
                     .column.is-2
                         h1.title Products
                         ul.footer-links
                             li.item
-                                nuxt-link(to="/coming-soon") Discount Products
+                                nuxt-link(to="/products") Discount Products
                             li.item
-                                nuxt-link(to="/coming-soon") Upcoming Products
+                                nuxt-link(to="/products") Upcoming Products
                     .column.is-2
                         h1.title Useful links
                         ul.footer-links
@@ -48,18 +48,28 @@
                             li.item
                                 nuxt-link(to="/coming-soon") Help Center
                             li.item
-                                nuxt-link(to="/coming-soon") Media
+                                nuxt-link(to="/media") Media
 
                 copyrights
 </template>
 
 <script>
-    import copyrights from '~/components/Copyrights.vue'
-    export default {
-        components: {
-            copyrights
-        }
+import copyrights from "~/components/Copyrights.vue";
+export default {
+  components: {
+    copyrights
+  },
+  methods: {
+    move_to_member() {
+      const self = this;
+      if (self.$store.state.user !== null) {
+          self.$router.push('/dashboard')
+      } else {
+        self.$store.commit("loginModalActiveSet", true);
+      }
     }
+  }
+};
 </script>
 
 <style lang="sass" scoped>

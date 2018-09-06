@@ -29,3 +29,5 @@ server/uploads/*/*.png
 
 static/docs
 static/gallery
+
+scripts

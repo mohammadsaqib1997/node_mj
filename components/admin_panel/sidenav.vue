@@ -177,14 +177,14 @@ export default {
           title: "System Level",
           show: [0]
         },
-        {
-          name: "profile",
-          active: false,
-          img: "person",
-          url: "/profile",
-          title: "Profile",
-          show: [0, 1, 2]
-        },
+        // {
+        //   name: "profile",
+        //   active: false,
+        //   img: "person",
+        //   url: "/profile",
+        //   title: "Profile",
+        //   show: [0, 1, 2]
+        // },
         {
           name: "notifications",
           active: false,

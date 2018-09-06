@@ -64,44 +64,27 @@
               img(src="~/assets/img/gallery-img.png")
           .column.is-9
             .slider-indec-cont
-              .prev.arrow(@click.prevent="slidePrv('#gallery', 300)")
-              .link-txt View All
-              .next.arrow(@click.prevent="slideNext('#gallery', 300)")
+              .prev.arrow(@click.prevent="slidePrv")
+              .link-txt(@click.prevent="img_act_mdl(gallery_imgs[0])") View All
+              .next.arrow(@click.prevent="slideNext")
             .columns.slider-cont.is-gapless
-              .column.is-4(v-for="n in 3" v-if="car_img_act[n-1]")
-                .img-cont
-                  LazyLoadImg(:src="car_img_act[n-1]")
+              .column.is-4(v-for="n in 3" v-if="curt_img_act[n-1]" @click.prevent="img_act_mdl(curt_img_act[n-1])")
+                LazyLoadImg(:src="curt_img_act[n-1]")
                 .cap-cont
                   .inner-cont
                     .txt MJ Supreme Launch Event
                     .divider
                     .txt 04th Aug 2018
               
-            //- #gallery.slider-cont-2
-            //-   .wrapper
-            //-     .content
-            //-       .list-item(v-for="url in gallery_imgs" @click.prevent="active_img.md=true;active_img.src=url;")
-            //-         .img-cont
-            //-           LazyLoadImg(:src="url")
-            //-         .cap-cont
-            //-           .inner-cont
-            //-             .txt Team Connect Event
-            //-             .divider
-            //-             .txt 29th Jun 2018
     b-modal.img-gallery(:active.sync="active_img.md")
+      .slider-container
+        .prev.arrow(@click.prevent="active_img.ind=prev_act_slide(active_img.ind, gallery_imgs)")
+        .next.arrow(@click.prevent="active_img.ind=next_act_slide(active_img.ind, gallery_imgs)")
+        .sh-img-cont(v-if="active_img.loading !== true && active_img.loaded_img !== null" v-html="active_img.loaded_img")
+        b-loading(:is-full-page="false" :active="active_img.loading" :can-cancel="false")
       
-      .img-sec
-        .image-cont
-          img(v-if="active_img.src !== ''" :src="active_img.src")
-        .slider-cont-2
-          .wrapper
-            .columns.is-gapless.is-mobile
-              .column.is-3(v-for="url in gallery_imgs")
-                .img-cont(:style="'background-image:url('+ url +')'")
+      
 
-            //- .content
-            //-   .list-item(v-for="url in gallery_imgs" @click.prevent="")
-            //-     .img-cont(:style="'background-image:url('+ url +')'")
     b-modal.mdl-videos(:active.sync="vid_mdl.active")
       iframe(v-show="vid_mdl.loading !== true" :onLoad="vid_load_mdl()"  :src="vid_mdl.src" width="560" height="315" frameborder="0" allow="encrypted-media" allowfullscree)
       b-loading(:is-full-page="false" :active="vid_mdl.loading" :can-cancel="false")
@@ -116,27 +99,23 @@ export default {
     LazyLoadImg
   },
   computed: {
-    car_img_act: function() {
+    curt_img_act: function() {
       const self = this;
       const limit = 3;
       let offset = (self.view_at_pg - 1) * limit;
-      let data = [];
+      let endpoint = self.view_at_pg * limit;
 
-      for (let i = 0; i < limit; i++) {
-        if (self.gallery_imgs[offset]) {
-          data.push(self.gallery_imgs[offset]);
-          offset += 1;
-        } else {
-          break;
-        }
-      }
-
-      return data;
+      return _.slice(self.gallery_imgs, offset, endpoint);
+    }
+  },
+  watch: {
+    "active_img.ind": function(val) {
+      this.load_img_glr(val);
     }
   },
   data() {
     let gallery_imgs = [];
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 76; i++) {
       gallery_imgs.push("/gallery/" + i + ".jpg");
     }
     return {
@@ -171,8 +150,10 @@ export default {
       ],
       prs_act_slide: 0,
       active_img: {
-        src: "",
-        md: false
+        ind: 0,
+        md: false,
+        loading: false,
+        loaded_img: null
       },
       vid_mdl: {
         loading: false,
@@ -188,64 +169,50 @@ export default {
         self.vid_mdl.loading = false;
       }, 5000);
     },
+    async img_act_mdl(src) {
+      const self = this;
+      let find_ind = _.indexOf(self.gallery_imgs, src);
+      if (self.active_img.ind !== find_ind)
+        self.active_img.ind = _.indexOf(self.gallery_imgs, src);
+      else self.load_img_glr(self.active_img.ind);
+    },
+    async load_img_glr(ind) {
+      const self = this;
+      self.active_img.md = true;
+      self.active_img.loading = true;
+      await new Promise(resolve => {
+        let img = new Image();
+        img.onload = function() {
+          self.active_img.loaded_img = img.outerHTML;
+          setTimeout(resolve, 500);
+        };
+        img.src = self.gallery_imgs[ind];
+      });
+      self.active_img.loading = false;
+    },
     next_act_slide(cur, data) {
       return data.length > cur + 1 ? cur + 1 : 0;
     },
     prev_act_slide(cur, data) {
       return 0 <= cur - 1 ? cur - 1 : data.length - 1;
     },
-    slideNext: function(id, move_in_px) {
-      this.view_at_pg = this.view_at_pg + 1;
-      // let grab_cont = $(id);
-      // let wr_w = grab_cont.find(".wrapper").width();
-      // let max_move = -(grab_cont.find(".wrapper>.content").width() - wr_w);
-      // let move_ml =
-      //   parseInt(grab_cont.find(".wrapper>.content").css("margin-left")) -
-      //   move_in_px;
+    slideNext: function() {
+      let next_pg = this.view_at_pg + 1;
+      let max_pg = Math.ceil(this.gallery_imgs.length / 3);
 
-      // move_ml = max_move > move_ml ? max_move : move_ml;
-
-      // if (max_move <= move_ml && move_ml < 0) {
-      //   grab_cont.find(".wrapper>.content").css("margin-left", move_ml + "px");
-      // }
+      this.view_at_pg = next_pg <= max_pg ? next_pg : 1;
     },
-    slidePrv: function(id, move_in_px) {
-      let grab_cont = $(id);
-      let wr_w = grab_cont.find(".wrapper").width();
-      let max_move = grab_cont.find(".wrapper>.content").width() - wr_w;
-      let move_ml =
-        parseInt(grab_cont.find(".wrapper>.content").css("margin-left")) +
-        move_in_px;
+    slidePrv: function() {
+      let prev_pg = this.view_at_pg - 1;
+      let max_pg = Math.ceil(this.gallery_imgs.length / 3);
 
-      move_ml = 0 > move_ml ? move_ml : 0;
-
-      if (move_ml <= 0) {
-        grab_cont.find(".wrapper>.content").css("margin-left", move_ml + "px");
-      }
+      this.view_at_pg = prev_pg >= 1 ? prev_pg : max_pg;
     }
   }
 };
 </script>
 
 <style lang="scss" scoped>
-.wrapper /deep/ {
-  .slider-cont-2 {
-    .wrapper {
-      overflow: hidden;
-      .content {
-        transition: 200ms ease margin-left;
-        width: max-content;
-
-        &:after {
-          content: "";
-          display: table;
-          clear: both;
-        }
-      }
-    }
-  }
-}
-
 .section {
   .slider-indec-cont {
     display: flex;
@@ -567,115 +534,70 @@ export default {
         }
       }
     }
-
-    // .slider-cont-2 {
-    //   .wrapper {
-    //     .content {
-    //       > .list-item {
-    //         float: left;
-    //         position: relative;
-    //         cursor: pointer;
-    //         width: 300px;
-    //         height: 265px;
-    //         .img-cont {
-    //           display: flex;
-    //           align-items: center;
-    //           justify-content: center;
-    //           overflow: hidden;
-    //           height: 265px;
-    //           width: 100%;
-    //           margin: 0 auto;
-    //           position: relative;
-    //           cursor: pointer;
-    //           box-shadow: 0px 2px 10px 2px rgba(0, 0, 0, 0.15);
-
-    //           &:before {
-    //             content: " ";
-    //             position: absolute;
-    //             right: 0;
-    //             left: 0;
-    //             top: 0;
-    //             bottom: 0;
-    //           }
-
-    //           img {
-    //             max-width: none;
-    //           }
-    //         }
-    //         .cap-cont {
-    //           display: none;
-    //           position: absolute;
-    //           top: 0;
-    //           left: 0;
-    //           right: 0;
-    //           bottom: 0;
-    //           background-color: rgba(59, 63, 87, 0.5);
-    //           align-items: center;
-    //           justify-content: center;
-
-    //           .inner-cont {
-    //             text-align: center;
-    //             color: #fefefe;
-    //             font-weight: 700;
-    //             font-size: 16px;
-
-    //             .divider {
-    //               display: inline-block;
-    //               width: 50px;
-    //               height: 5px;
-    //               background-color: #d9bd68;
-    //               margin: 3px auto;
-    //             }
-    //           }
-    //         }
-
-    //         &:hover {
-    //           .cap-cont {
-    //             display: flex;
-    //           }
-    //         }
-
-    //         @media screen and (max-width: 375px) {
-    //           width: 265px;
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
   }
 }
 
 .img-gallery /deep/ {
   .modal-content {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    .img-sec {
-      display: block;
-      position: relative;
-      height: 100%;
-      .image-cont {
-        height: calc(100% - 130px);
-        padding-bottom: 1rem;
-        img {
-          display: block;
-          height: 100%;
-          margin: 0 auto;
+    > .slider-container {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .arrow {
+        width: 25px;
+        height: 70px;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+        cursor: pointer;
+
+        &.prev {
+          background-image: url("~/assets/img/sld-prev-btn.png");
         }
-      }
-      .slider-cont-2 {
-        height: 130px;
-        .wrapper {
-          .img-cont {
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            display: block;
-            height: 130px;
-            width: 100%;
+
+        &.next {
+          background-image: url("~/assets/img/sld-next-btn.png");
+        }
+        @media screen and (min-width: 1131px) {
+          &.prev {
+            margin-right: 30px;
+          }
+
+          &.next {
+            margin-left: 30px;
+            order: 2;
+          }
+        }
+
+        @media screen and (max-width: 1130px) {
+          position: absolute;
+          bottom: 40px;
+          &.prev {
+            left: calc(50% - 40px);
+          }
+
+          &.next {
+            right: calc(50% - 40px);
           }
         }
       }
+      .sh-img-cont {
+        height: calc(100% - 40px);
+        min-width: 200px;
+        min-height: 200px;
+        img {
+          display: block;
+          max-height: 100%;
+        }
+      }
+    }
+    .loading-background {
+      background: transparent;
     }
   }
 }
