@@ -287,12 +287,12 @@ router.post('/user_id_check', function (req, res) {
             if (error) {
                 res.status(500).json({ error })
             } else {
-                connection.query('SELECT count(*) as count FROM members WHERE user_asn_id=? AND id<>?', [recv_u_asn_id, user_id], function (error, results, fields) {
+                connection.query('SELECT count(*) as count, full_name FROM members WHERE user_asn_id=? AND id<>?', [recv_u_asn_id, user_id], function (error, results, fields) {
                     connection.release();
                     if (error) {
                         res.status(500).json({ error })
                     } else {
-                        res.json({ count: results[0].count })
+                        res.json({ data: results[0] })
                     }
                 })
             }

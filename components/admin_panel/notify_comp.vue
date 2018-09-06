@@ -64,11 +64,6 @@
 
 <script>
 export default {
-  async mounted() {
-    if (this.$route.name !== "notifications") {
-      await this.$store.dispatch("notification/n_list_load", { limit: 5 });
-    }
-  },
   computed: {
     a_item: function() {
       return this.$store.state.notification.a_item;

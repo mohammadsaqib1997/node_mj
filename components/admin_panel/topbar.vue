@@ -51,6 +51,7 @@ export default {
   },
   async mounted() {
     await this.$store.dispatch("profile/loadName");
+    await this.$store.dispatch("notification/load_tbar_list");
     $(function() {
       $("body").off("click", "#nBurgerTop");
 
@@ -61,22 +62,12 @@ export default {
     });
   },
   computed: {
-    u_type: function() {
-      return this.$store.state.user.data.type;
-    },
     top_5_notif: function() {
-      return _.slice(this.$store.state.notification.n_list, 0, 5);
-    }
-  },
-  watch: {
-    act_notify: function(val) {
-      console.log(val);
+      return this.$store.state.notification.tbar_list;
     }
   },
   data() {
-    return {
-      act_notify: []
-    };
+    return {};
   },
   methods: {
     navbarActToggle: function(e) {

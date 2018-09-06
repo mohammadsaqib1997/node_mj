@@ -30,7 +30,7 @@ router.get("/name", function (req, res) {
         }
         db.getConnection(function (err, connection) {
             if (err) {
-                res.status(500).json({ error })
+                res.status(500).json({ err })
             } else {
                 connection.query(query, req.decoded.data.user_id, function (error, results, fields) {
                     connection.release();
@@ -111,6 +111,99 @@ router.get("/", function (req, res) {
         })
     } else {
         res.json({ status: false, message: "No User Found!" })
+    }
+})
+
+router.get("/may_i_wallet_req", function (req, res) {
+    if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({ err })
+            } else {
+                let query = `SELECT m.*, m_bk.bank_name, m_bk.branch_code, m_bk.account_title, m_bk.account_number
+                FROM members as m
+                LEFT JOIN user_bank_details as m_bk
+                ON m.id=m_bk.member_id
+                WHERE m.id=?`
+                connection.query(query, req.decoded.data.user_id, function (error, results, fields) {
+                    connection.release();
+
+                    if (error) {
+                        res.status(500).json({ error })
+                    } else {
+                        let profile_comp = []
+                        // member detail
+                        if (results[0].active_sts !== 1) {
+                            profile_comp.push({
+                                message: "Your account has been suspended.",
+                            })
+                        }
+                        if (results[0].address === "" || results[0].address === null) {
+                            profile_comp.push({
+                                message: "Provide address.",
+                            })
+                        }
+                        if (results[0].cnic_num === "" || results[0].cnic_num === null) {
+                            profile_comp.push({
+                                message: "Provide CNIC.",
+                            })
+                        }
+                        if (results[0].contact_num === "" || results[0].contact_num === null) {
+                            profile_comp.push({
+                                message: "Provide contact number.",
+                            })
+                        }
+                        if (results[0].email === "" || results[0].email === null) {
+                            profile_comp.push({
+                                message: "Provide email address.",
+                            })
+                        }
+                        if (results[0].full_name === "" || results[0].full_name === null) {
+                            profile_comp.push({
+                                message: "Provide full name.",
+                            })
+                        }
+                        if (results[0].is_paid_m !== 1) {
+                            profile_comp.push({
+                                message: "You are unpaid member.",
+                            })
+                        }
+
+                        //bank detail
+                        if (results[0].bank_name === "" || results[0].bank_name === null) {
+                            profile_comp.push({
+                                message: "Provide bank name.",
+                            })
+                        }
+                        if (results[0].branch_code === "" || results[0].branch_code === null) {
+                            profile_comp.push({
+                                message: "Provide bank branch code.",
+                            })
+                        }
+                        if (results[0].account_title === "" || results[0].account_title === null) {
+                            profile_comp.push({
+                                message: "Provide bank account title.",
+                            })
+                        }
+                        if (results[0].account_number === "" || results[0].account_number === null) {
+                            profile_comp.push({
+                                message: "Provide bank account number.",
+                            })
+                        }
+
+                        // here is response
+                        if (profile_comp.length > 0) {
+                            res.json({ status: false, errors: profile_comp })
+                        } else {
+                            res.json({ status: true })
+                        }
+
+                    }
+                })
+            }
+        })
+    } else {
+        res.json({ status: false, message: "No User Data!" })
     }
 })
 

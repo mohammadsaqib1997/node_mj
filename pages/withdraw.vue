@@ -17,23 +17,30 @@
                         .column
                             bankDetComp(:has_header="true")
                     hr
-                    form.form(@submit.prevent="withdraw")
-                        .columns.is-variable.is-1
-                            .column.is-3
-                                label Withdraw Amount
-                            .column
-                                b-field(:type="(validation.hasError('form.amount')) ? 'is-danger':''" :message="validation.firstError('form.amount')")
-                                    b-input(type="text" placeholder="Enter Amount in Rupees" v-model="form.amount" v-mask="'#######'")
-                        .columns.is-variable.is-1
-                            .column.is-offset-3
-                                button.button.btn-des-1(type="submit" style="margin-top:0")
-                                    img(src="~/assets/img/transfer.png")
-                                    | &nbsp;&nbsp;&nbsp;&nbsp;Withdraw
+                    template(v-if="form.loading !== true")
+                      template(v-if="w_is_err === true")
+                        h2.title Please Complete Your Profile And Bank Details
+                        ul.errors
+                          li.item(v-for="err in w_errors") {{ err.message }}
+
+                      form.form(v-else @submit.prevent="withdraw")
+                          .columns.is-variable.is-1
+                              .column.is-3
+                                  label Withdraw Amount
+                              .column
+                                  b-field(:type="(validation.hasError('form.amount')) ? 'is-danger':''" :message="validation.firstError('form.amount')")
+                                      b-input(type="text" placeholder="Enter Amount in Rupees" v-model="form.amount" v-mask="'#######'")
+                          .columns.is-variable.is-1
+                              .column.is-offset-3
+                                  button.button.btn-des-1(type="submit" style="margin-top:0")
+                                      img(src="~/assets/img/transfer.png")
+                                      | &nbsp;&nbsp;&nbsp;&nbsp;Withdraw
                     b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
                     
 </template>
 
 <script>
+import { mapState } from "vuex";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
@@ -46,8 +53,18 @@ export default {
   directives: {
     mask
   },
-  mounted() {
-    this.$store.dispatch("member/loadWallet");
+  computed: {
+    ...mapState({
+      "w_is_err": state => state.profile.profile_comp.is_err,
+      "w_errors": state => state.profile.profile_comp.errors,
+    })
+  },
+  async mounted() {
+    const self = this;
+    this.form.loading = true;
+    await this.$store.dispatch("member/loadWallet");
+    await this.$store.dispatch("profile/mayWalletReq");
+    this.form.loading = false;
   },
   data() {
     return {
@@ -123,3 +140,27 @@ export default {
   }
 };
 </script>
+
+<style lang="scss" scoped>
+ul.errors {
+  li.item {
+    font-size: 20px;
+    font-weight: 300;
+    color: #da367a;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 20px;
+    &:before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      background-color: #da367a;
+      border-radius: 100%;
+      top: calc(50% - 5px);
+      left: 0;
+    }
+  }
+}
+</style>
+

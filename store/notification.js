@@ -1,7 +1,12 @@
 import _ from 'lodash'
 
+const after_settle = _.debounce(function (cb) {
+  cb()
+}, 1000)
+
 export const state = () => ({
   modalAct: false,
+  tbar_list: [],
   n_list: [],
   n_list_loader: false,
   total_unread: 0,
@@ -42,11 +47,37 @@ export const mutations = {
   },
   set_load_params: (state, pld) => {
     _.set(state.load_params, pld.param, pld.value)
+  },
+  reset_load_params: (state) => {
+    state.load_params = {
+      limit: 10,
+      page: 1,
+      search: ""
+    }
+  },
+  set_tbar_list: (state, pld) => {
+    state.tbar_list = pld
   }
 }
 
 export const actions = {
-  async n_list_load({ commit, state }, payload) {
+  async load_tbar_list({ commit }) {
+    await this.$axios
+      .get("/api/notification/top_5")
+      .then(res => {
+        if (!res.data.status) {
+          commit('set_tot_un_read', res.data.un_read)
+          commit('set_tbar_list', res.data.result)
+        } else {
+          console.log(res.data)
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  },
+
+  async n_list_load({ commit, state }) {
     await this.$axios
       .get("/api/notification", { params: state.load_params })
       .then(res => {
@@ -64,6 +95,22 @@ export const actions = {
       });
   },
 
+  async set_params({ commit, state, dispatch }, pld) {
+    let param_val = _.get(state.load_params, pld.param, null)
+    if (param_val !== null && param_val !== pld.value) {
+      if (pld.param !== 'page') {
+        commit('set_load_params', { param: 'page', value: 1 })
+      }
+      commit('set_load_params', pld)
+      commit('set_list_loader', true)
+      after_settle(async function () {
+        await dispatch('n_list_load')
+        commit('set_list_loader', false)
+      })
+
+    }
+  },
+
   async readToggle({ commit, state, dispatch }, hit_id) {
     commit('set_list_loader', true)
     let n_item = _.find(state.n_list, { id: hit_id })
@@ -73,6 +120,7 @@ export const actions = {
         if (res.data.status === false) {
           console.log(res.data)
         } else {
+          await dispatch('load_tbar_list')
           await dispatch('n_list_load')
         }
       })
@@ -83,7 +131,12 @@ export const actions = {
   },
 
   async show_notif({ commit, state, dispatch }, open_id) {
+    let n_pg = true
     let n_item = _.cloneDeep((_.find(state.n_list, { id: open_id })))
+    if (typeof n_item === 'undefined') {
+      n_item = _.cloneDeep((_.find(state.tbar_list, { id: open_id })))
+      n_pg = false
+    }
     commit('set_active_item', n_item)
     commit('modalActTG', true)
 
@@ -95,7 +148,12 @@ export const actions = {
           if (res.data.status === false) {
             console.log(res.data)
           } else {
-            await dispatch('n_list_load')
+            if (n_pg) {
+              await dispatch('load_tbar_list')
+              await dispatch('n_list_load')
+            } else {
+              await dispatch('load_tbar_list')
+            }
           }
         })
         .catch(err => {

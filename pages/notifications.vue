@@ -6,8 +6,8 @@
 					h1 Notifications
 			.body
 				.section
-					tblTopFilter
-					tableComp(:arr="ren_data" :loading="loading" :total_record="tot_rows")
+					tblTopFilter(:act_view="String(params.limit)" :s_txt="params.search" @change_s_txt="set_params({ param: 'search', value: $event })" @change_act_view="set_params({ param: 'limit', value: parseInt($event) })")
+					tableComp(:arr="ren_data" :loading="loading" :total_record="tot_rows" :per_page="parseInt(params.limit)" :page_set="params.page" @page_change="set_params({ param: 'page', value: $event })")
 						template(slot="thead")
 							tr
 								th(width="50px") Mark Read / UnRead
@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 export default {
@@ -36,21 +37,25 @@ export default {
   async mounted() {
     await this.$store.dispatch("notification/n_list_load");
   },
+  destroyed() {
+    this.$store.commit("notification/set_n_list", []);
+    this.$store.commit("notification/reset_load_params");
+  },
   computed: {
-    ren_data: function() {
-      return this.$store.state.notification.n_list;
-    },
-    loading: function() {
-      return this.$store.state.notification.n_list_loader;
-    },
-    tot_rows: function () {
-      return this.$store.state.notification.total_s_rows;
-    }
+    ...mapState({
+      ren_data: state => state.notification.n_list,
+      loading: state => state.notification.n_list_loader,
+      tot_rows: state => state.notification.total_s_rows,
+      params: state => state.notification.load_params
+    })
   },
   data() {
-    return {
-      
-    };
+    return {};
+  },
+  methods: {
+    ...mapActions({
+      set_params: "notification/set_params"
+    })
   }
 };
 </script>

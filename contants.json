@@ -19,6 +19,10 @@
             "name": "On Installment"
         }
     ],
+    "mem_act_sts": {
+        "active": 1,
+        "suspended": 0
+    },
     "user_types": {
         "member": 0,
         "moderator": 1,

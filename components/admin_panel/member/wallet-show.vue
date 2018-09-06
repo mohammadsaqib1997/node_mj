@@ -27,8 +27,14 @@
                                 h2.title Transfer Details
                                 form.form(@submit.prevent="send_funds")
                                     label Enter User ID
-                                    b-field(:type="(validation.hasError('funds_form.u_id')) ? 'is-danger':''" :message="validation.firstError('funds_form.u_id')")
-                                        b-input(type="text" placeholder="User ID" v-model="funds_form.u_id" v-mask="'#########'")
+                                    .columns
+                                      .column
+                                        b-field(:type="(validation.hasError('funds_form.u_id')) ? 'is-danger':''" :message="validation.firstError('funds_form.u_id')")
+                                          b-input(type="text" placeholder="User ID" v-model="funds_form.u_id" v-mask="'#########'")
+                                      .column
+                                        b-field
+                                          b-input(type="text" placeholder="User Name" readonly :value="funds_form.name")
+
                                     label Enter Transfer Amount
                                     b-field(:type="(validation.hasError('funds_form.amount')) ? 'is-danger':''" :message="validation.firstError('funds_form.amount')")
                                         b-input(type="text" placeholder="Enter Amount in Rupees" v-model="funds_form.amount" v-mask="'#######'")
@@ -56,7 +62,8 @@ export default {
         submitted: false,
         loading: false,
         u_id: "",
-        amount: ""
+        amount: "",
+        name: ""
       }
     };
   },
@@ -66,6 +73,7 @@ export default {
       debounce: 500,
       validator: function(value) {
         const self = this;
+        self.funds_form.name = "";
         if (
           self.funds_form.submitted ||
           self.validation.isTouched("funds_form.u_id")
@@ -85,8 +93,10 @@ export default {
                   recv_user_ans_id: value
                 })
                 .then(res => {
-                  if (res.data.count < 1) {
+                  if (res.data.data.count < 1) {
                     return "Invalid user id.";
+                  } else {
+                    self.funds_form.name = res.data.data.full_name;
                   }
                 });
             });
@@ -125,16 +135,18 @@ export default {
         if (success) {
           await self.$axios
             .post("/api/commission/transfer_funds", {
-                id: self.$store.state.user.data.user_id,
-                user_asn_id: self.funds_form.u_id,
-                amount: self.funds_form.amount
+              id: self.$store.state.user.data.user_id,
+              user_asn_id: self.funds_form.u_id,
+              amount: self.funds_form.amount
             })
             .then(async res => {
               if (res.data.status !== false) {
                 self.reset_funds_form();
                 msg = "Successfully Funds Transfer.";
                 await self.$store.dispatch("member/loadWallet");
-                await self.$store.dispatch('member/transactions/loadTransactions');
+                await self.$store.dispatch(
+                  "member/transactions/loadTransactions"
+                );
               } else {
                 is_err = true;
                 msg = res.data.message;
@@ -160,6 +172,7 @@ export default {
     reset_funds_form: function() {
       this.funds_form["u_id"] = "";
       this.funds_form["amount"] = "";
+      this.funds_form["name"] = "";
       this.funds_form["submitted"] = false;
       this.validation.reset();
     }

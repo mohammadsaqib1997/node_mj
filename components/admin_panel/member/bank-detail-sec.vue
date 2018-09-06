@@ -185,8 +185,11 @@ export default {
               data: self.f_data
             })
             .then(async res => {
-              msg = "Successfully Bank Details "+((_.isEmpty(self.bank_det_data)) ? "Added.": "Updated.");
+              msg =
+                "Successfully Bank Details " +
+                (_.isEmpty(self.bank_det_data) ? "Added." : "Updated.");
               await self.bank_det_load();
+              await self.$store.dispatch("profile/mayWalletReq");
             })
             .catch(err => {
               is_err = true;

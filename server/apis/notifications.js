@@ -33,9 +33,12 @@ router.get('/', function (req, res) {
           } else {
             let un_read = result[0].total
 
-            connection.query(
-              `SELECT COUNT(*) as total_rows FROM notifications WHERE to_id=? AND to_type=?`,
-              [id, type],
+            connection.query(`
+              SELECT COUNT(*) as total_rows 
+              FROM notifications 
+              WHERE to_id=? AND to_type=?
+              ${(search !== '') ? 'AND (from_txt LIKE ? OR message LIKE ? OR created_at LIKE ?)' : ''}
+              `, [id, type, '%' + search + '%', '%' + search + '%', '%' + search + '%'],
               function (error, result) {
                 if (error) {
                   connection.release()
@@ -47,8 +50,10 @@ router.get('/', function (req, res) {
                   SELECT id, from_id, from_txt, from_type, message as msg, seen as \`read\`, created_at as date, notify_type as type 
                   FROM notifications 
                   WHERE to_id=? AND to_type=?
+                  ${(search !== '') ? 'AND (from_txt LIKE ? OR message LIKE ? OR created_at LIKE ?)' : ''}
                   ORDER BY id DESC LIMIT ${limit}
-                  `, [id, type], function (error, result) {
+                  OFFSET ${offset}
+                  `, [id, type, '%' + search + '%', '%' + search + '%', '%' + search + '%'], function (error, result) {
                       connection.release()
                       if (error) {
                         res.status(500).json({ error })
