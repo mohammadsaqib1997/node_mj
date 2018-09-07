@@ -9,7 +9,8 @@
           b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="f_data.full_name")
 
         b-field(label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email')
+          b-input(v-if="user_asn_id === ''" type="email" placeholder="user@domain.com" v-model='f_data.email')
+          b-input(v-else type="email" placeholder="user@domain.com" :value="f_data.email" readonly)
 
         b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
           b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
@@ -26,8 +27,9 @@
         b-field(label="Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
           b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")
           
-        b-field(label="Referral ID")
-          b-input(type="text" placeholder="000000000" readonly v-bind:value="ref_code")
+        b-field(label="Referral ID" :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
+          b-input(v-if="user_asn_id === ''" type="text" placeholder="000000000" v-model="f_data.ref_code" v-mask="'#########'")
+          b-input(v-else type="text" placeholder="000000000" readonly v-bind:value="f_data.ref_code")
 
         b-field.cus-des-1(label="Status")
           b-input(type="text" placeholder="Approved/Suspended" readonly v-bind:value="(status == 0) ? 'Suspended':'Approved'")
@@ -63,7 +65,6 @@ export default {
       prd_list: [],
       fet_m_data: null,
       user_asn_id: "",
-      ref_code: "",
       status: "",
       f_data: {
         full_name: "",
@@ -72,7 +73,8 @@ export default {
         cnic_num: "",
         dob: null,
         cont_num: "",
-        address: ""
+        address: "",
+        ref_code: ""
       },
       form: {
         loading: false
@@ -96,15 +98,15 @@ export default {
       debounce: 500,
       validator: function(value) {
         const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .email()
-          .maxLength(100);
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (value !== self.profile.email) {
+        if (self.user_asn_id === "") {
+          let validator = Validator.value(value)
+            .required()
+            .email()
+            .maxLength(100);
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
               return self.$axios
                 .post("/api/web/check_email", {
                   email: value
@@ -114,16 +116,45 @@ export default {
                     return "This email is already in use.";
                   }
                 });
-            }
-          });
+            });
+          }
         }
       }
     },
-    "f_data.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
+    "f_data.password": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        let validator = Validator.value(value)
+          .required()
+          .minLength(6)
+          .maxLength(35);
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          if (
+            self.f_data.email !== "" &&
+            (self.f_data.email !== self.profile.email ||
+              value !== self.profile.password)
+          ) {
+            return validator.custom(() => {
+              return self.$axios
+                .post("/api/web/check_email_pass", {
+                  email: self.f_data.email,
+                  pass: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This password already used in previous account.";
+                  }
+                });
+            });
+          } else {
+            return validator;
+          }
+        }
+      }
     },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
@@ -133,41 +164,48 @@ export default {
     "f_data.dob": function(value) {
       return Validator.value(value).required();
     },
-    "f_data.cont_num": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .regex(
-            /^\92-\d{3}-\d{3}-\d{4}$/,
-            "Invalid Contact Number(e.g 92-000-000-0000)"
-          );
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (value !== self.profile.contact_num) {
-              return self.$axios
-                .post("/api/web/check_cont_num", {
-                  cont_num: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This Contact Number is already in use.";
-                  }
-                });
-            }
-          });
-        }
-      }
+    "f_data.cont_num": function(value) {
+      return Validator.value(value)
+        .required()
+        .regex(
+          /^\92-\d{3}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 92-000-000-0000)"
+        );
     },
     "f_data.address": function(value) {
       return Validator.value(value)
         .required()
         .minLength(6)
         .maxLength(100);
+    },
+    "f_data.ref_code": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        if (self.user_asn_id === "") {
+          let validator = Validator.value(value)
+            .digit()
+            .length(9);
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
+              if (!Validator.isEmpty(value)) {
+                return self.$axios
+                  .post("/api/web/check_ref_id", {
+                    id: value
+                  })
+                  .then(res => {
+                    if (res.data.count < 1) {
+                      return "Invalid referral id.";
+                    }
+                  });
+              }
+            });
+          }
+        }
+      }
     }
   },
   directives: {
@@ -176,7 +214,6 @@ export default {
   methods: {
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
-      this.ref_code = data.ref_user_asn_id;
       this.status = data.active_sts;
       this.f_data = {
         full_name: data.full_name,
@@ -185,7 +222,8 @@ export default {
         cnic_num: data.cnic_num,
         dob: data.dob ? new Date(moment(data.dob)) : new Date(),
         cont_num: data.contact_num,
-        address: data.address
+        address: data.address,
+        ref_code: data.ref_user_asn_id
       };
     },
     update: function() {

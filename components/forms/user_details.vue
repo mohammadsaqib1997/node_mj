@@ -4,10 +4,10 @@
         b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="form.full_name")
 
     b-field(label="Email" :type="(validation.hasError('form.email')) ? 'is-danger':''" :message="validation.firstError('form.email')")
-        b-input(type="email" placeholder="(example: shabir@gmail.com)" v-model="form.email")
+        b-input(type="email" placeholder="(example: shabir@gmail.com)" v-model="form.email" :loading="validation.isValidating('form.email')")
 
     b-field(label="Password" :type="(validation.hasError('form.password')) ? 'is-danger':''" :message="validation.firstError('form.password')")
-        b-input(type="password" placeholder="******" v-model="form.password")
+        b-input(type="password" placeholder="******" v-model="form.password" :loading="validation.isValidating('form.password')")
 
     b-field(label="CNIC" :type="(validation.hasError('form.cnic_num')) ? 'is-danger':''" :message="validation.firstError('form.cnic_num')")
         b-input(type="text" placeholder="xxxxx-xxxxxxx-x" v-model="form.cnic_num" v-mask="'#####-#######-#'")
@@ -18,8 +18,13 @@
     b-field(label="Address" :type="(validation.hasError('form.address')) ? 'is-danger':''" :message="validation.firstError('form.address')")
         b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="form.address")
 
-    b-field(label="Referral Code" :type="(validation.hasError('form.ref_code')) ? 'is-danger':''" :message="validation.firstError('form.ref_code')")
-        b-input(type="text" placeholder="Enter member ID" v-model="form.ref_code")
+    .columns
+      .column
+        b-field(label="Referral Code" :type="(validation.hasError('form.ref_code')) ? 'is-danger':''" :message="validation.firstError('form.ref_code')")
+          b-input(type="text" placeholder="Enter member ID" v-model="form.ref_code" :loading="validation.isValidating('form.ref_code')")
+      .column
+        b-field(label="Referral Name")
+          b-input(type="text" placeholder="Name" :value="ref_name" readonly)
 </template>
 
 <script>
@@ -32,6 +37,7 @@ export default {
   },
   data() {
     return {
+      ref_name: "",
       form: {
         full_name: "",
         email: "",
@@ -76,44 +82,49 @@ export default {
         }
       }
     },
-    "form.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
+    "form.password": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this
+        let validator = Validator.value(value)
+          .required()
+          .minLength(6)
+          .maxLength(35);
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          if (self.form.email !== "") {
+            return validator.custom(() => {
+              return self.$axios
+                .post("/api/web/check_email_pass", {
+                  email: self.form.email,
+                  pass: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This password already used in previous account.";
+                  }
+                });
+            });
+          } else {
+            return validator;
+          }
+        }
+      }
     },
     "form.cnic_num": function(value) {
       return Validator.value(value)
         .required()
         .regex(/^\d{5}-\d{7}-\d$/, "Invalid NIC Number(e.g 12345-1234567-1)");
     },
-    "form.cont_num": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .regex(
-            /^\92-\d{3}-\d{3}-\d{4}$/,
-            "Invalid Contact Number(e.g 92-000-000-0000)"
-          );
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            return self.$axios
-              .post("/api/web/check_cont_num", {
-                cont_num: value
-              })
-              .then(res => {
-                if (res.data.count > 0) {
-                  return "This Contact Number is already in use.";
-                }
-              });
-          });
-        }
-      }
+    "form.cont_num": function(value) {
+      return Validator.value(value)
+        .required()
+        .regex(
+          /^\92-\d{3}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 92-000-000-0000)"
+        );
     },
     "form.address": function(value) {
       return Validator.value(value)
@@ -126,6 +137,7 @@ export default {
       debounce: 500,
       validator: function(value) {
         const self = this;
+        self.ref_name = "";
         let validator = Validator.value(value)
           .digit()
           .length(9);
@@ -141,6 +153,8 @@ export default {
                 .then(res => {
                   if (res.data.count < 1) {
                     return "Invalid referral id.";
+                  } else {
+                    self.ref_name = res.data.user.full_name;
                   }
                 });
             });

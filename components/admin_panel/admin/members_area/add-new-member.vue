@@ -26,13 +26,13 @@
                 label Email
               .column
                 b-field(:type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-                  b-input(type="email" placeholder="user@domain.com" v-model='f_data.email')
+                  b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
             .columns.is-variable.is-1
               .column.is-3
                 label Password
               .column
                 b-field(:type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
-                  b-input(type="password" placeholder="******" v-model="f_data.password")
+                  b-input(type="password" placeholder="******" v-model="f_data.password" :loading="validation.isValidating('f_data.password')")
             .columns.is-variable.is-1
               .column.is-3
                 label Re-Type Password
@@ -68,7 +68,7 @@
                 label Referral ID
               .column
                 b-field(:type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
-                  b-input(type="text" placeholder="000000000" v-model="f_data.ref_code")
+                  b-input(type="text" placeholder="000000000" v-model="f_data.ref_code" :loading="validation.isValidating('f_data.ref_code')")
               .column
                 b-field
                   b-input(type="text" placeholder="Referral Name" readonly v-bind:value="ref_name")
@@ -110,19 +110,19 @@
                   b-icon(icon="plus-circle" style="margin-top: 2px;")
                   | &nbsp;&nbsp;&nbsp;&nbsp;Add Member
           b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
-        b-modal.confirm_modal(:active="modalAct" :canCancel="false")
-          .box.main-box
-            .header.columns.is-gapless
-              .column
-                  h1 Confirmation
-            .body
-              .section
-                .show-info
-                  label Yau are assign the manual user id so please confirm it this is paid user?
-                button.button.btn-des-1(@click.prevent="modalAct=false")
-                  | No
-                button.button.btn-des-1(@click.prevent="modalAct=false;is_paid_user=true;submit();" style="margin-left:10px")
-                  | Yes
+    b-modal.confirm_modal(:active="modalAct" :canCancel="false")
+      .box.main-box
+        .header.columns.is-gapless
+          .column
+              h1 Confirmation
+        .body
+          .section
+            .show-info
+              label Yau are assign the manual user id so please confirm it this is paid user?
+            button.button.btn-des-1(@click.prevent="modalAct=false")
+              | No
+            button.button.btn-des-1(@click.prevent="modalAct=false;is_paid_user=true;submit();" style="margin-left:10px")
+              | Yes
 
 </template>
 
@@ -185,26 +185,31 @@ export default {
       debounce: 500,
       validator: function(value) {
         const self = this;
-        let validator = Validator.value(value)
-          .digit()
-          .length(9);
+        if (
+          self.form.submitted ||
+          self.validation.isTouched("f_data.user_asn_id")
+        ) {
+          let validator = Validator.value(value)
+            .digit()
+            .length(9);
 
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (!Validator.isEmpty(value)) {
-              return self.$axios
-                .post("/api/member/mjIdCheck", {
-                  id: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This id is already in use.";
-                  }
-                });
-            }
-          });
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
+              if (!Validator.isEmpty(value)) {
+                return self.$axios
+                  .post("/api/member/mjIdCheck", {
+                    id: value
+                  })
+                  .then(res => {
+                    if (res.data.count > 0) {
+                      return "This id is already in use.";
+                    }
+                  });
+              }
+            });
+          }
         }
       }
     },
@@ -224,33 +229,65 @@ export default {
       debounce: 500,
       validator: function(value) {
         const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .email()
-          .maxLength(100);
+        if (self.form.submitted || self.validation.isTouched("f_data.email")) {
+          let validator = Validator.value(value)
+            .required()
+            .email()
+            .maxLength(100);
 
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            return self.$axios
-              .post("/api/web/check_email", {
-                email: value
-              })
-              .then(res => {
-                if (res.data.count > 0) {
-                  return "This email is already in use.";
-                }
-              });
-          });
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
+              return self.$axios
+                .post("/api/web/check_email", {
+                  email: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This email is already in use.";
+                  }
+                });
+            });
+          }
         }
       }
     },
-    "f_data.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
+    "f_data.password": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        if (
+          self.form.submitted ||
+          self.validation.isTouched("f_data.password")
+        ) {
+          let validator = Validator.value(value)
+            .required()
+            .minLength(6)
+            .maxLength(35);
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            if (self.f_data.email !== "") {
+              return validator.custom(() => {
+                return self.$axios
+                  .post("/api/web/check_email_pass", {
+                    email: self.f_data.email,
+                    pass: value
+                  })
+                  .then(res => {
+                    if (res.data.count > 0) {
+                      return "This password already used in previous account.";
+                    }
+                  });
+              });
+            } else {
+              return validator;
+            }
+          }
+        }
+      }
     },
     "con_pass, f_data.password": function(con_pass, password) {
       if (this.form.submitted || this.validation.isTouched("con_pass")) {
@@ -267,33 +304,13 @@ export default {
     "f_data.dob": function(value) {
       return Validator.value(value).required();
     },
-    "f_data.cont_num": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .regex(
-            /^\92-\d{3}-\d{3}-\d{4}$/,
-            "Invalid Contact Number(e.g 92-000-000-0000)"
-          );
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            return self.$axios
-              .post("/api/web/check_cont_num", {
-                cont_num: value
-              })
-              .then(res => {
-                if (res.data.count > 0) {
-                  return "This Contact Number is already in use.";
-                }
-              });
-          });
-        }
-      }
+    "f_data.cont_num": function(value) {
+      return Validator.value(value)
+        .required()
+        .regex(
+          /^\92-\d{3}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 92-000-000-0000)"
+        );
     },
     "f_data.address": function(value) {
       return Validator.value(value)
@@ -307,32 +324,37 @@ export default {
       validator: function(value) {
         const self = this;
         self.ref_name = "";
-        let validator = Validator.value(value)
-          .digit()
-          .length(9);
+        if (
+          self.form.submitted ||
+          self.validation.isTouched("f_data.ref_code")
+        ) {
+          let validator = Validator.value(value)
+            .digit()
+            .length(9);
 
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (!Validator.isEmpty(value)) {
-              if (value !== self.f_data.user_asn_id) {
-                return self.$axios
-                  .post("/api/web/check_ref_id", {
-                    id: value
-                  })
-                  .then(res => {
-                    if (res.data.count < 1) {
-                      return "Invalid referral id.";
-                    } else {
-                      self.ref_name = res.data.user.full_name;
-                    }
-                  });
-              } else {
-                return "Invalid referral id.";
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
+              if (!Validator.isEmpty(value)) {
+                if (value !== self.f_data.user_asn_id) {
+                  return self.$axios
+                    .post("/api/web/check_ref_id", {
+                      id: value
+                    })
+                    .then(res => {
+                      if (res.data.count < 1) {
+                        return "Invalid referral id.";
+                      } else {
+                        self.ref_name = res.data.user.full_name;
+                      }
+                    });
+                } else {
+                  return "Invalid referral id.";
+                }
               }
-            }
-          });
+            });
+          }
         }
       }
     },
@@ -395,8 +417,8 @@ export default {
             active_sts: self.f_data.status
           };
           if (self.is_paid_user === true) {
-            mem_data['is_paid_m'] = 1
-            mem_data['user_asn_id'] = self.f_data.user_asn_id
+            mem_data["is_paid_m"] = 1;
+            mem_data["user_asn_id"] = self.f_data.user_asn_id;
           }
 
           self.$axios
@@ -433,7 +455,7 @@ export default {
     reset: function() {
       this.con_pass = "";
       this.ref_name = "";
-      this.is_paid_user = false
+      this.is_paid_user = false;
       this.form.submitted = false;
       this.f_data = {
         user_asn_id: "",
@@ -453,8 +475,10 @@ export default {
         qnt_bikes: 5,
         p_type: 1
       };
+      this.validation.reset();
       $(".main-content").animate({ scrollTop: 20 }, 500);
-      setTimeout(() => this.validation.reset(), 100);
+
+      //setTimeout(() => , 100);
     }
   }
 };

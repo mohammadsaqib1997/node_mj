@@ -52,7 +52,19 @@ router.post('/check_email', (req, res) => {
     if (err) {
       sendDBError(res, err)
     } else {
-      connection.query('SELECT email FROM `members` where binary `email`=?', [req.body.email], function (error, results, fields) {
+      // connection.query('SELECT email FROM `members` where binary `email`=?', [req.body.email], function (error, results, fields) {
+      //   if (error) {
+      //     connection.release();
+      //     sendDBError(res, error)
+      //   } else {
+      //     if (results.length > 0) {
+      //       connection.release();
+      //       res.json({ count: results.length })
+      //     } else {
+      //     }
+      //   }
+      // });
+      connection.query('SELECT email FROM `moderators` where binary `email`=?', [req.body.email], function (error, results, fields) {
         if (error) {
           connection.release();
           sendDBError(res, error)
@@ -61,78 +73,83 @@ router.post('/check_email', (req, res) => {
             connection.release();
             res.json({ count: results.length })
           } else {
-            connection.query('SELECT email FROM `moderators` where binary `email`=?', [req.body.email], function (error, results, fields) {
+            connection.query('SELECT email FROM `admins` where binary `email`=?', [req.body.email], function (error, results, fields) {
               if (error) {
                 connection.release();
                 sendDBError(res, error)
               } else {
-                if (results.length > 0) {
-                  connection.release();
-                  res.json({ count: results.length })
-                } else {
-                  connection.query('SELECT email FROM `admins` where binary `email`=?', [req.body.email], function (error, results, fields) {
-                    if (error) {
-                      connection.release();
-                      sendDBError(res, error)
-                    } else {
-                      connection.release();
-                      res.json({ count: results.length })
-                    }
-                  })
-                }
+                connection.release();
+                res.json({ count: results.length })
               }
             })
           }
         }
+      })
 
-      });
     }
   })
 
 })
 
-router.post('/check_cont_num', (req, res) => {
-
+router.post("/check_email_pass", (req, res) => {
   db.getConnection(function (err, connection) {
     if (err) {
       sendDBError(res, err)
     } else {
-      connection.query('SELECT contact_num FROM `members` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
+      connection.query('SELECT COUNT(*) as count FROM `members` WHERE BINARY `email`=? AND BINARY `password`=?', [req.body.email, req.body.pass], function (error, results, fields) {
+        connection.release();
         if (error) {
-          connection.release();
           sendDBError(res, error)
         } else {
-          if (results.length > 0) {
-            connection.release();
-            res.json({ count: results.length })
-          } else {
-            connection.query('SELECT contact_num FROM `moderators` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
-              if (error) {
-                connection.release();
-                sendDBError(res, error)
-              } else {
-                if (results.length > 0) {
-                  connection.release();
-                  res.json({ count: results.length })
-                } else {
-                  connection.query('SELECT contact_num FROM `admins` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
-                    connection.release();
-                    if (error) {
-                      sendDBError(res, error)
-                    } else {
-                      res.json({ count: results.length })
-                    }
-                  })
-                }
-              }
-            })
-          }
+          res.json({ count: results[0].count })
         }
-      });
+      })
     }
   })
-
 })
+
+// router.post('/check_cont_num', (req, res) => {
+
+//   db.getConnection(function (err, connection) {
+//     if (err) {
+//       sendDBError(res, err)
+//     } else {
+//       connection.query('SELECT contact_num FROM `members` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
+//         if (error) {
+//           connection.release();
+//           sendDBError(res, error)
+//         } else {
+//           if (results.length > 0) {
+//             connection.release();
+//             res.json({ count: results.length })
+//           } else {
+//             connection.query('SELECT contact_num FROM `moderators` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
+//               if (error) {
+//                 connection.release();
+//                 sendDBError(res, error)
+//               } else {
+//                 if (results.length > 0) {
+//                   connection.release();
+//                   res.json({ count: results.length })
+//                 } else {
+//                   connection.query('SELECT contact_num FROM `admins` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
+//                     connection.release();
+//                     if (error) {
+//                       sendDBError(res, error)
+//                     } else {
+//                       res.json({ count: results.length })
+//                     }
+//                   })
+//                 }
+//               }
+//             })
+//           }
+//         }
+//       });
+//     }
+//   })
+
+// })
 
 router.post('/check_ref_id', (req, res) => {
 

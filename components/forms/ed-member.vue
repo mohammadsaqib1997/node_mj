@@ -173,7 +173,7 @@ export default {
         .minLength(3)
         .maxLength(50)
         .custom(() => {
-          if (/[^a-zA-Z0-9 ]/.test(value)) {
+          if (/[^a-zA-Z0-9. ]/.test(value)) {
             return "Invalid character use.";
           }
         });
@@ -206,11 +206,41 @@ export default {
         }
       }
     },
-    "f_data.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
+    "f_data.password": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+
+        let validator = Validator.value(value)
+          .required()
+          .minLength(6)
+          .maxLength(35);
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          if (
+            self.f_data.email !== "" &&
+            (self.f_data.email !== self.fet_m_data.email ||
+              value !== self.fet_m_data.password)
+          ) {
+            return validator.custom(() => {
+              return self.$axios
+                .post("/api/web/check_email_pass", {
+                  email: self.f_data.email,
+                  pass: value
+                })
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "This password already used in previous account.";
+                  }
+                });
+            });
+          } else {
+            return validator;
+          }
+        }
+      }
     },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
@@ -220,35 +250,13 @@ export default {
     "f_data.dob": function(value) {
       return Validator.value(value).required();
     },
-    "f_data.cont_num": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .regex(
-            /^\92-\d{3}-\d{3}-\d{4}$/,
-            "Invalid Contact Number(e.g 92-000-000-0000)"
-          );
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (value !== self.fet_m_data.contact_num) {
-              return self.$axios
-                .post("/api/web/check_cont_num", {
-                  cont_num: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This Contact Number is already in use.";
-                  }
-                });
-            }
-          });
-        }
-      }
+    "f_data.cont_num": function(value) {
+      return Validator.value(value)
+        .required()
+        .regex(
+          /^\92-\d{3}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 92-000-000-0000)"
+        );
     },
     "f_data.address": function(value) {
       return Validator.value(value)
@@ -402,7 +410,7 @@ export default {
               $("#ed-member-con").animate({ scrollTop: 0 }, 500);
               self.form.loading = false;
               self.form.suc = "Successfully Member Updated.";
-              self.$emit("update_member", true)
+              self.$emit("update_member", true);
               setTimeout(() => (self.form.suc = ""), 2000);
             })
             .catch(err => {

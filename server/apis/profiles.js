@@ -209,7 +209,7 @@ router.get("/may_i_wallet_req", function (req, res) {
 
 router.post("/update", function (req, res) {
     if (req.decoded.data.user_id) {
-        db.getConnection(function (err, connection) {
+        db.getConnection(async function (err, connection) {
             if (err) {
                 res.status(500).json({ error })
             } else {
@@ -224,6 +224,29 @@ router.post("/update", function (req, res) {
                 if (req.decoded.data.type === 0) {
                     query = "UPDATE members SET ? WHERE id=?"
                     params["dob"] = moment(req.body.data.dob).format("YYYY-MM-DD")
+
+                    let throw_error = null
+                    await new Promise(resolve => {
+                        connection.query(
+                            `SELECT is_paid_m FROM members WHERE id=?`,
+                            req.decoded.data.user_id,
+                            function (error, result) {
+                                if (error) {
+                                    throw_error = error
+                                    return resolve()
+                                } else {
+                                    if (result[0].is_paid_m === 0) {
+                                        params["ref_user_asn_id"] = req.body.data.ref_code
+                                    } else {
+                                        delete params['email']
+                                    }
+                                    return resolve()
+                                }
+                            })
+                    })
+                    if (throw_error) {
+                        return res.status(500).json({ throw_error })
+                    }
 
                 } else if (req.decoded.data.type === 1) {
                     query = "UPDATE moderators SET ? WHERE id=?"

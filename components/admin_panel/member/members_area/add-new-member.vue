@@ -23,13 +23,13 @@
                   label Email
                 .column
                   b-field(:type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-                    b-input(type="email" placeholder="user@domain.com" v-model='f_data.email')
+                    b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
               .columns.is-variable.is-1
                 .column.is-3
                   label Password
                 .column
                   b-field(:type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
-                    b-input(type="password" placeholder="******" v-model="f_data.password")
+                    b-input(type="password" placeholder="******" v-model="f_data.password" :loading="validation.isValidating('f_data.password')")
               .columns.is-variable.is-1
                 .column.is-3
                   label Re-Type Password
@@ -226,11 +226,41 @@ export default {
         }
       }
     },
-    "f_data.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
+    "f_data.password": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+        if (
+          self.form.submitted ||
+          self.validation.isTouched("f_data.password")
+        ) {
+          let validator = Validator.value(value)
+            .required()
+            .minLength(6)
+            .maxLength(35);
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            if (self.f_data.email !== "") {
+              return validator.custom(() => {
+                return self.$axios
+                  .post("/api/web/check_email_pass", {
+                    email: self.f_data.email,
+                    pass: value
+                  })
+                  .then(res => {
+                    if (res.data.count > 0) {
+                      return "This password already used in previous account.";
+                    }
+                  });
+              });
+            }else{
+              return validator
+            }
+          }
+        }
+      }
     },
     "con_pass, f_data.password": function(con_pass, password) {
       if (this.form.submitted || this.validation.isTouched("con_pass")) {
@@ -247,39 +277,47 @@ export default {
     "f_data.dob": function(value) {
       return Validator.value(value).required();
     },
-    "f_data.cont_num": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        if (
-          self.form.submitted ||
-          self.validation.isTouched("f_data.cont_num")
-        ) {
-          let validator = Validator.value(value)
-            .required()
-            .regex(
-              /^\92-\d{3}-\d{3}-\d{4}$/,
-              "Invalid Contact Number(e.g 92-000-000-0000)"
-            );
-          if (validator.hasImmediateError()) {
-            return validator;
-          } else {
-            return validator.custom(() => {
-              return self.$axios
-                .post("/api/web/check_cont_num", {
-                  cont_num: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This Contact Number is already in use.";
-                  }
-                });
-            });
-          }
-        }
-      }
+    "f_data.cont_num": function(value) {
+      return Validator.value(value)
+        .required()
+        .regex(
+          /^\92-\d{3}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 92-000-000-0000)"
+        );
     },
+    // {
+    //   cache: false,
+    //   debounce: 500,
+    //   validator: function(value) {
+    //     const self = this;
+    //     if (
+    //       self.form.submitted ||
+    //       self.validation.isTouched("f_data.cont_num")
+    //     ) {
+    //       let validator = Validator.value(value)
+    //         .required()
+    //         .regex(
+    //           /^\92-\d{3}-\d{3}-\d{4}$/,
+    //           "Invalid Contact Number(e.g 92-000-000-0000)"
+    //         );
+    //       if (validator.hasImmediateError()) {
+    //         return validator;
+    //       } else {
+    //         return validator.custom(() => {
+    //           return self.$axios
+    //             .post("/api/web/check_cont_num", {
+    //               cont_num: value
+    //             })
+    //             .then(res => {
+    //               if (res.data.count > 0) {
+    //                 return "This Contact Number is already in use.";
+    //               }
+    //             });
+    //         });
+    //       }
+    //     }
+    //   }
+    // },
     "f_data.address": function(value) {
       return Validator.value(value)
         .required()

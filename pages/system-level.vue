@@ -118,12 +118,12 @@ export default {
         rwd: "Toyota Fortuner 2018 OR 50,000 $",
         pp: 1
       },
-      {
-        lvl: "10th Level",
-        cm: "None",
-        rwd: "World Tour OR 100,000 $",
-        pp: 1
-      }
+      // {
+      //   lvl: "10th Level",
+      //   cm: "None",
+      //   rwd: "World Tour OR 100,000 $",
+      //   pp: 1
+      // }
     ];
     let dir_inc = 0;
     for (let ind in gen_data) {

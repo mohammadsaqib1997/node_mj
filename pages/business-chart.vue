@@ -4,7 +4,7 @@
             .header.columns.is-gapless
                 .column
                     h1 Member Business Chart
-                .column(v-if="u_type !== 0")
+                .column
                     .field
                         p.control.has-icons-right
                             input.input(type="search" v-model="search_txt" placeholder="Search by Member ID or Name")
@@ -95,9 +95,6 @@ import _ from "lodash";
 export default {
   layout: "admin_layout",
   computed: {
-    u_type: function() {
-      return this.$store.state.user.data.type;
-    },
     search_classes: function() {
       return {
         "fa-search": this.s_loading === false,
@@ -169,7 +166,7 @@ export default {
         self.tree_load_ids.push(self.load_id);
       }
 
-      if (self.tree_load_ids.indexOf(id) === (self.tree_load_ids.length-1)) {
+      if (self.tree_load_ids.indexOf(id) === self.tree_load_ids.length - 1) {
         _.remove(self.tree_load_ids, function(id_l) {
           return id_l === id;
         });
