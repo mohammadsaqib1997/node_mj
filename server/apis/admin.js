@@ -235,16 +235,66 @@ router.get('/trans_list', function (req, res) {
     if (err) {
       res.status(500).json({ err })
     } else {
-      connection.query("SELECT * FROM transactions_comp ORDER BY id DESC", function (error, results) {
-        connection.release()
-        if (error) {
-          res.status(500).json({ error })
-        } else {
-          res.json({
-            results
-          })
-        }
-      })
+      let offset = 0, limit = 10, search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `SELECT SUM(debit) - SUM(credit) as tot_balance
+        FROM transactions_comp`,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({ error })
+          } else {
+            let tot_balance = result[0].tot_balance
+
+            connection.query(
+              `SELECT COUNT(*) as tot_rows 
+              FROM transactions_comp
+              ${(search !== '') ? 'WHERE id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?' : ''}`,
+              ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+              function (error, result) {
+                if (error) {
+                  connection.release()
+                  res.status(500).json({ error })
+                } else {
+                  let tot_rows = result[0].tot_rows
+
+                  connection.query(
+                    `SELECT * 
+                    FROM transactions_comp
+                    ${(search !== '') ? 'WHERE id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?' : ''}
+                    ORDER BY id DESC
+                    LIMIT ${limit}
+                    OFFSET ${offset}`,
+                    ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                    function (error, results) {
+                      connection.release()
+                      if (error) {
+                        res.status(500).json({ error })
+                      } else {
+                        res.json({
+                          results,
+                          tot_balance,
+                          tot_rows
+                        })
+                      }
+                    })
+                }
+              })
+          }
+        })
     }
   })
 })

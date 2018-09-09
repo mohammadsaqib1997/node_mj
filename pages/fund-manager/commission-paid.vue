@@ -5,62 +5,44 @@
         .column
           h1 Commission Paid
       .body
-          .section
-              b-field.table-filter(grouped)
-                b-field.sort-fields
-                  p.control
-                    button.button
-                      b-icon(icon="sort-amount-down" pack="fas")
-                  p.control
-                    button.button
-                      b-icon(icon="sort-amount-up" pack="fas")
-                  b-select(placeholder="By Field")
-                    option(value="email") By Email
-                    option(value="name") By Name
-                    option(value="id") By ID
-                b-field.search-field(expanded)
-                  p.control.has-icons-right
-                    input.input(type="search" placeholder="Search")
-                    span.icon.is-right
-                      i.fas.fa-search
-                b-field.view-field
-                  p.control
-                    button.button
-                      b-icon(icon="eye" pack="fas")
-                      | &nbsp;&nbsp;&nbsp;VIEW
-              table-comp(:arr="ren_data" :loading="loading" :striped="true")
-                  template(slot="thead")
-                    tr
-                      th ID
-                      th Date
-                      th Description
-                      th Amount
-                      th Receipt
-                  template(slot="tbody")
-                      tr(v-for="row in ren_data")
-                        td {{ row.id }}
-                        td {{ $store.getters.formatDate(row.date) }}
-                        td {{ row.description }}
-                        td {{ row.amount }}
-                        td.receipt_con
-                          template(v-if="row.receipt")
-                            a.anch(href="#") REF {{ "#"+row.receipt }}
-                          template(v-else)
-                            .upload(v-if="$store.getters['receipts_upload/hasFile'](row.id)" @click.prevent="uploadFile(row.member_id, row.id)")
-                              span UPLOAD&nbsp;&nbsp;&nbsp;
-                              b-icon(icon="upload")
-                              b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.id)")
-                            b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.id})")
-                              span UPLOAD&nbsp;&nbsp;&nbsp;
-                              b-icon(icon="plus-circle")
+        .section
+          tblTopFilter(:act_view="String(params.limit)" :s_txt="params.search" @change_act_view="set_params({ param: 'limit', value: parseInt($event) })" @change_s_txt="set_params({ param: 'search', value: $event })")
+          table-comp(:arr="ren_data" :loading="loading" :striped="true" :total_record="tot_rows" :per_page="parseInt(params.limit)" :page_set="params.page" @page_change="set_params({ param: 'page', value: $event })")
+              template(slot="thead")
+                tr
+                  th ID
+                  th Date
+                  th Description
+                  th Amount
+                  th Receipt
+              template(slot="tbody")
+                  tr(v-for="row in ren_data")
+                    td {{ row.id }}
+                    td {{ $store.getters.formatDate(row.date) }}
+                    td {{ row.description }}
+                    td {{ row.amount }}
+                    td.receipt_con
+                      template(v-if="row.receipt")
+                        a.anch(href="#") REF {{ "#"+row.receipt }}
+                      template(v-else)
+                        .upload(v-if="$store.getters['receipts_upload/hasFile'](row.id)" @click.prevent="uploadFile(row.member_id, row.id)")
+                          span UPLOAD&nbsp;&nbsp;&nbsp;
+                          b-icon(icon="upload")
+                          b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.id)")
+                        b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.id})")
+                          span UPLOAD&nbsp;&nbsp;&nbsp;
+                          b-icon(icon="plus-circle")
 </template>
 
 <script>
+import _ from "lodash";
 import tableComp from "~/components/html_comp/tableComp.vue";
+import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 export default {
   layout: "admin_layout",
   components: {
-    tableComp
+    tableComp,
+    tblTopFilter
   },
   async mounted() {
     const self = this;
@@ -74,16 +56,25 @@ export default {
   data() {
     return {
       ren_data: [],
-      loading: false
+      tot_rows: 1,
+      loading: false,
+      params: {
+        limit: 10,
+        page: 1,
+        search: ""
+      }
     };
   },
   methods: {
     loadCM: async function() {
       const self = this;
       await self.$axios
-        .get("/api/commission/paid")
+        .get("/api/commission/paid", {
+          params: self.params
+        })
         .then(res => {
           self.ren_data = res.data.data;
+          self.tot_rows = res.data.tot_rows;
         })
         .catch(err => {
           console.log(err);
@@ -122,7 +113,25 @@ export default {
           console.log(err);
         });
       self.loading = false;
-    }
+    },
+    async set_params(pld) {
+      const self = this;
+      let param_val = _.get(self.params, pld.param, null);
+      if (param_val !== null && param_val !== pld.value) {
+        if (pld.param !== "page") {
+          _.set(self.params, "page", 1);
+        }
+        _.set(self.params, pld.param, pld.value);
+        self.loading = true;
+        self.after_settle(async function() {
+          await self.loadCM();
+          self.loading = false;
+        });
+      }
+    },
+    after_settle: _.debounce(function(cb) {
+      cb();
+    }, 1000)
   }
 };
 </script>

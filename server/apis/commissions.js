@@ -74,20 +74,55 @@ router.get("/un_paid", function (req, res) {
         if (error) {
             res.status(500).json({ error })
         } else {
-            query = `
-            SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
-            FROM commissions
-            WHERE status=0
-            ORDER BY trans_id DESC
-            `
-            connection.query(query, function (error, results) {
-                connection.release()
-                if (error) {
-                    res.status(500).json({ error })
-                } else {
-                    res.json({ data: results })
-                }
-            })
+            let offset = 0, limit = 10, search = ""
+
+            if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+                limit = req.query.limit
+            }
+
+            if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+                offset = (parseInt(req.query.page) - 1) * limit
+            }
+
+            if (req.query.search) {
+                search = req.query.search
+            }
+
+            connection.query(
+                `SELECT COUNT(*) as tot_rows
+                FROM commissions
+                WHERE status=0 
+                ${(search !== '') ? 'AND (trans_id LIKE ? OR remarks LIKE ? OR amount LIKE ? OR created_at LIKE ?)' : ''}`,
+                ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                function (error, results) {
+                    if (error) {
+                        connection.release()
+                        res.status(500).json({ error })
+                    } else {
+                        let tot_rows = results[0].tot_rows
+
+                        connection.query(
+                            `SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
+                            FROM commissions
+                            WHERE status=0 
+                            ${(search !== '') ? 'AND (trans_id LIKE ? OR remarks LIKE ? OR amount LIKE ? OR created_at LIKE ?)' : ''}
+                            ORDER BY trans_id DESC
+                            LIMIT ${limit}
+                            OFFSET ${offset}`,
+                            ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                            function (error, results) {
+                                connection.release()
+                                if (error) {
+                                    res.status(500).json({ error })
+                                } else {
+                                    res.json({ data: results, tot_rows })
+                                }
+                            }
+                        )
+                    }
+                })
+
+
         }
     })
 })
@@ -97,20 +132,57 @@ router.get("/paid", function (req, res) {
         if (error) {
             res.status(500).json({ error })
         } else {
-            query = `
-            SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
-            FROM commissions
-            WHERE status=1
-            ORDER BY trans_id DESC
-            `
-            connection.query(query, function (error, results) {
-                connection.release()
-                if (error) {
-                    res.status(500).json({ error })
-                } else {
-                    res.json({ data: results })
+            let offset = 0, limit = 10, search = ""
+
+            if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+                limit = req.query.limit
+            }
+
+            if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+                offset = (parseInt(req.query.page) - 1) * limit
+            }
+
+            if (req.query.search) {
+                search = req.query.search
+            }
+
+            connection.query(
+                `SELECT COUNT(*) as tot_rows
+                FROM commissions
+                WHERE status=1 
+                ${(search !== '') ? 'AND (trans_id LIKE ? OR remarks LIKE ? OR amount LIKE ? OR created_at LIKE ?)' : ''}`,
+                ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                function (error, result) {
+                    if (error) {
+                        connection.release()
+                        res.status(500).json({ error })
+                    } else {
+                        let tot_rows = result[0].tot_rows
+
+                        connection.query(
+                            `SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
+                            FROM commissions
+                            WHERE status=1 
+                            ${(search !== '') ? 'AND (trans_id LIKE ? OR remarks LIKE ? OR amount LIKE ? OR created_at LIKE ?)' : ''}
+                            ORDER BY trans_id DESC
+                            LIMIT ${limit}
+                            OFFSET ${offset}`,
+                            ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                            function (error, results) {
+                                connection.release()
+                                if (error) {
+                                    res.status(500).json({ error })
+                                } else {
+                                    res.json({
+                                        data: results,
+                                        tot_rows
+                                    })
+                                }
+                            }
+                        )
+                    }
                 }
-            })
+            )
         }
     })
 })

@@ -45,11 +45,9 @@ export default {
     ...mapState({
       params: state => state.member.transactions.load_params,
       tot_rows: state => state.member.transactions.total_s_rows,
-      loading: state => state.member.transactions.list_loader
-    }),
-    trans_data: function() {
-      return this.$store.state.member.transactions.list;
-    }
+      loading: state => state.member.transactions.list_loader,
+      trans_data: state => state.member.transactions.list
+    })
   },
   async mounted() {
     this.$store.commit("member/transactions/set_list_loader", true);
@@ -60,9 +58,9 @@ export default {
     return {};
   },
   methods: {
-      ...mapActions({
-          update_params: 'member/transactions/update_params'
-      })
+    ...mapActions({
+      update_params: "member/transactions/update_params"
+    })
   }
 };
 </script>

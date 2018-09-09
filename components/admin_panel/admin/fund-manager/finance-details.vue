@@ -7,25 +7,14 @@
           h1 Finance Details
       .body
         .section
-          b-field.table-filter(grouped)
-            b-field.sort-fields
-              p.control
-                button.button
-                  b-icon(icon="sort-amount-down" pack="fas")
-              p.control
-                button.button
-                  b-icon(icon="sort-amount-up" pack="fas")
-              b-select(placeholder="By Field")
-                option(value="email") By Email
-                option(value="name") By Name
-                option(value="id") By ID
+          tblTopFilter(:act_view="String(params.limit)" :s_txt="params.search" @change_act_view="update_params({ param: 'limit', value: parseInt($event) })" @change_s_txt="update_params({ param: 'search', value: $event })")
             
-            b-field.total-count
-              p.control.has-text-right
-                span Total Balance:
-                span.count {{ $store.state.transaction.balance }}/-
+          b-field.total-count
+            p.control.has-text-right
+              span Total Balance:
+              span.count {{ $store.state.transaction.tot_balance }}/-
 
-          tableComp(:arr="trans_data" :loading="loading" :striped="true" :paginate="false")
+          tableComp(:arr="trans_data" :loading="loading" :striped="true" :total_record="tot_rows" :per_page="parseInt(params.limit)" :page_set="params.page" @page_change="update_params({ param: 'page', value: $event })")
             template(slot="thead")
               tr
                 th ID
@@ -36,35 +25,61 @@
             template(slot="tbody")
               tr(v-for="row in trans_data")
                 td {{ row.id }}
-                td {{ $store.getters.formatDate(row.date) }}
+                td {{ $store.getters.formatDate(row.created_at) }}
                 td {{ row.remarks }}
                 td {{ row.debit }}
                 td {{ row.credit }}
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
+import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import wsAdmin from "~/components/admin_panel/admin/wallet-show.vue";
 export default {
   components: {
     tableComp,
-    wsAdmin
+    wsAdmin,
+    tblTopFilter
   },
   async mounted() {
-    this.loading = true;
+    this.$store.commit("transaction/set_list_loader", true);
     await this.$store.dispatch("transaction/loadTransaction");
-    this.loading = false;
+    this.$store.commit("transaction/set_list_loader", false);
   },
   computed: {
-    trans_data: function() {
-      return this.$store.state.transaction.list;
-    }
+    ...mapState({
+      params: state => state.transaction.load_params,
+      tot_rows: state => state.transaction.total_s_rows,
+      loading: state => state.transaction.list_loader,
+      trans_data: state => state.transaction.list
+    })
+  },
+  destroyed() {
+    this.$store.commit('transaction/reset_data')
   },
   data() {
-    return {
-      loading: true
-    };
+    return {};
+  },
+  methods: {
+    ...mapActions({
+      update_params: "transaction/update_params"
+    })
   }
 };
 </script>
+
+<style lang="scss" scoped>
+.total-count {
+  > p {
+    font-size: 16px;
+    font-weight: 500;
+    color: #959595;
+    > .count {
+      margin-left: 5px;
+      color: #666666;
+    }
+  }
+}
+</style>
 
