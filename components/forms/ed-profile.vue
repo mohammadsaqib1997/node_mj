@@ -44,6 +44,7 @@
 </template>
 
 <script>
+import _ from "lodash";
 import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
@@ -233,10 +234,16 @@ export default {
         if (success) {
           let is_err = false;
           let msg = "";
+
+          let new_data = _.cloneDeep(self.f_data)
+          
+          new_data["dob"] = new_data["dob"]
+            ? moment(new_data.dob).format("YYYY-MM-DD")
+            : null;
           await self.$axios
             .post("/api/profile/update", {
               update_id: self.$store.state.user.data.user_id,
-              data: self.f_data
+              data: new_data
             })
             .then(async res => {
               if (res.data.status !== false) {

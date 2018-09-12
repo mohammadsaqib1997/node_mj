@@ -223,7 +223,7 @@ router.post("/update", function (req, res) {
                 }
                 if (req.decoded.data.type === 0) {
                     query = "UPDATE members SET ? WHERE id=?"
-                    params["dob"] = moment(req.body.data.dob).format("YYYY-MM-DD")
+                    params["dob"] = req.body.data.dob
 
                     let throw_error = null
                     await new Promise(resolve => {
