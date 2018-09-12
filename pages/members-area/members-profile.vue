@@ -122,7 +122,6 @@ export default {
         _.set(new_params, param, val);
         this.load_params = new_params;
         this.loading = true;
-        console.log(this.load_params)
         this.after_f_settle();
       }
     },

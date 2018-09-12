@@ -16,7 +16,7 @@
             .column
                 label Date Of Birth
             .column
-                h2 {{ $store.getters.formatDate(profile.dob) }}
+                h2 {{ profile.dob ? $store.getters.formatDate(profile.dob) : '' }}
 
         .columns.is-variable.is-1
             .column

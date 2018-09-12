@@ -339,7 +339,7 @@ export default {
         email: data.email,
         password: data.password,
         cnic_num: data.cnic_num,
-        dob: data.dob ? new Date(moment(data.dob)) : new Date(),
+        dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
         ref_code: data.ref_user_asn_id,

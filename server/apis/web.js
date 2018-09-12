@@ -108,49 +108,6 @@ router.post("/check_email_pass", (req, res) => {
   })
 })
 
-// router.post('/check_cont_num', (req, res) => {
-
-//   db.getConnection(function (err, connection) {
-//     if (err) {
-//       sendDBError(res, err)
-//     } else {
-//       connection.query('SELECT contact_num FROM `members` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
-//         if (error) {
-//           connection.release();
-//           sendDBError(res, error)
-//         } else {
-//           if (results.length > 0) {
-//             connection.release();
-//             res.json({ count: results.length })
-//           } else {
-//             connection.query('SELECT contact_num FROM `moderators` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
-//               if (error) {
-//                 connection.release();
-//                 sendDBError(res, error)
-//               } else {
-//                 if (results.length > 0) {
-//                   connection.release();
-//                   res.json({ count: results.length })
-//                 } else {
-//                   connection.query('SELECT contact_num FROM `admins` where binary `contact_num`=?', [req.body.cont_num], function (error, results, fields) {
-//                     connection.release();
-//                     if (error) {
-//                       sendDBError(res, error)
-//                     } else {
-//                       res.json({ count: results.length })
-//                     }
-//                   })
-//                 }
-//               }
-//             })
-//           }
-//         }
-//       });
-//     }
-//   })
-
-// })
-
 router.post('/check_ref_id', (req, res) => {
 
   db.getConnection(function (err, connection) {
@@ -175,74 +132,121 @@ router.post('/check_ref_id', (req, res) => {
 })
 
 router.post('/login', (req, res) => {
-  db.getConnection(function (err, connection) {
+  db.getConnection(async function (err, connection) {
     if (err) {
       sendDBError(res, err)
     } else {
+      let throw_error = null
+      let resp = null
 
-      connection.query(
-        'SELECT id, email FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
-        [req.body.email, req.body.email, req.body.password],
-        function (error, results, fields) {
-          if (error) {
-            connection.release();
-            sendDBError(res, error)
-          } else {
-            if (results.length === 1) {
-              connection.release();
-              let token = tokenGen(results[0], 0)
-              res.json({
-                status: true,
-                token: token,
-                user: userData(results[0], 0)
-              })
+      // member check
+      await new Promise(resolve => {
+        connection.query(
+          'SELECT id, email, active_sts FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
+          [req.body.email, req.body.email, req.body.password],
+          function (error, results) {
+            if (error) {
+              throw_error = error;
+              return resolve()
             } else {
-              connection.query(
-                'SELECT id, email FROM `moderators` WHERE BINARY `email`=? and BINARY `password`=?',
-                [req.body.email, req.body.password],
-                function (error, results, fields) {
-                  if (error) {
-                    connection.release();
-                    sendDBError(res, error)
-                  } else {
-                    if (results.length === 1) {
-                      connection.release();
-                      let token = tokenGen(results[0], 1)
-                      res.json({
-                        status: true,
-                        token: token,
-                        user: userData(results[0], 1)
-                      })
-                    } else {
-                      connection.query(
-                        'SELECT id, email FROM `admins` where BINARY `email`=? and BINARY `password`=?',
-                        [req.body.email, req.body.password],
-                        function (error, results, fields) {
-                          connection.release();
-                          if (error) {
-                            sendDBError(res, error)
-                          } else {
-                            if (results.length === 1) {
-                              let token = tokenGen(results[0], 2)
-                              res.json({
-                                status: true,
-                                token: token,
-                                user: userData(results[0], 2)
-                              })
-                            } else {
-                              res.json({
-                                status: false,
-                                message: "Invalid Credentials!"
-                              })
-                            }
-                          }
-                        })
-                    }
+              if (results.length === 1) {
+                if (results[0].active_sts === 1) {
+                  resp = {
+                    status: true,
+                    token: tokenGen(results[0], 0),
+                    user: userData(results[0], 0)
                   }
-                })
+                } else {
+                  resp = {
+                    status: false,
+                    message: "Your account has bees Suspended. Contact your administrator."
+                  }
+                }
+              }
+              return resolve()
             }
-          }
-        })
+          })
+      })
+
+      if (resp) {
+        connection.release();
+        return res.json(resp)
+      } else if (throw_error) {
+        connection.release();
+        return sendDBError(res, throw_error)
+      }
+
+      // moderator check
+      await new Promise(resolve => {
+        connection.query(
+          'SELECT id, email, active_sts FROM `moderators` WHERE BINARY `email`=? and BINARY `password`=?',
+          [req.body.email, req.body.password],
+          function (error, results) {
+            if (error) {
+              throw_error = error;
+              return resolve()
+            } else {
+              if (results.length === 1) {
+                if (results[0].active_sts === 1) {
+                  resp = {
+                    status: true,
+                    token: tokenGen(results[0], 1),
+                    user: userData(results[0], 1)
+                  }
+                } else {
+                  resp = {
+                    status: false,
+                    message: "Your account has bees Suspended. Contact your administrator."
+                  }
+                }
+              }
+              return resolve()
+            }
+          })
+      })
+
+      if (resp) {
+        connection.release();
+        return res.json(resp)
+      } else if (throw_error) {
+        connection.release();
+        return sendDBError(res, throw_error)
+      }
+
+      // admin check
+      await new Promise(resolve => {
+        connection.query(
+          'SELECT id, email FROM `admins` where BINARY `email`=? and BINARY `password`=?',
+          [req.body.email, req.body.password],
+          function (error, results) {
+            if (error) {
+              throw_error = error;
+              return resolve()
+            } else {
+              if (results.length === 1) {
+                resp = {
+                  status: true,
+                  token: tokenGen(results[0], 2),
+                  user: userData(results[0], 2)
+                }
+              } else {
+                resp = {
+                  status: false,
+                  message: "Invalid Credentials!"
+                }
+              }
+              return resolve()
+            }
+          })
+      })
+
+      if (resp) {
+        connection.release();
+        return res.json(resp)
+      } else if (throw_error) {
+        connection.release();
+        return sendDBError(res, throw_error)
+      }
     }
   })
 

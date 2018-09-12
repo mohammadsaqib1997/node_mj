@@ -33,7 +33,7 @@ export const mutations = {
 export const getters = {
   formatDate(state) {
     return function (strDate) {
-      return moment(strDate).format("DD-MM-YYYY")
+      return moment(new Date(strDate)).format("DD-MM-YYYY")
     }
   },
 }
