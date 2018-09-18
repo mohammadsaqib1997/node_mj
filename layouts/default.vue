@@ -176,6 +176,17 @@ export default {
       -moz-box-shadow: 0 2px 20px 2px #ccc;
       box-shadow: 0 2px 20px 2px #ccc;
 
+      &.dark {
+        background-color: #3d3e59;
+        color: #d3c05c !important;
+        &:hover {
+          background-color: #28293c;
+        }
+        &:not(.is-loading):after {
+          background-color: #28293c;
+        }
+      }
+
       &:hover {
         background-color: #c52566;
       }

@@ -6,7 +6,8 @@ export const state = () => ({
   loginModalActive: false,
   jwtToken: null,
   user: null,
-  isForgotPassword: false
+  isForgotPassword: false,
+  hasTermsLoaded: false
 })
 
 export const mutations = {
@@ -27,6 +28,9 @@ export const mutations = {
   },
   isForgotPasswordSet(state, payload) {
     state.isForgotPassword = payload
+  },
+  hasTermsLoadedSet(state, pld) {
+    state.hasTermsLoaded = pld
   }
 }
 
@@ -91,6 +95,7 @@ export const actions = {
   logout({ commit }) {
     localStorage.removeItem("user")
     commit('setUser', null)
+    commit('hasTermsLoadedSet', false)
   }
 }
 

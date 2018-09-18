@@ -79,6 +79,68 @@ router.get("/", function (req, res) {
   })
 })
 
+router.get("/get_terms_sts", (req, res) => {
+  if (req.decoded.data.user_id) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ error: err })
+      } else {
+        connection.query("SELECT accept_sts FROM terms_accept WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+          connection.release()
+          if (error) {
+            res.status(500).json({ error })
+          } else {
+            let accept_sts = 0
+            if (results.length > 0) {
+              accept_sts = results[0].accept_sts
+            }
+            res.json({
+              accept_sts
+            })
+          }
+        })
+      }
+    })
+  } else {
+    res.json({ status: false, message: "No user found!" })
+  }
+})
+
+router.post("/terms_accept", (req, res) => {
+  if (req.decoded.data.user_id) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({ error: err })
+      } else {
+        connection.query("SELECT accept_sts FROM terms_accept WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+          if (error) {
+            connection.release()
+            res.status(500).json({ error })
+          } else {
+            let query = 0
+            if (results.length > 0) {
+              query = `UPDATE terms_accept SET accept_sts=1 WHERE member_id=${req.decoded.data.user_id}`
+            } else {
+              query = `INSERT INTO terms_accept SET member_id=${req.decoded.data.user_id}, accept_sts=1`
+            }
+
+            connection.query(query, function (error, result) {
+              connection.release()
+              if (error) {
+                res.status(500).json({ error })
+              } else {
+                res.json({ status: true })
+              }
+            })
+          }
+        })
+      }
+    })
+  } else {
+    res.json({ status: false, message: "No user found!" })
+  }
+})
+
 router.get('/get_level_info', function (req, res) {
   if (req.decoded.data.user_id) {
     db.getConnection(function (err, connection) {
@@ -952,138 +1014,138 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
           let direct_inc = 0
           for (ref_usr_asn_id of grab_ref_usr_ids) {
             await new Promise(resolve2 => {
-              connection.query('SELECT id, full_name, ref_user_asn_id FROM `members` WHERE user_asn_id=?', ref_usr_asn_id, function (error, results, fields) {
-                if (error) {
-                  throw_error = error
-                  return resolve2()
-                } else {
-                  if (results[0].ref_user_asn_id !== null) {
-                    grab_ref_usr_ids.push(results[0].ref_user_asn_id)
-                  }
-                  let ref_mem_id = results[0].id
-                  connection.query('SELECT * FROM `info_var_m` WHERE member_id=?', ref_mem_id, function (error, results, fields) {
-                    if (error) {
-                      throw_error = error
-                      return resolve2()
-                    } else {
-                      direct_inc++
-                      let set_param = {}
 
-                      let commission_amount = 0
-
-                      if (direct_inc === 1) {
-                        set_param['direct_ref_count'] = parseInt(results[0].direct_ref_count) + 1
-
-                        if (parseInt(results[0].level) <= 9) {
-                          commission_amount = 1000
-                          set_param['wallet'] = parseInt(results[0].wallet) + 1000
-                        }
-                      } else if (direct_inc === 2) {
-                        set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
-
-                        if (parseInt(results[0].level) <= 9) {
-                          commission_amount = 300
-                          set_param['wallet'] = parseInt(results[0].wallet) + 300
-                        }
-                      } else {
-                        set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
-
-                        if (parseInt(results[0].level) <= 9) {
-                          commission_amount = 200
-                          set_param['wallet'] = parseInt(results[0].wallet) + 200
-                        }
-                      }
-
-                      connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, ref_mem_id], function (error, results, fields) {
-                        if (error) {
-                          throw_error = error
-                          return resolve2()
-                        } else {
-
-                          // notify query add direct or indirect
-                          connection.query('INSERT INTO `notifications` SET ?', {
-                            from_type: 1,
-                            to_type: 0,
-                            from_id: 1,
-                            to_id: ref_mem_id,
-                            from_txt: 'Admin',
-                            message: `Add Your ${(direct_inc === 1) ? 'Direct' : 'In-Direct'} Refferral in Hierarchy - User ID ${mem_asn_id}`,
-                            notify_type: 0
-                          }, function (error, results, fields) {
-                            if (error) {
-                              throw_error = error
-                              return resolve2()
-                            } else {
-                              if (commission_amount > 0) {
-
-                                add_to_c_wallet = add_to_c_wallet - commission_amount
-
-                                // apply commission - transaction
-                                connection.query('INSERT INTO `transactions_m` SET ?', {
-                                  member_id: ref_mem_id,
-                                  remarks: "Issued Commission From User ID " + mem_asn_id,
-                                  debit: commission_amount
-                                }, function (error, results, fields) {
-                                  if (error) {
-                                    throw_error = error
-                                    return resolve2()
-                                  } else {
-                                    // notify query issued commission to user
-                                    connection.query('INSERT INTO `notifications` SET ?', {
-                                      from_type: 1,
-                                      to_type: 0,
-                                      from_id: 1,
-                                      to_id: ref_mem_id,
-                                      from_txt: 'Admin',
-                                      message: "Issued Commission From User ID " + mem_asn_id + " Amount Rs." + commission_amount + "/-",
-                                      notify_type: 0
-                                    }, function (error, results, fields) {
-                                      if (error) {
-                                        throw_error = error
-                                        return resolve2()
-                                      } else {
-
-                                        // transaction insert in company
-                                        connection.query('INSERT INTO `transactions_comp` SET ?', {
-                                          remarks: "Issued Commission To User ID " + ref_usr_asn_id,
-                                          credit: commission_amount
-                                        }, function (error, results, fields) {
-                                          if (error) {
-                                            throw_error = error
-                                            return resolve2()
-                                          } else {
-                                            // notify admin issued commission to user
-                                            connection.query('INSERT INTO `notifications` SET ?', {
-                                              from_type: 0,
-                                              to_type: 1,
-                                              from_id: ref_mem_id,
-                                              to_id: 1,
-                                              message: "Issued Commission To User ID " + ref_usr_asn_id + " Amount Rs." + commission_amount + "/-",
-                                              notify_type: 0
-                                            }, function (error, results, fields) {
-                                              if (error) {
-                                                throw_error = error
-                                              }
-                                              return resolve2()
-                                            })
-                                          }
-                                        })
-                                      }
-                                    })
-                                  }
-                                })
-
-                              } else {
-                                return resolve2()
-                              }
-                            }
-                          })
-                        }
-                      })
+              connection.query(
+                `SELECT m.id, m.full_name, m.ref_user_asn_id , iv.direct_ref_count, iv.in_direct_ref_count, iv.wallet, iv.level
+                FROM \`members\` as m
+                LEFT JOIN info_var_m as iv
+                ON m.id = iv.member_id
+                WHERE user_asn_id=?`,
+                ref_usr_asn_id,
+                function (error, results, fields) {
+                  if (error) {
+                    throw_error = error
+                    return resolve2()
+                  } else {
+                    if (results[0].ref_user_asn_id !== null) {
+                      grab_ref_usr_ids.push(results[0].ref_user_asn_id)
                     }
-                  })
+
+                    let ref_mem_id = results[0].id
+
+                    direct_inc++
+                    let set_param = {}
+                    let commission_amount = 0
+
+                    if (direct_inc === 1) {
+                      set_param['direct_ref_count'] = parseInt(results[0].direct_ref_count) + 1
+                      commission_amount = 1000
+                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
+
+                    } else if (direct_inc === 2) {
+                      set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
+                      commission_amount = 300
+                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
+
+                    } else if (direct_inc <= 9) {
+                      set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
+                      commission_amount = 200
+                      set_param['wallet'] = parseInt(results[0].wallet) + 200
+
+                    } else {
+                      set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
+                    }
+
+                    connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, ref_mem_id], function (error, results, fields) {
+                      if (error) {
+                        throw_error = error
+                        return resolve2()
+                      } else {
+
+                        // notify query add direct or indirect
+                        connection.query('INSERT INTO `notifications` SET ?', {
+                          from_type: 1,
+                          to_type: 0,
+                          from_id: 1,
+                          to_id: ref_mem_id,
+                          from_txt: 'Admin',
+                          message: `Add Your ${(direct_inc === 1) ? 'Direct' : 'In-Direct'} Refferral in Hierarchy - User ID ${mem_asn_id}`,
+                          notify_type: 0
+                        }, function (error, results, fields) {
+                          if (error) {
+                            throw_error = error
+                            return resolve2()
+                          } else {
+                            if (commission_amount > 0) {
+
+                              add_to_c_wallet = add_to_c_wallet - commission_amount
+
+                              // apply commission - transaction
+                              connection.query('INSERT INTO `transactions_m` SET ?', {
+                                member_id: ref_mem_id,
+                                remarks: "Issued Commission From User ID " + mem_asn_id,
+                                debit: commission_amount
+                              }, function (error, results, fields) {
+                                if (error) {
+                                  throw_error = error
+                                  return resolve2()
+                                } else {
+                                  // notify query issued commission to user
+                                  connection.query('INSERT INTO `notifications` SET ?', {
+                                    from_type: 1,
+                                    to_type: 0,
+                                    from_id: 1,
+                                    to_id: ref_mem_id,
+                                    from_txt: 'Admin',
+                                    message: "Issued Commission From User ID " + mem_asn_id + " Amount Rs." + commission_amount + "/-",
+                                    notify_type: 0
+                                  }, function (error, results, fields) {
+                                    if (error) {
+                                      throw_error = error
+                                      return resolve2()
+                                    } else {
+
+                                      // transaction insert in company
+                                      connection.query('INSERT INTO `transactions_comp` SET ?', {
+                                        remarks: "Issued Commission To User ID " + ref_usr_asn_id,
+                                        credit: commission_amount
+                                      }, function (error, results, fields) {
+                                        if (error) {
+                                          throw_error = error
+                                          return resolve2()
+                                        } else {
+                                          // notify admin issued commission to user
+                                          connection.query('INSERT INTO `notifications` SET ?', {
+                                            from_type: 0,
+                                            to_type: 1,
+                                            from_id: ref_mem_id,
+                                            to_id: 1,
+                                            message: "Issued Commission To User ID " + ref_usr_asn_id + " Amount Rs." + commission_amount + "/-",
+                                            notify_type: 0
+                                          }, function (error, results, fields) {
+                                            if (error) {
+                                              throw_error = error
+                                            }
+                                            return resolve2()
+                                          })
+                                        }
+                                      })
+                                    }
+                                  })
+                                }
+                              })
+
+                            } else {
+                              return resolve2()
+                            }
+                          }
+                        })
+                      }
+                    })
+
+                  }
                 }
-              })
+              )
             })
             if (throw_error) break
           }

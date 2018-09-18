@@ -117,7 +117,7 @@ export default {
             link.id = "download_anc";
           }
           link.href = url;
-          link.setAttribute("download", "file.csv");
+          link.setAttribute("download", `members_report.${moment(self.start_date).format("YYYY-MM-DD")}-${moment(self.end_date).format("YYYY-MM-DD")}.csv`);
           if (!document.getElementById("download_anc")) {
             document.body.appendChild(link);
           }

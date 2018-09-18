@@ -1,14 +1,16 @@
 <template lang="pug">
-    .admin-layout
-        template(v-if="$store.state.pageLoading === false && $store.state.user !== null")
-            top-bar
-            side-nav
-            .main-content
-                nuxt
-            footer-comp
+  .admin-layout
+    template(v-if="$store.state.pageLoading === false && $store.state.user !== null")
+      top-bar
+      side-nav
+      .main-content
+        nuxt
+      footer-comp
+      termAndCondMD(v-if="user.data.type === 0 && $store.state.hasTermsLoaded === false")
 </template>
 
 <script>
+import termAndCondMD from "~/components/modals/terms_and_cond.vue";
 import sideNavComp from "~/components/admin_panel/sidenav.vue";
 import topBarComp from "~/components/admin_panel/topbar.vue";
 import footerComp from "~/components/admin_panel/footer.vue";
@@ -16,7 +18,8 @@ export default {
   components: {
     "side-nav": sideNavComp,
     "top-bar": topBarComp,
-    "footer-comp": footerComp
+    "footer-comp": footerComp,
+    termAndCondMD
   },
   computed: {
     user: function() {
@@ -34,5 +37,4 @@ export default {
 </script>
 
 <style lang="scss" scoped src="~/assets/sass/admin_layout.scss">
- 
 </style>

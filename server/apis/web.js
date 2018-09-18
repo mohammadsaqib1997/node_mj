@@ -274,28 +274,36 @@ router.post('/signup', (req, res) => {
                 let mem_id = results.insertId
                 req.body.prd_data['member_id'] = mem_id
                 req.body.bank_data['member_id'] = mem_id
-                connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
+
+                connection.query(`INSERT INTO terms_accept SET member_id=${mem_id}, accept_sts=1`, function (error, results, fields) {
                   if (error) {
                     throw_error = error
                     return resolve()
                   } else {
-                    connection.query('INSERT INTO `user_bank_details` SET ?', req.body.bank_data, function (error, results, fields) {
+                    connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
                       if (error) {
                         throw_error = error
                         return resolve()
                       } else {
-                        connection.query('INSERT INTO `notifications` SET ?', {
-                          from_type: 0,
-                          to_type: 1,
-                          from_id: mem_id,
-                          to_id: 1, // admin id
-                          message: "New member added in members list. Approve it.",
-                          notify_type: 1
-                        }, function (error, results, fields) {
+                        connection.query('INSERT INTO `user_bank_details` SET ?', req.body.bank_data, function (error, results, fields) {
                           if (error) {
                             throw_error = error
+                            return resolve()
+                          } else {
+                            connection.query('INSERT INTO `notifications` SET ?', {
+                              from_type: 0,
+                              to_type: 1,
+                              from_id: mem_id,
+                              to_id: 1, // admin id
+                              message: "New member added in members list. Approve it.",
+                              notify_type: 1
+                            }, function (error, results, fields) {
+                              if (error) {
+                                throw_error = error
+                              }
+                              return resolve()
+                            })
                           }
-                          return resolve()
                         })
                       }
                     })
