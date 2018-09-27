@@ -12,7 +12,7 @@ module.exports = {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.png' },
-      { rel: 'stylesheet', href: '/fontawesome/css/fontawesome-all.min.css' }
+      { rel: 'stylesheet', href: '/fontawesome/css/all.min.css' }
     ],
     script: [
       { src: '/js/jquery-3.3.1.min.js' },

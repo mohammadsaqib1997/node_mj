@@ -144,6 +144,7 @@ export default {
               cnic_num: self.$refs.userDetForm.form.cnic_num,
               contact_num: self.$refs.userDetForm.form.cont_num,
               address: self.$refs.userDetForm.form.address,
+              city: self.$refs.userDetForm.form.city,
               ref_user_asn_id:
                 self.$refs.userDetForm.form.ref_code !== ""
                   ? self.$refs.userDetForm.form.ref_code

@@ -32,7 +32,7 @@
                 label Password
               .column
                 b-field(:type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
-                  b-input(type="password" placeholder="******" v-model="f_data.password" :loading="validation.isValidating('f_data.password')")
+                  b-input(type="password" placeholder="******" v-model="f_data.password")
             .columns.is-variable.is-1
               .column.is-3
                 label Re-Type Password
@@ -63,6 +63,13 @@
               .column
                 b-field(:type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
                   b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")
+            .columns.is-variable.is-1
+              .column.is-3
+                label City
+              .column
+                b-field(:type="(validation.hasError('f_data.city')) ? 'is-danger':''" :message="validation.firstError('f_data.city')")
+                  b-autocomplete(placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray" @select="option => f_data.city = option" :keep-first="true" :open-on-focus="true")
+                    template(slot="empty") No results for {{ac_city}}
             .columns.is-variable.is-1
               .column.is-3
                 label Referral ID
@@ -132,9 +139,23 @@ import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 export default {
+  computed: {
+    filteredCityArray() {
+      return this.cities.filter(option => {
+        return (
+          option
+            .toString()
+            .toLowerCase()
+            .indexOf(this.ac_city.toLowerCase()) >= 0
+        );
+      });
+    }
+  },
   async mounted() {
     const list_pds = await this.$axios.$get("/api/product/");
     this.prd_list = list_pds.data;
+    let ct_data = await this.$axios.$get("/api/web/pk");
+    this.cities = ct_data.cities;
     this.form.loading = false;
   },
   data() {
@@ -149,6 +170,8 @@ export default {
         { code: 1, name: "On Cash" },
         { code: 2, name: "On Installment" }
       ],
+      cities: [],
+      ac_city: "",
       prd_list: [],
       sts_list: [{ code: 1, name: "Approved" }, { code: 0, name: "Suspended" }],
       ref_name: "",
@@ -162,6 +185,7 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
+        city: "",
         ref_code: "",
         status: ""
       },
@@ -253,41 +277,11 @@ export default {
         }
       }
     },
-    "f_data.password": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        if (
-          self.form.submitted ||
-          self.validation.isTouched("f_data.password")
-        ) {
-          let validator = Validator.value(value)
-            .required()
-            .minLength(6)
-            .maxLength(35);
-          if (validator.hasImmediateError()) {
-            return validator;
-          } else {
-            if (self.f_data.email !== "") {
-              return validator.custom(() => {
-                return self.$axios
-                  .post("/api/web/check_email_pass", {
-                    email: self.f_data.email,
-                    pass: value
-                  })
-                  .then(res => {
-                    if (res.data.count > 0) {
-                      return "This password already used in previous account.";
-                    }
-                  });
-              });
-            } else {
-              return validator;
-            }
-          }
-        }
-      }
+    "f_data.password": function(value) {
+      return Validator.value(value)
+        .required()
+        .minLength(6)
+        .maxLength(35);
     },
     "con_pass, f_data.password": function(con_pass, password) {
       if (this.form.submitted || this.validation.isTouched("con_pass")) {
@@ -317,6 +311,9 @@ export default {
         .required()
         .minLength(6)
         .maxLength(100);
+    },
+    "f_data.city": function(value) {
+      return Validator.value(value).required();
     },
     "f_data.ref_code": {
       cache: false,
@@ -412,6 +409,7 @@ export default {
             dob: moment(self.f_data.dob).format("YYYY-MM-DD"),
             contact_num: self.f_data.cont_num,
             address: self.f_data.address,
+            city: self.f_data.city,
             ref_user_asn_id:
               self.f_data.ref_code !== "" ? self.f_data.ref_code : null,
             active_sts: self.f_data.status
@@ -466,6 +464,7 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
+        city: "",
         ref_code: "",
         status: ""
       };

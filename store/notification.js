@@ -191,6 +191,25 @@ export const actions = {
             console.log(err)
           })
       }
+    } else if (n_item.type === 3) {
+      let split_val = (n_item.msg).split('Reward Level -> ')
+      let lvl = split_val.length > 1 ? parseInt(split_val[1]) : null
+      if (lvl) {
+        await this.$axios
+          .get('/api/notification/claim_info/' + n_item.from_id + "/" + lvl)
+          .then(res => {
+            if (!res.data.status) {
+              n_item['data'] = res.data.data
+              n_item['data']['lvl'] = lvl
+              n_item['data']['mem_id'] = n_item.from_id
+            } else {
+              console.log(res.data)
+            }
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      }
     }
 
     commit('set_loader', false)

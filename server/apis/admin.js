@@ -15,8 +15,14 @@ router.get('/wallet', function (req, res) {
         if (error) {
           res.status(500).json({ error })
         } else {
+          let wallet = 0
+          if (results.length > 0) {
+            wallet = results[0].wallet
+          } else {
+            wallet = 0
+          }
           res.json({
-            wallet: results[0].wallet !== null ? results[0].wallet : 0
+            wallet
           })
         }
       });

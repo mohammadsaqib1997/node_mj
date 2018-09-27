@@ -46,7 +46,7 @@ export default {
       .get("/api/admin/member_counts")
       .then(res => {
         let data = res.data.data;
-        self.paid_mem = data.paid_mem;
+        self.paid_mem = data.paid_mem ? data.paid_mem : 0;
         self.un_paid_mem = data.un_paid_mem;
       })
       .catch(err => {

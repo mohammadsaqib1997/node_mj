@@ -155,7 +155,7 @@ export default {
       if (id === null) {
         self.$toast.open({
           duration: 1500,
-          message: "Invalid User Load!",
+          message: "User doesen't exist. If you think it is an error, contact administrator now.",
           position: "is-bottom",
           type: "is-danger"
         });

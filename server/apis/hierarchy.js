@@ -132,6 +132,11 @@ router.get('/refl/direct/:id', function (req, res) {
 })
 
 router.get('/find/:param', function (req, res) {
+    let is_user = false, user_id = null
+    if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+        is_user = true
+        user_id = req.decoded.data.user_id
+    }
     let param = req.params.param
     db.getConnection(async function (err, connection) {
         if (err) {
@@ -143,14 +148,15 @@ router.get('/find/:param', function (req, res) {
             LEFT JOIN members AS m
             ON h_m.member_id = m.id
             WHERE 
-            m.user_asn_id LIKE ?
+            (m.user_asn_id LIKE ?
             OR
             m.email LIKE ?
             OR
-            m.full_name LIKE ?
+            m.full_name LIKE ?)
+            ${ is_user ? 'AND h_m.id > (SELECT id FROM hierarchy_m WHERE member_id='+user_id+')' : ''}
             ORDER BY h_m.id DESC
             LIMIT 10
-            `, ['%'+param+'%', '%'+param+'%', '%'+param+'%'], function (err, result) {
+            `, ['%' + param + '%', '%' + param + '%', '%' + param + '%'], function (err, result) {
                     connection.release()
                     if (err) {
                         res.status(500).json({ err })

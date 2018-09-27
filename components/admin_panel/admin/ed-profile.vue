@@ -6,7 +6,7 @@
           b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="f_data.full_name")
 
         b-field(label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email')
+          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
 
         b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
           b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
@@ -27,7 +27,7 @@
           button.button.btn-des-1(type="submit")
             b-icon(icon="edit" style="margin-top: 2px;")
             | &nbsp;&nbsp;&nbsp;&nbsp;Update
-          button.button.btn-des-1(type="button" v-on:click.prevent="$emit('close_modal')") Cancel
+          button.button.btn-des-1.dark(type="button" v-on:click.prevent="$emit('close_modal')") Cancel
 
         b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
 </template>
@@ -119,35 +119,13 @@ export default {
         .required()
         .regex(/^\d{5}-\d{7}-\d$/, "Invalid NIC Number(e.g 12345-1234567-1)");
     },
-    "f_data.cont_num": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .regex(
-            /^\92-\d{3}-\d{3}-\d{4}$/,
-            "Invalid Contact Number(e.g 92-000-000-0000)"
-          );
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (value !== self.profile.contact_num) {
-              return self.$axios
-                .post("/api/web/check_cont_num", {
-                  cont_num: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This Contact Number is already in use.";
-                  }
-                });
-            }
-          });
-        }
-      }
+    "f_data.cont_num": function(value) {
+      return Validator.value(value)
+        .required()
+        .regex(
+          /^\92-\d{3}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 92-000-000-0000)"
+        );
     },
     "f_data.address": function(value) {
       return Validator.value(value)
@@ -161,7 +139,8 @@ export default {
   },
   methods: {
     setData: function(data) {
-      this.status = typeof data.active_sts !== 'undefined' ? data.active_sts : null;
+      this.status =
+        typeof data.active_sts !== "undefined" ? data.active_sts : null;
       this.f_data = {
         full_name: data.full_name,
         email: data.email,
@@ -185,9 +164,9 @@ export default {
             })
             .then(async res => {
               if (res.data.status !== false) {
-                $("#ed-prof-con").animate({ scrollTop: 0 }, 500);
                 msg = "Successfully Profile Updated.";
                 await self.$store.dispatch("profile/loadProfile");
+                self.$emit("close_modal");
               } else {
                 is_err = true;
                 msg = res.data.message;
@@ -216,32 +195,43 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
-.section
-    padding: 3rem
-    & /deep/
-
-      .form
-        .field
-          .label
-            font-size: 18px
-            line-height: 18px
-            color: #828282
-          .control
-            &>.icon.is-right.is-clickable
-              right: 8px
-              color: #d9bd68 !important
-        .d-flex
-          @media screen and (min-width: 426px)
-            display: flex
-            justify-content: center
-          &> .button
-            @media screen and (max-width: 425px)
-              width: 100%
-
-            &:last-child
-              @media screen and (min-width: 426px)
-                margin-left: 1rem
+<style scoped lang="scss">
+.section {
+  padding: 3rem;
+  & /deep/ {
+    .form {
+      .field {
+        .label {
+          font-size: 18px;
+          line-height: 18px;
+          color: #828282;
+        }
+        .control {
+          & > .icon.is-right.is-clickable {
+            right: 8px;
+            color: #d9bd68 !important;
+          }
+        }
+      }
+      .d-flex {
+        @media screen and (min-width: 426px) {
+          display: flex;
+          justify-content: center;
+        }
+        & > .button {
+          @media screen and (max-width: 425px) {
+            width: 100%;
+          }
+          &:last-child {
+            @media screen and (min-width: 426px) {
+              margin-left: 1rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
 </style>
 
 

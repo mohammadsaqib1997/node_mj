@@ -7,12 +7,6 @@
                     label Bank Name
                 .column
                     h2 {{ bank_det_data.bank_name }}
-
-            .columns.is-gapless
-                .column
-                    label Branch
-                .column
-                    h2 {{ bank_det_data.branch }}
             
             .columns.is-gapless
                 .column
@@ -50,7 +44,7 @@
                 | &nbsp;&nbsp;&nbsp;&nbsp;Add Bank Details
             template(v-else)
                 b-icon(icon="university")
-                | &nbsp;&nbsp;&nbsp;&nbsp;Edit Bank Details
+                | &nbsp;&nbsp;&nbsp;&nbsp;Update Bank Details
 
         nuxt-link.button.btn-des-1(to="/fund-manager/finance-details" style="margin-left: 10px")
             img(src="~/assets/img/btn-coin.png")
@@ -63,9 +57,6 @@
                         form.form(v-on:submit.prevent="update")
                             b-field(label="Bank Name" :type="(validation.hasError('f_data.bank_name')) ? 'is-danger':''" :message="validation.firstError('f_data.bank_name')")
                                 b-input(type="text" placeholder="Enter Bank Name" v-model="f_data.bank_name")
-                            
-                            b-field(label="Branch Name" :type="(validation.hasError('f_data.branch')) ? 'is-danger':''" :message="validation.firstError('f_data.branch')")
-                                b-input(type="text" placeholder="Enter Branch Name" v-model="f_data.branch")
 
                             b-field(label="Branch Code" :type="(validation.hasError('f_data.branch_code')) ? 'is-danger':''" :message="validation.firstError('f_data.branch_code')")
                                 b-input(type="text" placeholder="Enter Branch Code" v-model="f_data.branch_code")
@@ -89,8 +80,8 @@
                                         | &nbsp;&nbsp;&nbsp;&nbsp;Add
                                     template(v-else)
                                         b-icon(icon="edit" style="margin-top: 2px;")
-                                        | &nbsp;&nbsp;&nbsp;&nbsp;Edit
-                                button.button.btn-des-1(type="button" @click.prevent="modalActive=false") Cancel
+                                        | &nbsp;&nbsp;&nbsp;&nbsp;Update
+                                button.button.btn-des-1.dark(type="button" @click.prevent="modalActive=false") Cancel
 
                         b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
 </template>
@@ -113,11 +104,6 @@ export default {
   },
   validators: {
     "f_data.bank_name": function(value) {
-      return Validator.value(value)
-        .minLength(6)
-        .maxLength(50);
-    },
-    "f_data.branch": function(value) {
       return Validator.value(value)
         .minLength(6)
         .maxLength(50);
@@ -154,7 +140,6 @@ export default {
       bank_det_data: {},
       f_data: {
         bank_name: "",
-        branch: "",
         branch_code: "",
         account_title: "",
         account_number: "",
@@ -228,31 +213,47 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
-.modal-des-1
-    /deep/
-        .section
-            padding: 3rem
-            .form
-                .field
-                    .label
-                        font-size: 18px
-                        line-height: 18px
-                        color: #828282
-                    .control
-                        &>.icon.is-right.is-clickable
-                            right: 8px
-                            color: #d9bd68 !important
-                .d-flex
-                    @media screen and (min-width: 426px)
-                        display: flex
-                        justify-content: center
-                    &> .button
-                        @media screen and (max-width: 425px)
-                            width: 100%
-
-                        &:last-child
-                            @media screen and (min-width: 426px)
-                                margin-left: 1rem
+<style scoped lang="scss">
+.show-info {
+  margin-bottom: 1rem;
+}
+.modal-des-1 {
+  /deep/ {
+    .section {
+      padding: 3rem;
+      .form {
+        .field {
+          .label {
+            font-size: 18px;
+            line-height: 18px;
+            color: #828282;
+          }
+          .control {
+            & > .icon.is-right.is-clickable {
+              right: 8px;
+              color: #d9bd68 !important;
+            }
+          }
+        }
+        .d-flex {
+          @media screen and (min-width: 426px) {
+            display: flex;
+            justify-content: center;
+          }
+          & > .button {
+            @media screen and (max-width: 425px) {
+              width: 100%;
+            }
+            &:last-child {
+              @media screen and (min-width: 426px) {
+                margin-left: 1rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 </style>
 

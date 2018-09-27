@@ -44,6 +44,7 @@ router.use("/profile", cors(corsOptions), require('./profiles.js'))
 router.use("/receipt", cors(corsOptions), require('./receipts.js'))
 router.use("/notification", cors(corsOptions), require('./notifications.js'))
 router.use("/report", cors(corsOptions), require('./reports.js'))
+router.use("/reward", cors(corsOptions), require('./rewards.js'))
 
 router.all("*", function (req, res) {
   res.status(403).json({ error: 'Invalid Request!' })

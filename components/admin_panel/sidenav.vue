@@ -9,7 +9,8 @@
               span {{ item.title }}
           template(v-else)
             .nav-item(v-on:click.prevent="openDropdown")
-              img.i-img(:src="'/img/'+item.img+((item.active) ? '-active': '')+'.png'")
+              img.i-img(v-if="item.img !== null" :src="'/img/'+item.img+((item.active) ? '-active': '')+'.png'")
+              span.icon(v-else-if="item.icon !== null" v-html="item.icon")
               span {{ item.title }}
             template(v-if="item.hasOwnProperty('children')")
               .dropdown
@@ -99,17 +100,35 @@ export default {
               show: [0, 1, 2]
             },
             {
-              name: "bank-details",
-              active: false,
-              url: "/fund-manager/bank-details",
-              title: "Bank Details",
-              show: [0]
-            },
-            {
               name: "total-finances",
               active: false,
               url: "/fund-manager/total-finances",
               title: "Total Finances",
+              show: [1, 2]
+            }
+          ]
+        },
+        {
+          name: "rewards",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-award"></i>',
+          url: false,
+          title: "Rewards",
+          show: [1, 2],
+          children: [
+            {
+              name: "rewards-request",
+              active: false,
+              url: "/rewards/rewards-request",
+              title: "Rewards Request",
+              show: [1, 2]
+            },
+            {
+              name: "rewards-completed",
+              active: false,
+              url: "/rewards/rewards-completed",
+              title: "Rewards Completed",
               show: [1, 2]
             }
           ]
@@ -177,14 +196,30 @@ export default {
           title: "System Level",
           show: [0]
         },
-        // {
-        //   name: "profile",
-        //   active: false,
-        //   img: "person",
-        //   url: "/profile",
-        //   title: "Profile",
-        //   show: [0, 1, 2]
-        // },
+        {
+          name: "user",
+          active: false,
+          img: "person",
+          url: false,
+          title: "Profile",
+          show: [0, 1, 2],
+          children: [
+            {
+              name: "profile",
+              active: false,
+              url: "/user/profile",
+              title: "Profile",
+              show: [0, 1, 2]
+            },
+            {
+              name: "bank-details",
+              active: false,
+              url: "/user/bank-details",
+              title: "Bank Details",
+              show: [0]
+            }
+          ]
+        },
         {
           name: "notifications",
           active: false,
@@ -297,171 +332,243 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
+<style scoped lang="scss">
 // - setting-up navigation
-.navbar-container
-  position: absolute
-  width: 250px
-  height: calc(100% - 100px)
-  &>.wrapper
-    position: relative
-    padding: 0
-    height: 100%
-    &>ul
-      width: 100%
-      max-height: 100%
-      overflow-x: visible
-      overflow-y: auto
-      padding-bottom: 1rem
-      &>li
-        position: static
-        &>.nav-item
-          display: flex
-          align-items: center
-        .wrapper
-          display: none
-          position: absolute
-          left: calc(100% + 5px)
-          top: 0
-  @media screen and (max-width: 1023px)
-    margin-left: -250px
-    &.is-active
-      margin-left: 0
-
+.navbar-container {
+  position: absolute;
+  width: 250px;
+  height: calc(100% - 100px);
+  & > .wrapper {
+    position: relative;
+    padding: 0;
+    height: 100%;
+    & > ul {
+      width: 100%;
+      max-height: 100%;
+      overflow-x: visible;
+      overflow-y: auto;
+      padding-bottom: 1rem;
+      & > li {
+        position: static;
+        & > .nav-item {
+          display: flex;
+          align-items: center;
+        }
+        .wrapper {
+          display: none;
+          position: absolute;
+          left: calc(100% + 5px);
+          top: 0;
+        }
+      }
+    }
+  }
+  @media screen and (max-width: 1023px) {
+    margin-left: -250px;
+    &.is-active {
+      margin-left: 0;
+    }
+  }
+}
 
 //- designing navigation
-.navbar-container
-  border-right: 2px solid #dcdcdc
-  z-index: 6
-  background-color: #f6f6f6
-  .wrapper
-    &>ul
-      &>li
-        .nav-item
-          cursor: pointer
-          &>span
-            font-weight: 100
-            color: #8c8c8c
-            text-transform: uppercase
-          &:hover
-            &>span
-              color: #3d3e5a
-        &>.nav-item
-          padding: 12px 10px 12px 25px
-          &>span
-            font-size: 14px
-          &> img
-            max-width: 35px
-            max-height: 35px
-            margin-right: 10px
-        &:not(.has-dropdown)
-          &.is-active
-            position: relative
-            background-color: #ffffff
-            &>.nav-item
-              box-shadow: 0 0 10px 1px #ececec
-              &>span
-                color: #3d3e5a
-                font-weight: 400
-              &:before
-                content: " "
-                position: absolute
-                background-color: #d9bd68
-                width: 5px
-                height: 100%
-                left: 0
-        &.has-dropdown
-          &>.nav-item
-            position: relative
-            &:after
-              content: ' '
-              position: absolute
-              width: 20px
-              height: 20px
-              right: 5px
-              background-size: contain
-              background-position: center
-              background-repeat: no-repeat
-              background-image: url("~/assets/img/arrow.png")
-          &>.dropdown
-            display: none
-            position: static
-            font-size: 14px
-            &>ul
-              &>li
-                &>.nav-item
-                  display: block
-                  padding-top: 8px
-                  padding-bottom: 8px
-                  padding-left: 68px
-                  &>span
-                    font-size: 12px
-                  &:hover
-                    background-color: #ececec
-                &.has-popover
-                  &>.nav-item
-                    position: relative
-                    &:after
-                      content: ' '
-                      position: absolute
-                      width: 18px
-                      height: 18px
-                      right: 8px
-                      background-size: contain
-                      background-position: center
-                      background-repeat: no-repeat
-                      background-image: url("~/assets/img/arrow.png")
-                  &>.popover
-                    display: none
-                    position: absolute
-                    left: calc(100% + 5px)
-                    margin-top: -37px
-                    width: 100%
-                    z-index: 999
-                    background-color: white
-                    box-shadow: 3px 3px 1rem 0px #dcdcdc
-                    &:before
-                      content: " "
-                      background-color: #3d3e5a
-                      position: absolute
-                      width: 5px
-                      height: 37px
-                      right: 100%
-                    &>ul
-                      &>li
-                        &>.nav-item
-                          display: block
-                          padding: 8px 15px
-                        &.is-active
-                          &>.nav-item
-                            &>span
-                              color: #3d3e5a
-                              font-weight: 400
-                &.is-u-active
-                  &>.popover
-                    display: block
-                &.is-active
-                  &>.nav-item
-                    background-color: #ececec
-                    &>span
-                      color: #3d3e5a
-                      font-weight: 600
-          &.is-active, &.is-u-active
-            background-color: #ffffff
-            &>.nav-item
-              box-shadow: 0 0 10px 1px #ececec
-              &>span
-                color: #3d3e5a
-                font-weight: 400
-              &:before
-                content: " "
-                position: absolute
-                background-color: #d9bd68
-                width: 5px
-                height: 100%
-                left: 0
-              &:after
-                transform: rotate(90deg)
-            &>.dropdown
-              display: block
+.navbar-container {
+  border-right: 2px solid gainsboro;
+  z-index: 6;
+  background-color: #f6f6f6;
+  .wrapper {
+    & > ul {
+      & > li {
+        .nav-item {
+          cursor: pointer;
+          & > span {
+            font-weight: 100;
+            color: #8c8c8c;
+            text-transform: uppercase;
+          }
+          &:hover {
+            & > span {
+              color: #3d3e5a;
+            }
+            & > .icon {
+              color: #afafaf;
+            }
+          }
+        }
+        & > .nav-item {
+          padding: 12px 10px 12px 25px;
+          & > span {
+            font-size: 14px;
+          }
+          & > .i-img {
+            max-width: 35px;
+            max-height: 35px;
+            margin-right: 10px;
+          }
+          & > .icon {
+            font-size: 25px;
+            width: 35px;
+            height: 35px;
+            margin-right: 10px;
+            color: #afafaf;
+          }
+        }
+        &:not(.has-dropdown) {
+          &.is-active {
+            position: relative;
+            background-color: white;
+            & > .nav-item {
+              box-shadow: 0 0 10px 1px #ececec;
+              & > span {
+                color: #3d3e5a;
+                font-weight: 400;
+              }
+              &:before {
+                content: " ";
+                position: absolute;
+                background-color: #d9bd68;
+                width: 5px;
+                height: 100%;
+                left: 0;
+              }
+            }
+          }
+        }
+        &.has-dropdown {
+          & > .nav-item {
+            position: relative;
+            &:after {
+              content: " ";
+              position: absolute;
+              width: 20px;
+              height: 20px;
+              right: 5px;
+              background-size: contain;
+              background-position: center;
+              background-repeat: no-repeat;
+              background-image: url("~/assets/img/arrow.png");
+            }
+          }
+          & > .dropdown {
+            display: none;
+            position: static;
+            font-size: 14px;
+            & > ul {
+              & > li {
+                & > .nav-item {
+                  display: block;
+                  padding-top: 8px;
+                  padding-bottom: 8px;
+                  padding-left: 68px;
+                  & > span {
+                    font-size: 12px;
+                  }
+                  &:hover {
+                    background-color: #ececec;
+                  }
+                }
+                &.has-popover {
+                  & > .nav-item {
+                    position: relative;
+                    &:after {
+                      content: " ";
+                      position: absolute;
+                      width: 18px;
+                      height: 18px;
+                      right: 8px;
+                      background-size: contain;
+                      background-position: center;
+                      background-repeat: no-repeat;
+                      background-image: url("~/assets/img/arrow.png");
+                    }
+                  }
+                  & > .popover {
+                    display: none;
+                    position: absolute;
+                    left: calc(100% + 5px);
+                    margin-top: -37px;
+                    width: 100%;
+                    z-index: 999;
+                    background-color: white;
+                    box-shadow: 3px 3px 1rem 0px gainsboro;
+                    &:before {
+                      content: " ";
+                      background-color: #3d3e5a;
+                      position: absolute;
+                      width: 5px;
+                      height: 37px;
+                      right: 100%;
+                    }
+                    & > ul {
+                      & > li {
+                        & > .nav-item {
+                          display: block;
+                          padding: 8px 15px;
+                        }
+                        &.is-active {
+                          & > .nav-item {
+                            & > span {
+                              color: #3d3e5a;
+                              font-weight: 400;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                &.is-u-active {
+                  & > .popover {
+                    display: block;
+                  }
+                }
+                &.is-active {
+                  & > .nav-item {
+                    background-color: #ececec;
+                    & > span {
+                      color: #3d3e5a;
+                      font-weight: 600;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          &.is-active,
+          &.is-u-active {
+            background-color: white;
+            & > .nav-item {
+              box-shadow: 0 0 10px 1px #ececec;
+              & > span:not(.icon) {
+                color: #3d3e5a;
+                font-weight: 400;
+              }
+              &:before {
+                content: " ";
+                position: absolute;
+                background-color: #d9bd68;
+                width: 5px;
+                height: 100%;
+                left: 0;
+              }
+              &:after {
+                transform: rotate(90deg);
+              }
+            }
+            & > .dropdown {
+              display: block;
+            }
+          }
+          &.is-active {
+            & > .nav-item {
+              & > .icon {
+                color: #3d3e5a;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 </style>

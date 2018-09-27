@@ -91,7 +91,7 @@ router.get("/", function (req, res) {
             } else {
                 let query = ''
                 if (req.decoded.data.type === 0) {
-                    query = "SELECT user_asn_id, email, password, full_name, contact_num, cnic_num, dob, address, ref_user_asn_id, active_sts FROM members WHERE id=?"
+                    query = "SELECT user_asn_id, email, password, full_name, contact_num, cnic_num, dob, address, city, ref_user_asn_id, active_sts FROM members WHERE id=?"
                 } else if (req.decoded.data.type === 1) {
                     query = "SELECT email, password, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
                 } else {
@@ -224,6 +224,7 @@ router.post("/update", function (req, res) {
                 if (req.decoded.data.type === 0) {
                     query = "UPDATE members SET ? WHERE id=?"
                     params["dob"] = req.body.data.dob
+                    params["city"] = req.body.data.city
 
                     let throw_error = null
                     await new Promise(resolve => {
@@ -237,9 +238,9 @@ router.post("/update", function (req, res) {
                                 } else {
                                     if (result[0].is_paid_m === 0) {
                                         params["ref_user_asn_id"] = req.body.data.ref_code
-                                    } else {
+                                    }/*  else {
                                         delete params['email']
-                                    }
+                                    } */
                                     return resolve()
                                 }
                             })

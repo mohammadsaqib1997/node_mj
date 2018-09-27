@@ -37,7 +37,7 @@
                             span.name(:title="$store.state.profile.name") {{ $store.state.profile.name }}
                             img.arrow-ic(src="~/assets/img/arrow.png")
                         .navbar-dropdown
-                            nuxt-link.navbar-item(to="/profile") PROFILE
+                            nuxt-link.navbar-item(to="/user/profile") PROFILE
                             a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
         notifyComp
 </template>

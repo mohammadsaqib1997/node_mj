@@ -7,7 +7,7 @@
         b-input(type="email" placeholder="(example: shabir@gmail.com)" v-model="form.email" :loading="validation.isValidating('form.email')")
 
     b-field(label="Password" :type="(validation.hasError('form.password')) ? 'is-danger':''" :message="validation.firstError('form.password')")
-        b-input(type="password" placeholder="******" v-model="form.password" :loading="validation.isValidating('form.password')")
+        b-input(type="password" placeholder="******" v-model="form.password")
 
     b-field(label="CNIC" :type="(validation.hasError('form.cnic_num')) ? 'is-danger':''" :message="validation.firstError('form.cnic_num')")
         b-input(type="text" placeholder="xxxxx-xxxxxxx-x" v-model="form.cnic_num" v-mask="'#####-#######-#'")
@@ -17,7 +17,11 @@
 
     b-field(label="Address" :type="(validation.hasError('form.address')) ? 'is-danger':''" :message="validation.firstError('form.address')")
         b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="form.address")
-
+    
+    b-field(label="City" :type="(validation.hasError('form.city')) ? 'is-danger':''" :message="validation.firstError('form.city')")
+      b-autocomplete(placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray" @select="option => form.city = option" :keep-first="true" :open-on-focus="true")
+        template(slot="empty") No results for {{ac_city}}
+        
     .columns
       .column
         b-field(label="Referral Code" :type="(validation.hasError('form.ref_code')) ? 'is-danger':''" :message="validation.firstError('form.ref_code')")
@@ -35,9 +39,27 @@ export default {
   directives: {
     mask
   },
+  async mounted() {
+    let data = await this.$axios.$get("/api/web/pk");
+    this.cities = data.cities;
+  },
+  computed: {
+    filteredCityArray() {
+      return this.cities.filter(option => {
+        return (
+          option
+            .toString()
+            .toLowerCase()
+            .indexOf(this.ac_city.toLowerCase()) >= 0
+        );
+      });
+    }
+  },
   data() {
     return {
+      cities: [],
       ref_name: "",
+      ac_city: "",
       form: {
         full_name: "",
         email: "",
@@ -45,6 +67,7 @@ export default {
         cnic_num: "",
         cont_num: "",
         address: "",
+        city: "",
         ref_code: ""
       }
     };
@@ -82,36 +105,11 @@ export default {
         }
       }
     },
-    "form.password": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this
-        let validator = Validator.value(value)
-          .required()
-          .minLength(6)
-          .maxLength(35);
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          if (self.form.email !== "") {
-            return validator.custom(() => {
-              return self.$axios
-                .post("/api/web/check_email_pass", {
-                  email: self.form.email,
-                  pass: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This password already used in previous account.";
-                  }
-                });
-            });
-          } else {
-            return validator;
-          }
-        }
-      }
+    "form.password": function(value) {
+      return Validator.value(value)
+        .required()
+        .minLength(6)
+        .maxLength(35);
     },
     "form.cnic_num": function(value) {
       return Validator.value(value)
@@ -131,6 +129,10 @@ export default {
         .required()
         .minLength(6)
         .maxLength(100);
+    },
+    "form.city": function(value) {
+      return Validator.value(value)
+        .required();
     },
     "form.ref_code": {
       cache: false,

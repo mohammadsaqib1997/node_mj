@@ -12,7 +12,7 @@
           b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="f_data.full_name")
 
         b-field(label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email')
+          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
 
         b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
           b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
@@ -28,6 +28,10 @@
 
         b-field(label="Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
           b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")
+
+        b-field(label="City" :type="(validation.hasError('f_data.city')) ? 'is-danger':''" :message="validation.firstError('f_data.city')")
+          b-autocomplete(placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray" @select="option => f_data.city = option" :keep-first="true" :open-on-focus="true")
+            template(slot="empty") No results for {{ac_city}}
           
         b-field(label="Referral ID" :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
           b-input(v-if="is_paid_user === true" type="text" placeholder="000000000" readonly v-bind:value="f_data.ref_code")
@@ -54,8 +58,8 @@
         .d-flex
           button.button.btn-des-1(type="submit")
             b-icon(icon="edit" style="margin-top: 2px;")
-            | &nbsp;&nbsp;&nbsp;&nbsp;Edit Member
-          button.button.btn-des-1(type="button" v-on:click.prevent="$store.commit('edMemModal/setModalActive', false)") Cancel
+            | &nbsp;&nbsp;&nbsp;&nbsp;Update Member
+          button.button.btn-des-1.dark(type="button" v-on:click.prevent="$store.commit('edMemModal/setModalActive', false)") Cancel
 
         b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
       b-modal.confirm_modal(:active="modalAct" :canCancel="false")
@@ -85,6 +89,18 @@ export default {
       default: null
     }
   },
+  computed: {
+    filteredCityArray() {
+      return this.cities.filter(option => {
+        return (
+          option
+            .toString()
+            .toLowerCase()
+            .indexOf(this.ac_city.toLowerCase()) >= 0
+        );
+      });
+    }
+  },
   async mounted() {
     this.form.loading = true;
     const list_pds = await this.$axios.$get("/api/product/");
@@ -93,6 +109,8 @@ export default {
     this.setFData(load_data.data[0].m);
     this.setPrdData(load_data.data[0].upd);
     this.prd_list = list_pds.data;
+    let ct_data = await this.$axios.$get("/api/web/pk");
+    this.cities = ct_data.cities;
     this.form.loading = false;
   },
   data() {
@@ -109,6 +127,8 @@ export default {
         { code: 2, name: "On Installment" }
       ],
       sts_list: [{ code: 1, name: "Approved" }, { code: 0, name: "Suspended" }],
+      cities: [],
+      ac_city: "",
       fet_m_data: null,
       f_data: {
         user_asn_id: "",
@@ -119,6 +139,7 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
+        city: "",
         ref_code: "",
         status: ""
       },
@@ -206,41 +227,11 @@ export default {
         }
       }
     },
-    "f_data.password": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-
-        let validator = Validator.value(value)
-          .required()
-          .minLength(6)
-          .maxLength(35);
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          if (
-            self.f_data.email !== "" &&
-            (self.f_data.email !== self.fet_m_data.email ||
-              value !== self.fet_m_data.password)
-          ) {
-            return validator.custom(() => {
-              return self.$axios
-                .post("/api/web/check_email_pass", {
-                  email: self.f_data.email,
-                  pass: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This password already used in previous account.";
-                  }
-                });
-            });
-          } else {
-            return validator;
-          }
-        }
-      }
+    "f_data.password": function(value) {
+      return Validator.value(value)
+        .required()
+        .minLength(6)
+        .maxLength(35);
     },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
@@ -263,6 +254,9 @@ export default {
         .required()
         .minLength(6)
         .maxLength(100);
+    },
+    "f_data.city": function(value) {
+      return Validator.value(value).required();
     },
     "f_data.ref_code": {
       cache: false,
@@ -333,6 +327,7 @@ export default {
   methods: {
     setFData: function(data) {
       this.is_paid_user = data.is_paid_m === 1 ? true : false;
+      this.ac_city = data.city !== null ? data.city : "";
       this.f_data = {
         user_asn_id: data.user_asn_id === null ? "" : data.user_asn_id,
         full_name: data.full_name,
@@ -342,6 +337,7 @@ export default {
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
+        city: data.city,
         ref_code: data.ref_user_asn_id,
         status: data.active_sts
       };
@@ -378,6 +374,7 @@ export default {
             dob: moment(self.f_data.dob).format("YYYY-MM-DD"),
             contact_num: self.f_data.cont_num,
             address: self.f_data.address,
+            city: self.f_data.city,
             ref_user_asn_id:
               self.f_data.ref_code !== "" ? self.f_data.ref_code : null,
             active_sts: self.f_data.status
@@ -407,11 +404,15 @@ export default {
               }
             })
             .then(res => {
-              $("#ed-member-con").animate({ scrollTop: 0 }, 500);
               self.form.loading = false;
-              self.form.suc = "Successfully Member Updated.";
               self.$emit("update_member", true);
-              setTimeout(() => (self.form.suc = ""), 2000);
+              self.$store.commit("edMemModal/setModalActive", false);
+              self.$toast.open({
+                duration: 3000,
+                message: "Successfully Member Updated.",
+                position: "is-bottom",
+                type: "is-success"
+              });
             })
             .catch(err => {
               $("#ed-member-con").animate({ scrollTop: 0 }, 500);
@@ -420,6 +421,7 @@ export default {
               self.form.err = "DB Error!";
             });
         } else {
+          $("#ed-member-con").animate({ scrollTop: 0 }, 500);
           self.form.loading = false;
         }
       });

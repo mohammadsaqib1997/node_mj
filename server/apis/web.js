@@ -5,6 +5,19 @@ const db = require('../db.js')
 
 const secret = require("./../config").secret
 const jwt = require('jsonwebtoken')
+const _ = require('lodash');
+const fs = require('fs');
+
+router.get("/pk", function (req, res) {
+  let data = JSON.parse(fs.readFileSync(__dirname + '/../files/pk.json', 'utf8'))
+  let new_data = _.map(data, o => {
+    return o.city
+  })
+  new_data.sort()
+  res.json({
+    cities: new_data
+  })
+})
 
 router.post('/tokenLogin', (req, res) => {
   const token = req.body.token || req.query.token
@@ -52,19 +65,7 @@ router.post('/check_email', (req, res) => {
     if (err) {
       sendDBError(res, err)
     } else {
-      // connection.query('SELECT email FROM `members` where binary `email`=?', [req.body.email], function (error, results, fields) {
-      //   if (error) {
-      //     connection.release();
-      //     sendDBError(res, error)
-      //   } else {
-      //     if (results.length > 0) {
-      //       connection.release();
-      //       res.json({ count: results.length })
-      //     } else {
-      //     }
-      //   }
-      // });
-      connection.query('SELECT email FROM `moderators` where binary `email`=?', [req.body.email], function (error, results, fields) {
+      connection.query('SELECT email FROM `members` where binary `email`=?', [req.body.email], function (error, results, fields) {
         if (error) {
           connection.release();
           sendDBError(res, error)
@@ -73,39 +74,34 @@ router.post('/check_email', (req, res) => {
             connection.release();
             res.json({ count: results.length })
           } else {
-            connection.query('SELECT email FROM `admins` where binary `email`=?', [req.body.email], function (error, results, fields) {
+            connection.query('SELECT email FROM `moderators` where binary `email`=?', [req.body.email], function (error, results, fields) {
               if (error) {
                 connection.release();
                 sendDBError(res, error)
               } else {
-                connection.release();
-                res.json({ count: results.length })
+                if (results.length > 0) {
+                  connection.release();
+                  res.json({ count: results.length })
+                } else {
+                  connection.query('SELECT email FROM `admins` where binary `email`=?', [req.body.email], function (error, results, fields) {
+                    if (error) {
+                      connection.release();
+                      sendDBError(res, error)
+                    } else {
+                      connection.release();
+                      res.json({ count: results.length })
+                    }
+                  })
+                }
               }
             })
           }
         }
-      })
+      });
 
     }
   })
 
-})
-
-router.post("/check_email_pass", (req, res) => {
-  db.getConnection(function (err, connection) {
-    if (err) {
-      sendDBError(res, err)
-    } else {
-      connection.query('SELECT COUNT(*) as count FROM `members` WHERE BINARY `email`=? AND BINARY `password`=?', [req.body.email, req.body.pass], function (error, results, fields) {
-        connection.release();
-        if (error) {
-          sendDBError(res, error)
-        } else {
-          res.json({ count: results[0].count })
-        }
-      })
-    }
-  })
 })
 
 router.post('/check_ref_id', (req, res) => {

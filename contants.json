@@ -40,7 +40,17 @@
     "notification": {
         "from_type": "0=member|1=comapny",
         "to_type": "0=member|1=comapny",
-        "notify_type": "0=simple|1=new_member|2=withdrawal_request",
+        "notify_type": "0=simple|1=new_member|2=withdrawal_request|3=claim_reward_request",
         "seen": "0=unseen|1=seen"
+    },
+    "claim_rewards": {
+        "type": {
+            "0": "Level Reward",
+            "1": "Cash"
+        },
+        "status": {
+            "0": "Pending",
+            "1": "Approved"
+        }
     }
 }

@@ -9,8 +9,7 @@
           b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="f_data.full_name")
 
         b-field(label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-          b-input(v-if="user_asn_id === ''" type="email" placeholder="user@domain.com" v-model='f_data.email')
-          b-input(v-else type="email" placeholder="user@domain.com" :value="f_data.email" readonly)
+          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
 
         b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
           b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
@@ -26,9 +25,13 @@
 
         b-field(label="Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
           b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")
+
+        b-field(label="City" :type="(validation.hasError('f_data.city')) ? 'is-danger':''" :message="validation.firstError('f_data.city')")
+          b-autocomplete(placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray" @select="option => f_data.city = option" :keep-first="true" :open-on-focus="true")
+            template(slot="empty") No results for {{ac_city}}
           
         b-field(label="Referral ID" :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
-          b-input(v-if="user_asn_id === ''" type="text" placeholder="000000000" v-model="f_data.ref_code" v-mask="'#########'")
+          b-input(v-if="user_asn_id === ''" type="text" placeholder="000000000" v-model="f_data.ref_code" v-mask="'#########'" :loading="validation.isValidating('f_data.ref_code')")
           b-input(v-else type="text" placeholder="000000000" readonly v-bind:value="f_data.ref_code")
 
         b-field.cus-des-1(label="Status")
@@ -37,8 +40,8 @@
         .d-flex
           button.button.btn-des-1(type="submit")
             b-icon(icon="edit" style="margin-top: 2px;")
-            | &nbsp;&nbsp;&nbsp;&nbsp;Edit Member
-          button.button.btn-des-1(type="button" v-on:click.prevent="$emit('close_modal')") Cancel
+            | &nbsp;&nbsp;&nbsp;&nbsp;Update Profile
+          button.button.btn-des-1.dark(type="button" v-on:click.prevent="$emit('close_modal')") Cancel
 
         b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
 </template>
@@ -53,17 +56,31 @@ export default {
   computed: {
     profile: function() {
       return this.$store.state.profile.profile;
+    },
+    filteredCityArray() {
+      return this.cities.filter(option => {
+        return (
+          option
+            .toString()
+            .toLowerCase()
+            .indexOf(this.ac_city.toLowerCase()) >= 0
+        );
+      });
     }
   },
   async mounted() {
     this.form.loading = true;
     await this.$store.dispatch("profile/loadProfile");
     this.setData(this.profile);
+    let ct_data = await this.$axios.$get("/api/web/pk");
+    this.cities = ct_data.cities;
     this.form.loading = false;
   },
   data() {
     return {
       prd_list: [],
+      cities: [],
+      ac_city: "",
       fet_m_data: null,
       user_asn_id: "",
       status: "",
@@ -75,6 +92,7 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
+        city: "",
         ref_code: ""
       },
       form: {
@@ -99,15 +117,15 @@ export default {
       debounce: 500,
       validator: function(value) {
         const self = this;
-        if (self.user_asn_id === "") {
-          let validator = Validator.value(value)
-            .required()
-            .email()
-            .maxLength(100);
-          if (validator.hasImmediateError()) {
-            return validator;
-          } else {
-            return validator.custom(() => {
+        let validator = Validator.value(value)
+          .required()
+          .email()
+          .maxLength(100);
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
+            if (value !== self.profile.email) {
               return self.$axios
                 .post("/api/web/check_email", {
                   email: value
@@ -117,45 +135,16 @@ export default {
                     return "This email is already in use.";
                   }
                 });
-            });
-          }
+            }
+          });
         }
       }
     },
-    "f_data.password": {
-      cache: false,
-      debounce: 500,
-      validator: function(value) {
-        const self = this;
-        let validator = Validator.value(value)
-          .required()
-          .minLength(6)
-          .maxLength(35);
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          if (
-            self.f_data.email !== "" &&
-            (self.f_data.email !== self.profile.email ||
-              value !== self.profile.password)
-          ) {
-            return validator.custom(() => {
-              return self.$axios
-                .post("/api/web/check_email_pass", {
-                  email: self.f_data.email,
-                  pass: value
-                })
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "This password already used in previous account.";
-                  }
-                });
-            });
-          } else {
-            return validator;
-          }
-        }
-      }
+    "f_data.password": function(value) {
+      return Validator.value(value)
+        .required()
+        .minLength(6)
+        .maxLength(35);
     },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
@@ -178,6 +167,9 @@ export default {
         .required()
         .minLength(6)
         .maxLength(100);
+    },
+    "f_data.city": function(value) {
+      return Validator.value(value).required();
     },
     "f_data.ref_code": {
       cache: false,
@@ -215,6 +207,7 @@ export default {
   methods: {
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
+      this.ac_city = data.city;
       this.status = data.active_sts;
       this.f_data = {
         full_name: data.full_name,
@@ -224,6 +217,7 @@ export default {
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
+        city: data.city,
         ref_code: data.ref_user_asn_id
       };
     },
@@ -235,8 +229,8 @@ export default {
           let is_err = false;
           let msg = "";
 
-          let new_data = _.cloneDeep(self.f_data)
-          
+          let new_data = _.cloneDeep(self.f_data);
+
           new_data["dob"] = new_data["dob"]
             ? moment(new_data.dob).format("YYYY-MM-DD")
             : null;
@@ -247,9 +241,9 @@ export default {
             })
             .then(async res => {
               if (res.data.status !== false) {
-                $("#ed-prof-con").animate({ scrollTop: 0 }, 500);
                 msg = "Successfully Profile Updated.";
                 await self.$store.dispatch("profile/loadProfile");
+                self.$emit("close_modal");
               } else {
                 is_err = true;
                 msg = res.data.message;

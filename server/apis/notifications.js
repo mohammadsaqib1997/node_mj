@@ -161,6 +161,31 @@ router.get('/cm_info/:trans_id', function (req, res) {
   }
 })
 
+router.get("/claim_info/:mem_id/:lvl", function (req, res) {
+  if (/^[0-9]*$/.test(req.params.mem_id) && /^[0-9]*$/.test(req.params.lvl)) {
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+        connection.query(`
+        SELECT type, status, cancel_reason, last_updated_at as clm_date
+        FROM claim_rewards 
+        WHERE member_id=? AND level=?
+        `, [req.params.mem_id, req.params.lvl], function (error, result) {
+            connection.release()
+            if (error) {
+              res.status(500).json({ error })
+            } else {
+              res.json({ data: result[0] })
+            }
+          })
+      }
+    })
+  }else{
+    res.json({ status: false, message: "Invalid Parameters!" })
+  }
+})
+
 router.post('/read_it', function (req, res) {
   if (/^[0-9]*$/.test(req.body.id)) {
     let seen_sts = 1

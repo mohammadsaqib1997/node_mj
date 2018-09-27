@@ -10,7 +10,7 @@ router.get("/:id", function (req, res, next) {
             if (err) {
                 res.status(500).json({ error })
             } else {
-                connection.query('SELECT account_number, account_title, address, bank_name, branch, branch_code, iban_number FROM `user_bank_details` WHERE member_id=?', req.params.id, function (error, results, fields) {
+                connection.query('SELECT account_number, account_title, address, bank_name, branch_code, iban_number FROM `user_bank_details` WHERE member_id=?', req.params.id, function (error, results, fields) {
                     connection.release();
 
                     if (error) {
