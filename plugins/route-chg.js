@@ -16,8 +16,8 @@ const authRoutes = [
     { name: "moderators-add-new-moderator", type_allowed: [2] },
     { name: "moderators-moderators-profile", type_allowed: [2] },
     { name: "withdraw", type_allowed: [0] },
-    { name: "rewards-rewards-request", type_allowed: [1, 2] },
-    { name: "rewards-rewards-completed", type_allowed: [1, 2] },
+    // { name: "rewards-rewards-request", type_allowed: [1, 2] },
+    // { name: "rewards-rewards-completed", type_allowed: [1, 2] },
 ]
 
 const unAuthRoutes = [
