@@ -207,7 +207,7 @@ export default {
   methods: {
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
-      this.ac_city = data.city;
+      this.ac_city = data.city === null ? "" : data.city;
       this.status = data.active_sts;
       this.f_data = {
         full_name: data.full_name,
@@ -217,7 +217,7 @@ export default {
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
-        city: data.city,
+        city: data.city === null ? "" : data.city,
         ref_code: data.ref_user_asn_id
       };
     },

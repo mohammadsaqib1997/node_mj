@@ -1,53 +1,57 @@
 <template lang="pug">
-    .topbar
-        .navbar
-            .navbar-brand
-                a.navbar-burger.main-menu(role="button" aria-label="menu" aria-expanded="false" v-on:click.prevet="navbarActToggle")
-                    span(aria-hidden="true")
-                    span(aria-hidden="true")
-                    span(aria-hidden="true")
-                nuxt-link.navbar-item(to="/")
-                    img.brand-logo(src="~/assets/img/admin-logo.png")
-                a#nBurgerTop.navbar-burger(role="button" aria-label="menu" aria-expanded="false")
-                    span(aria-hidden="true")
-                    span(aria-hidden="true")
-                    span(aria-hidden="true")
-            #navTopMenu.navbar-menu
-                .navbar-end
-                    .navbar-item.has-dropdown.is-hoverable
-                        .navbar-item
-                            .count-unread-msg(v-if="$store.state.notification.total_unread > 0")
-                                | {{ $store.state.notification.total_unread }}
-                            img(src="~/assets/img/notifications-bell-icon.png")
-                        .navbar-dropdown.notify_cont
-                            template(v-for="n in top_5_notif")
-                                .navbar-item(@click.prevent="$store.dispatch('notification/show_notif', n.id)" :class="{ active: n.read === 1 }")
-                                    span.icon(v-if="n.read === 1")
-                                        i.far.fa-bell.fa-lg
-                                    span.icon(v-else)
-                                        i.fas.fa-bell.fa-lg
-                                    .cont
-                                        p {{ n.msg }}
-                                        span.date {{ $store.getters['formatDate'](n.date) }}
-                                hr.navbar-divider
-                            nuxt-link.navbar-item.view-all(to="/notifications") View all...
-                    .navbar-item.has-dropdown.is-hoverable
-                        .navbar-item.profile
-                            img.profile-ic(src="~/assets/img/profile.png")
-                            span.name(:title="$store.state.profile.name") {{ $store.state.profile.name }}
-                            img.arrow-ic(src="~/assets/img/arrow.png")
-                        .navbar-dropdown
-                            nuxt-link.navbar-item(to="/user/profile") PROFILE
-                            a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
-        notifyComp
+  .topbar
+    .navbar
+      .navbar-brand
+        a.navbar-burger.main-menu(role="button" aria-label="menu" aria-expanded="false" v-on:click.prevet="navbarActToggle")
+          span(aria-hidden="true")
+          span(aria-hidden="true")
+          span(aria-hidden="true")
+        nuxt-link.navbar-item(to="/")
+          img.brand-logo(src="~/assets/img/admin-logo.png")
+        a#nBurgerTop.navbar-burger(role="button" aria-label="menu" aria-expanded="false")
+          span(aria-hidden="true")
+          span(aria-hidden="true")
+          span(aria-hidden="true")
+      #navTopMenu.navbar-menu
+        .navbar-end
+          .navbar-item(v-if="$store.state.user.data.type === 0")
+            topBarCompMem
+          .navbar-item.has-dropdown.is-hoverable
+            .navbar-item
+              .count-unread-msg(v-if="$store.state.notification.total_unread > 0")
+                | {{ $store.state.notification.total_unread }}
+              img(src="~/assets/img/notifications-bell-icon.png")
+            .navbar-dropdown.notify_cont
+              template(v-for="n in top_5_notif")
+                .navbar-item(@click.prevent="$store.dispatch('notification/show_notif', n.id)" :class="{ active: n.read === 1 }")
+                  span.icon(v-if="n.read === 1")
+                    i.far.fa-bell.fa-lg
+                  span.icon(v-else)
+                    i.fas.fa-bell.fa-lg
+                  .cont
+                    p {{ n.msg }}
+                    span.date {{ $store.getters['formatDate'](n.date) }}
+                hr.navbar-divider
+              nuxt-link.navbar-item.view-all(to="/notifications") View all...
+          .navbar-item.has-dropdown.is-hoverable
+            .navbar-item.profile
+              img.profile-ic(src="~/assets/img/profile.png")
+              span.name(:title="$store.state.profile.name") {{ $store.state.profile.name }}
+              img.arrow-ic(src="~/assets/img/arrow.png")
+            .navbar-dropdown
+              nuxt-link.navbar-item(to="/user/profile") PROFILE
+              a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
+    notifyComp
 </template>
 
 <script>
 import _ from "lodash";
 import notifyComp from "~/components/admin_panel/notify_comp.vue";
+import topBarCompMem from '~/components/admin_panel/member/top-bar-comp.vue'
 export default {
   components: {
-    notifyComp
+    notifyComp,
+    topBarCompMem
   },
   async mounted() {
     await this.$store.dispatch("profile/loadName");
@@ -65,9 +69,6 @@ export default {
     top_5_notif: function() {
       return this.$store.state.notification.tbar_list;
     }
-  },
-  data() {
-    return {};
   },
   methods: {
     navbarActToggle: function(e) {

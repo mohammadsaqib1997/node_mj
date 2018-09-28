@@ -114,6 +114,50 @@ router.get("/", function (req, res) {
     }
 })
 
+router.get("/get_comp_prg", function (req, res) {
+    if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({ err })
+            } else {
+                connection.query(
+                    `SELECT m.full_name, m.dob, m.cnic_num, m.email, m.contact_num, m.address, m.user_asn_id, m_bk.bank_name, m_bk.branch_code, m_bk.account_title, m_bk.account_number
+                    FROM members as m
+                    LEFT JOIN user_bank_details as m_bk
+                    ON m.id=m_bk.member_id
+                    WHERE m.id=?`,
+                    req.decoded.data.user_id,
+                    function (err, result) {
+                        connection.release()
+                        if (err) {
+                            res.status(500).json({ err })
+                        } else {
+                            if (result.length > 0) {
+                                let com_fields = 0
+                                for (field in result[0]) {
+                                    if (result[0][field] !== null && result[0][field] !== "") {
+                                        com_fields++
+                                    }
+                                }
+                                let progress = Math.round((com_fields / Object.keys(result[0]).length) * 100)
+                                res.json({
+                                    progress
+                                })
+                            } else {
+                                res.json({
+                                    status: false,
+                                    message: "No user found!"
+                                })
+                            }
+                        }
+                    })
+            }
+        })
+    } else {
+        res.json({ status: false, message: "No User Data!" })
+    }
+})
+
 router.get("/may_i_wallet_req", function (req, res) {
     if (req.decoded.data.user_id && req.decoded.data.type === 0) {
         db.getConnection(function (err, connection) {
