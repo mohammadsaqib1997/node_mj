@@ -17,6 +17,6 @@ export const mutations = {
 export const actions = {
   async loadWallet({ commit }) {
     let result = await this.$axios.$get('/api/admin/wallet')
-    commit("setWallet", (result.wallet ? result.wallet : 0))
+    commit("setWallet", (result.comp_wallet ? result.comp_wallet : 0))
   }
 }

@@ -10,7 +10,7 @@ const config = {
 
 const db = mysql.createPool(config)
 
-fs.readFile(__dirname + '/sheet#2 - Sheet1.csv', 'utf8', async function (err, data) {
+fs.readFile(__dirname + '/sheet#1 - Sheet1.csv', 'utf8', async function (err, data) {
   if (err) {
     console.log(err)
   } else {

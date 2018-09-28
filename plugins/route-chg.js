@@ -22,7 +22,7 @@ const authRoutes = [
 
 const unAuthRoutes = [
     'signup',
-    'dev-signup'
+    'admin-login'
 ]
 
 const visible = [
@@ -34,7 +34,8 @@ const visible = [
     'about-us',
     'contact',
     'coming-soon',
-    'career'
+    'career',
+    'admin-login'
 ]
 
 export default ({ app, error }) => {

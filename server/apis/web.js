@@ -127,50 +127,13 @@ router.post('/check_ref_id', (req, res) => {
 
 })
 
-router.post('/login', (req, res) => {
+router.post("/admin/login", (req, res) => {
   db.getConnection(async function (err, connection) {
     if (err) {
       sendDBError(res, err)
     } else {
       let throw_error = null
       let resp = null
-
-      // member check
-      await new Promise(resolve => {
-        connection.query(
-          'SELECT id, email, active_sts FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
-          [req.body.email, req.body.email, req.body.password],
-          function (error, results) {
-            if (error) {
-              throw_error = error;
-              return resolve()
-            } else {
-              if (results.length === 1) {
-                if (results[0].active_sts === 1) {
-                  resp = {
-                    status: true,
-                    token: tokenGen(results[0], 0),
-                    user: userData(results[0], 0)
-                  }
-                } else {
-                  resp = {
-                    status: false,
-                    message: "Your account has bees Suspended. Contact your administrator."
-                  }
-                }
-              }
-              return resolve()
-            }
-          })
-      })
-
-      if (resp) {
-        connection.release();
-        return res.json(resp)
-      } else if (throw_error) {
-        connection.release();
-        return sendDBError(res, throw_error)
-      }
 
       // moderator check
       await new Promise(resolve => {
@@ -243,6 +206,60 @@ router.post('/login', (req, res) => {
         connection.release();
         return sendDBError(res, throw_error)
       }
+    }
+  })
+})
+
+router.post('/login', (req, res) => {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      sendDBError(res, err)
+    } else {
+      let throw_error = null
+      let resp = null
+
+      // member check
+      await new Promise(resolve => {
+        connection.query(
+          'SELECT id, email, active_sts FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
+          [req.body.email, req.body.email, req.body.password],
+          function (error, results) {
+            if (error) {
+              throw_error = error;
+              return resolve()
+            } else {
+              if (results.length === 1) {
+                if (results[0].active_sts === 1) {
+                  resp = {
+                    status: true,
+                    token: tokenGen(results[0], 0),
+                    user: userData(results[0], 0)
+                  }
+                } else {
+                  resp = {
+                    status: false,
+                    message: "Your account has bees Suspended. Contact your administrator."
+                  }
+                }
+              } else {
+                resp = {
+                  status: false,
+                  message: "Invalid Credentials!"
+                }
+              }
+              return resolve()
+            }
+          })
+      })
+
+      if (resp) {
+        connection.release();
+        return res.json(resp)
+      } else if (throw_error) {
+        connection.release();
+        return sendDBError(res, throw_error)
+      }
+      
     }
   })
 

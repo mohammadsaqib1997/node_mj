@@ -23,8 +23,6 @@ README.md
 *-lock.json
 yarn.lock
 
-server/config.js
-
 server/uploads/*/*.jpg
 server/uploads/*/*.png
 server/uploads/reports/*.csv

@@ -10,19 +10,28 @@ router.get('/wallet', function (req, res) {
       res.status(500).json({ err })
     } else {
       connection.query('SELECT wallet FROM `company_var` WHERE id=1', function (error, results, fields) {
-        connection.release();
-
         if (error) {
+          connection.release();
           res.status(500).json({ error })
         } else {
-          let wallet = 0
+          let comp_wallet = 0
           if (results.length > 0) {
-            wallet = results[0].wallet
-          } else {
-            wallet = 0
+            comp_wallet = results[0].wallet !== null ? results[0].wallet : 0
           }
-          res.json({
-            wallet
+          connection.query('SELECT SUM(wallet) as user_wallet FROM info_var_m', function (error, results, fields) {
+            connection.release();
+            if (error) {
+              res.status(500).json({ error })
+            } else {
+              let user_wallet = 0
+              if (results.length > 0) {
+                user_wallet = results[0].user_wallet !== null ? results[0].user_wallet : 0
+              }
+              res.json({
+                comp_wallet,
+                user_wallet
+              })
+            }
           })
         }
       });

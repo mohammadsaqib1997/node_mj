@@ -25,15 +25,28 @@
                     h1 {{ wallet }}/-
                 h5 Wallet
             .column.is-12-mobile.is-6-tablet.is-3-widescreen
-                .amount-wrapepr
-                    b Rs.
-                    h1 {{ paid_cm }}/-
-                h5 Paid Commissions
+                .flex
+                  div
+                    .tile.is-ancestor.c-tile.is-parent
+                      .tile.is-vertical.is-narrow
+                        .tile.is-child
+                          h5 {{ paid_cm }}/-
+                        .tile.is-child
+                          h5 {{ un_paid_cm }}/-
+                        .tile.is-child
+                          h5 {{ user_wallet }}/-
+                      .tile.is-vertical
+                        .tile.is-child
+                          span Paid Commissions
+                        .tile.is-child
+                          span Un-Paid Commissions
+                        .tile.is-child
+                          span User Wallet
             .column.is-12-mobile.is-6-tablet.is-3-widescreen
                 .amount-wrapepr
                     b Rs.
-                    h1 {{ un_paid_cm }}/-
-                h5 Un-Paid Commissions
+                    h1 {{ parseInt(wallet) + parseInt(paid_cm) + parseInt(user_wallet) }}/-
+                h5 Grand Total
         b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
 
@@ -64,7 +77,8 @@ export default {
     await self.$axios
       .get("/api/admin/wallet")
       .then(res => {
-        self.wallet = res.data.wallet;
+        self.wallet = res.data.comp_wallet;
+        self.user_wallet = res.data.user_wallet;
       })
       .catch(err => {
         console.log(err);
@@ -78,7 +92,8 @@ export default {
       un_paid_mem: 0,
       paid_cm: 0,
       un_paid_cm: 0,
-      wallet: 0
+      wallet: 0,
+      user_wallet: 0
     };
   }
 };
