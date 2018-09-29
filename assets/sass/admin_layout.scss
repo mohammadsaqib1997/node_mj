@@ -268,46 +268,15 @@ $primary-light: rgba(217, 189, 104, 0.25);
             & > .field {
                 margin-bottom: 0;
 
-                &.sort-fields {
-                    & > .control {
-                        & > .button, & > .select {
-                            height: 2.8rem;
-                            border-color: #eeeeee;
-                            color: #afafaf;
-                        }
-
-                        & > .button {
-                            width: 3rem;
-
-                            &:focus, &.active {
-                                -webkit-box-shadow: inset 1px 2px 1px 0.5px #dcdcdc;
-                                -moz-box-shadow: inset 1px 2px 1px 0.5px #dcdcdc;
-                                box-shadow: inset 1px 2px 1px 0.5px #dcdcdc;
-                                background-color: #e6e6e6;
-                            }
-                        }
-
-                        & > .select {
-                            &:after {
-                                border-color: #afafaf;
-                            }
-
-                            & > select {
-                                border-color: #eeeeee;
-                                height: 2.8rem;
-
-                                &:focus, &:active {
-                                    -webkit-box-shadow: none;
-                                    -moz-box-shadow: none;
-                                    box-shadow: none;
-                                }
-                            }
-                        }
-                    }
+                &.rm-cont > .button{
+                    padding: 4px 10px;
+                    border-radius: 0;
+                    text-transform: uppercase;
+                    font-size: 12px;
                 }
 
                 &.search-field {
-                    max-width: 22rem;
+                    max-width: 30rem;
                     margin-left: auto !important;
                     margin-right: auto;
 
@@ -326,6 +295,24 @@ $primary-light: rgba(217, 189, 104, 0.25);
                         .icon {
                             top: 4px;
                             color: $primary;
+                        }
+
+                        & > .select {
+                            &:after {
+                                border-color: #afafaf;
+                                top: 22px;
+                            }
+
+                            & > select {
+                                border-color: #eeeeee;
+                                height: 2.8rem;
+
+                                &:focus, &:active {
+                                    -webkit-box-shadow: none;
+                                    -moz-box-shadow: none;
+                                    box-shadow: none;
+                                }
+                            }
                         }
 
                         &.is-loading {

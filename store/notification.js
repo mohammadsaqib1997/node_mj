@@ -16,7 +16,8 @@ export const state = () => ({
   load_params: {
     limit: 10,
     page: 1,
-    search: ""
+    search: "",
+    filter: "all"
   }
 })
 
@@ -52,7 +53,8 @@ export const mutations = {
     state.load_params = {
       limit: 10,
       page: 1,
-      search: ""
+      search: "",
+      filter: "all"
     }
   },
   set_tbar_list: (state, pld) => {
@@ -77,15 +79,22 @@ export const actions = {
       });
   },
 
-  async n_list_load({ commit, state }) {
+  async n_list_load({ commit, dispatch, state }) {
     await this.$axios
       .get("/api/notification", { params: state.load_params })
-      .then(res => {
+      .then(async res => {
         if (!res.data.status) {
-          // console.log(res.data)
-          commit('set_tot_s_rows', res.data.total_rows)
-          commit('set_tot_un_read', res.data.un_read)
-          commit('set_n_list', res.data.result)
+          if (res.data.result.length === 0 && res.data.total_rows > 0 && state.load_params.page > 1) {
+            commit('set_list_loader', true)
+            commit('set_load_params', { param: 'page', value: state.load_params.page - 1 })
+            await dispatch('n_list_load')
+            commit('set_list_loader', false)
+          } else {
+            commit('set_tot_s_rows', res.data.total_rows)
+            commit('set_tot_un_read', res.data.un_read)
+            commit('set_n_list', res.data.result)
+          }
+
         } else {
           console.log(res.data)
         }
@@ -116,6 +125,24 @@ export const actions = {
     let n_item = _.find(state.n_list, { id: hit_id })
     await this.$axios
       .post('/api/notification/read_it', { id: hit_id, sts: (n_item.read === 1) ? 0 : 1 })
+      .then(async res => {
+        if (res.data.status === false) {
+          console.log(res.data)
+        } else {
+          await dispatch('load_tbar_list')
+          await dispatch('n_list_load')
+        }
+      })
+      .catch(err => {
+        console.log(err)
+      })
+    commit('set_list_loader', false)
+  },
+
+  async remove({ commit, dispatch }, id) {
+    commit('set_list_loader', true)
+    await this.$axios
+      .post('/api/notification/user_remove', { id })
       .then(async res => {
         if (res.data.status === false) {
           console.log(res.data)

@@ -57,6 +57,9 @@ export default {
   data() {
     return {};
   },
+  destroyed() {
+    this.$store.commit("member/transactions/reset_load_params");
+  },
   methods: {
     ...mapActions({
       update_params: "member/transactions/update_params"

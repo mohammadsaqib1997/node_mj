@@ -33,6 +33,13 @@ export const mutations = {
     set_param: (state, pld) => {
         _.set(state.load_params, pld.param, pld.value)
     },
+    reset_load_params: (state) => {
+        state.load_params = {
+            limit: 10,
+            page: 1,
+            search: ""
+        }
+    }
 }
 
 export const actions = {
