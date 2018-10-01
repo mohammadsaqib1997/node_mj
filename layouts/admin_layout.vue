@@ -7,6 +7,9 @@
         nuxt
       footer-comp
       termAndCondMD(v-if="user.data.type === 0 && $store.state.hasTermsLoaded === false")
+      a.whatsapp_link(v-if="user.data.type === 0" href="https://api.whatsapp.com/send?phone=923137877363&text=&source=&data=" target="_blank")
+        span.icon
+          i.fab.fa-whatsapp
 </template>
 
 <script>

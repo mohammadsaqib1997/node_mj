@@ -5,6 +5,22 @@ $primary-light: rgba(217, 189, 104, 0.25);
     background-color: #f6f6f6;
 
     & /deep/ {
+        .whatsapp_link{
+            background-color: #00e676;
+            z-index: 999;
+            position: fixed;
+            border-radius: 100%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            bottom: 25px;
+            right: 25px;
+            font-size: 30px;
+            color: #fff;
+        }
+
         .confirm_modal {
             z-index: 999;
 

@@ -142,28 +142,66 @@ router.get('/find/:param', function (req, res) {
         if (err) {
             res.status(500).json({ err })
         } else {
-            connection.query(`
-            SELECT h_m.member_id AS id, m.email, m.user_asn_id, m.full_name
-            FROM hierarchy_m AS h_m
-            LEFT JOIN members AS m
-            ON h_m.member_id = m.id
-            WHERE 
-            (m.user_asn_id LIKE ?
-            OR
-            m.email LIKE ?
-            OR
-            m.full_name LIKE ?)
-            ${ is_user ? 'AND h_m.id > (SELECT id FROM hierarchy_m WHERE member_id='+user_id+')' : ''}
-            ORDER BY h_m.id DESC
-            LIMIT 10
-            `, ['%' + param + '%', '%' + param + '%', '%' + param + '%'], function (err, result) {
-                    connection.release()
-                    if (err) {
-                        res.status(500).json({ err })
-                    } else {
-                        res.json({ result: result })
+            if (is_user === true) {
+
+                connection.query(
+                    `WITH RECURSIVE cte (id, user_asn_id, full_name, email) AS
+                    (
+                     SELECT h_m.member_id as id, m.user_asn_id, m.full_name, m.email
+                     FROM hierarchy_m AS h_m
+                     LEFT JOIN members AS m
+                     ON h_m.member_id = m.id
+                     WHERE m.id = ${user_id}
+                     
+                     UNION ALL
+                     
+                     SELECT h_m.member_id as id, m.user_asn_id, m.full_name, m.email
+                     FROM hierarchy_m AS h_m
+                     LEFT JOIN members AS m
+                     ON h_m.member_id = m.id
+                     INNER JOIN cte
+                     ON m.ref_user_asn_id = cte.user_asn_id
+                    )
+                    SELECT * FROM cte 
+                    WHERE id <> ${user_id} 
+                    AND (user_asn_id LIKE ? OR full_name LIKE ? OR email LIKE ?)
+                    ORDER BY id
+                    LIMIT 10;`,
+                    ['%' + param + '%', '%' + param + '%', '%' + param + '%'],
+                    function (err, result) {
+                        connection.release()
+                        if (err) {
+                            res.status(500).json({ err })
+                        } else {
+                            res.json({ result: result })
+                        }
                     }
-                })
+                )
+                
+            } else {
+                connection.query(`
+                SELECT h_m.member_id AS id, m.email, m.user_asn_id, m.full_name
+                FROM hierarchy_m AS h_m
+                LEFT JOIN members AS m
+                ON h_m.member_id = m.id
+                WHERE 
+                (m.user_asn_id LIKE ?
+                OR
+                m.email LIKE ?
+                OR
+                m.full_name LIKE ?)
+                ORDER BY h_m.id DESC
+                LIMIT 10
+                `, ['%' + param + '%', '%' + param + '%', '%' + param + '%'], function (err, result) {
+                        connection.release()
+                        if (err) {
+                            res.status(500).json({ err })
+                        } else {
+                            res.json({ result: result })
+                        }
+                    })
+            }
+
         }
     })
 })
