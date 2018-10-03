@@ -190,6 +190,11 @@ export default {
     .modal-content {
       width: 960px;
       max-width: 100% !important;
+      .wallet-sc {
+        img {
+          max-height: 100%;
+        }
+      }
     }
   }
 }

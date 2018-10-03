@@ -23,7 +23,7 @@
                     td {{ row.amount }}
                     td.receipt_con
                       template(v-if="row.receipt")
-                        a.anch(href="#") REF {{ "#"+row.receipt }}
+                        a.anch(href="#" @click.prevent="rec_v_md=true;rec_v_id=row.receipt;") REF {{ "#"+row.receipt }}
                       template(v-else)
                         .upload(v-if="$store.getters['receipts_upload/hasFile'](row.id)" @click.prevent="uploadFile(row.member_id, row.id)")
                           span UPLOAD&nbsp;&nbsp;&nbsp;
@@ -32,17 +32,20 @@
                         b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.id})")
                           span UPLOAD&nbsp;&nbsp;&nbsp;
                           b-icon(icon="plus-circle")
+    receiptView(:md_act="rec_v_md" :load_id="rec_v_id" @closed="rec_v_md=$event;rec_v_id=null;")
 </template>
 
 <script>
 import _ from "lodash";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
+import receiptView from '~/components/modals/receipt_view.vue'
 export default {
   layout: "admin_layout",
   components: {
     tableComp,
-    tblTopFilter
+    tblTopFilter,
+    receiptView
   },
   async mounted() {
     const self = this;
@@ -55,6 +58,8 @@ export default {
   },
   data() {
     return {
+      rec_v_md: false,
+      rec_v_id: null,
       ren_data: [],
       tot_rows: 1,
       loading: false,

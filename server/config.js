@@ -1,5 +1,5 @@
 module.exports = {
-    dev: false,
+    dev: true,
     db: {
         live: {
             host: 'localhost',

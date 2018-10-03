@@ -15,7 +15,7 @@
                 th Description
                 th Amount
                 th Action
-                th Receipt
+                //- th Receipt
             template(slot="tbody")
               tr(v-for="row in ren_data")
                 td {{ row.id }}
@@ -25,17 +25,17 @@
                 td
                   button.button.is-primary.is-small(@click.prevent="ch_sts(row.id, 1)") Paid
                   button.button.is-danger.is-small(@click.prevent="ch_sts(row.id, 2)" style="margin-left:5px;") Cancel
-                td.receipt_con
-                  template(v-if="row.receipt")
-                    a.anch(href="#") REF {{ "#"+row.receipt }}
-                  template(v-else)
-                    .upload(v-if="$store.getters['receipts_upload/hasFile'](row.id)" @click.prevent="uploadFile(row.member_id, row.id)")
-                      span UPLOAD&nbsp;&nbsp;&nbsp;
-                      b-icon(icon="upload")
-                      b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.id)")
-                    b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.id})")
-                      span UPLOAD&nbsp;&nbsp;&nbsp;
-                      b-icon(icon="plus-circle")
+                //- td.receipt_con
+                //-   template(v-if="row.receipt")
+                //-     a.anch(href="#") REF {{ "#"+row.receipt }}
+                //-   template(v-else)
+                //-     .upload(v-if="$store.getters['receipts_upload/hasFile'](row.id)" @click.prevent="uploadFile(row.member_id, row.id)")
+                //-       span UPLOAD&nbsp;&nbsp;&nbsp;
+                //-       b-icon(icon="upload")
+                //-       b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.id)")
+                //-     b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.id})")
+                //-       span UPLOAD&nbsp;&nbsp;&nbsp;
+                //-       b-icon(icon="plus-circle")
 </template>
 
 <script>
@@ -54,9 +54,9 @@ export default {
     self.loadCM();
     self.loading = false;
   },
-  destroyed() {
-    this.$store.commit("receipts_upload/resetFile");
-  },
+  // destroyed() {
+  //   this.$store.commit("receipts_upload/resetFile");
+  // },
   data() {
     return {
       loading: false,
@@ -98,40 +98,40 @@ export default {
         });
       self.loading = false;
     },
-    uploadFile: async function(mem_id, cm_id) {
-      const self = this;
-      self.loading = true;
-      let form_data = new FormData();
-      form_data.append("mem_id", mem_id);
-      form_data.append("cm_id", cm_id);
-      form_data.append(
-        "receipt",
-        self.$store.state.receipts_upload.sel_file[cm_id],
-        self.$store.state.receipts_upload.sel_file[cm_id].name
-      );
-      let config = {
-        headers: { "content-type": "multipart/form-data" }
-      };
-      await this.$axios
-        .post("/api/receipt/upload_cm_rcp", form_data, config)
-        .then(async res => {
-          if (res.data.status === true) {
-            self.$store.commit("receipts_upload/remFile", cm_id);
-            await self.loadCM();
-          } else {
-            self.$toast.open({
-              duration: 3000,
-              message: "Uploading Error",
-              position: "is-bottom",
-              type: "is-danger"
-            });
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      self.loading = false;
-    },
+    // uploadFile: async function(mem_id, cm_id) {
+    //   const self = this;
+    //   self.loading = true;
+    //   let form_data = new FormData();
+    //   form_data.append("mem_id", mem_id);
+    //   form_data.append("cm_id", cm_id);
+    //   form_data.append(
+    //     "receipt",
+    //     self.$store.state.receipts_upload.sel_file[cm_id],
+    //     self.$store.state.receipts_upload.sel_file[cm_id].name
+    //   );
+    //   let config = {
+    //     headers: { "content-type": "multipart/form-data" }
+    //   };
+    //   await this.$axios
+    //     .post("/api/receipt/upload_cm_rcp", form_data, config)
+    //     .then(async res => {
+    //       if (res.data.status === true) {
+    //         self.$store.commit("receipts_upload/remFile", cm_id);
+    //         await self.loadCM();
+    //       } else {
+    //         self.$toast.open({
+    //           duration: 3000,
+    //           message: "Uploading Error",
+    //           position: "is-bottom",
+    //           type: "is-danger"
+    //         });
+    //       }
+    //     })
+    //     .catch(err => {
+    //       console.log(err);
+    //     });
+    //   self.loading = false;
+    // },
     async set_params(pld) {
       const self = this;
       let param_val = _.get(self.params, pld.param, null);

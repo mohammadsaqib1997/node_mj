@@ -5,7 +5,8 @@
         li(v-for="item in menu" v-if="find(item.show, u_type)" :class="{ 'has-dropdown': item.hasOwnProperty('children'), 'is-active': item.active }")
           template(v-if="item.url")
             nuxt-link.nav-item(:to="item.url")
-              img.i-img(:src="'/img/'+item.img+((item.active) ? '-active': '')+'.png'")
+              img.i-img(v-if="item.img !== null" :src="'/img/'+item.img+((item.active) ? '-active': '')+'.png'")
+              span.icon(v-else-if="item.icon !== null" v-html="item.icon")
               span {{ item.title }}
           template(v-else)
             .nav-item(v-on:click.prevent="openDropdown")
@@ -227,6 +228,15 @@ export default {
           url: "/notifications",
           title: "Notifications",
           show: [0, 1, 2]
+        },
+        {
+          name: "product",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-cart-arrow-down"></i>',
+          url: "/product",
+          title: "Product",
+          show: [0]
         }
       ]
     };

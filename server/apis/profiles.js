@@ -251,6 +251,43 @@ router.get("/may_i_wallet_req", function (req, res) {
     }
 })
 
+router.get("/get_prd_detail", function (req, res) {
+    if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({ err })
+            } else {
+                connection.query(
+                    `SELECT p_d.product_id, p_d.buyer_type, p_d.buyer_pay_type, p_d.buyer_qty_prd, iv_m.package_act_date
+                    FROM user_product_details as p_d
+                    LEFT JOIN info_var_m as iv_m
+                    ON p_d.member_id = iv_m.member_id
+                    WHERE p_d.member_id=?`,
+                    req.decoded.data.user_id,
+                    function (err, result) {
+                        connection.release()
+                        if (err) {
+                            res.status(500).json({ err })
+                        } else {
+                            if (result.length > 0) {
+                                res.json({
+                                    data: result[0]
+                                })
+                            } else {
+                                res.json({
+                                    status: false,
+                                    message: "No user data found!"
+                                })
+                            }
+                        }
+                    })
+            }
+        })
+    } else {
+        res.json({ status: false, message: "No User Data!" })
+    }
+})
+
 router.post("/update", function (req, res) {
     if (req.decoded.data.user_id) {
         db.getConnection(async function (err, connection) {

@@ -20,6 +20,43 @@ const upload = multer({ storage })
 
 const db = require('../db.js')
 
+router.get('/get_cm_receipt/:file_id', function (req, res) {
+    if (/^[0-9]*$/.test(req.params.file_id)) {
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({ error })
+            } else {
+                connection.query(
+                    `SELECT file_name FROM user_receipts WHERE id=? AND type=1
+                    ${(req.decoded.data.type === 0) ? ' AND member_id="' + req.decoded.data.user_id + '"' : ''}`,
+                    req.params.file_id,
+                    function (error, results, fields) {
+                        connection.release();
+
+                        if (error) {
+                            res.status(500).json({ error })
+                        } else {
+                            if (results.length > 0) {
+                                if (fs.existsSync(__dirname + "/../uploads/receipts/" + results[0].file_name)) {
+                                    let file = fs.readFileSync(__dirname + "/../uploads/receipts/" + results[0].file_name)
+                                    res.send(file)
+                                } else {
+                                    res.status(404).json({ message: 'Not found!' })
+                                }
+                            } else {
+                                res.status(404).json({ message: 'Not found!' })
+                            }
+                        }
+
+                    }
+                );
+            }
+        })
+    } else {
+        res.json({ status: false, message: 'Invalid parameters!' })
+    }
+})
+
 router.post("/upload_pd_rcp", upload.single('receipt'), function (req, res) {
     if (/^[0-9]*$/.test(req.body.id)) {
         let id = req.body.id
@@ -74,7 +111,7 @@ router.post("/upload_cm_rcp", upload.single('receipt'), function (req, res) {
                                     throw_error = error
                                     return resolve()
                                 } else {
-                                    connection.query("UPDATE commissions SET ? WHERE id=?", [{
+                                    connection.query("UPDATE commissions SET ? WHERE trans_id=?", [{
                                         receipt_id: req.body.file_id
                                     }, cm_id], function (error, results) {
                                         if (error) {

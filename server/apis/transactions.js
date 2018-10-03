@@ -49,11 +49,13 @@ router.get("/:id", function (req, res, next) {
                                     } else {
                                         let tot_rows = result[0].tot_rows
                                         let opt = {
-                                            sql: `SELECT id, remarks as description, debit, credit, created_at as date 
-                                        FROM transactions_m 
-                                        WHERE member_id=? 
-                                        ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}
-                                        ORDER BY id DESC
+                                            sql: `SELECT trans.id, trans.remarks as description, trans.debit, trans.credit, trans.created_at as date, cm.receipt_id
+                                        FROM transactions_m as trans
+                                        LEFT JOIN commissions as cm
+                                        ON trans.id=cm.trans_id
+                                        WHERE trans.member_id=? 
+                                        ${(search !== '') ? 'AND (trans.id LIKE ? OR trans.remarks LIKE ? OR trans.debit LIKE ? OR trans.credit LIKE ? OR trans.created_at LIKE ?)' : ''}
+                                        ORDER BY trans.id DESC
                                         LIMIT ${limit}
                                         OFFSET ${offset}`
                                         }
