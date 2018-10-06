@@ -101,6 +101,13 @@ export default {
               show: [0, 1, 2]
             },
             {
+              name: "invoices",
+              active: false,
+              url: "/fund-manager/invoices",
+              title: "Invoices",
+              show: [0]
+            },
+            {
               name: "total-finances",
               active: false,
               url: "/fund-manager/total-finances",
@@ -198,6 +205,15 @@ export default {
           show: [0]
         },
         {
+          name: "product",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-cart-arrow-down"></i>',
+          url: "/product",
+          title: "Product",
+          show: [0]
+        },
+        {
           name: "user",
           active: false,
           img: "person",
@@ -229,15 +245,6 @@ export default {
           title: "Notifications",
           show: [0, 1, 2]
         },
-        {
-          name: "product",
-          active: false,
-          img: null,
-          icon: '<i class="fas fa-cart-arrow-down"></i>',
-          url: "/product",
-          title: "Product",
-          show: [0]
-        }
       ]
     };
   },

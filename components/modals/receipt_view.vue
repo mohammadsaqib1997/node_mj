@@ -6,42 +6,80 @@
           h1 Receipt View
         .body
           .section
-            .img-cont.has-text-centered(v-if="loading !== true && loaded_img !== null")
-              img(:src="loaded_img")
-            b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
+            section.section.em-sec(v-if="ren_data.length < 1")
+              .content.has-text-grey.has-text-centered
+                p
+                  span.icon.is-large
+                    i.far.fa-frown.fa-3x
+                p Nothing here.
+
+            table.table.is-fullwidth.is-bordered(v-else)
+              thead
+                tr
+                  th Date
+                  th File
+                  th Action
+              tbody
+                tr(v-for="row in ren_data")
+                  td {{ dateFT(row.date) }}
+                  td {{ row.file_name }}
+                  td 
+                    b-field(grouped)
+                      p.control
+                        button.button.is-small.is-danger(@click.prevent="deleteReceipt(row.id)")
+                          b-icon(icon="trash")
+                      p.control
+                        button.button.is-small.is-info(@click.prevent="download(row.id, row.file_name, type)")
+                          b-icon(icon="download")
+
             hr
             b-field(grouped style="justify-content: flex-end;")
-              button.button.btn-des-1(@click.prevent="modalAct=false" style="margin-top:0;") Close
-              //- button.button.btn-des-1.dark(v-if="$store.state.user.data.type !== 0" @click.prevent="modalAct=false" style="margin-top:0;margin-left:1rem;") Delete
-
+              button.button.btn-des-1(v-if="hasFile(ref_id)" style="margin-top:0;" @click.prevent="uploadFile(mem_id, ref_id, type)")
+                b-icon(icon="upload")
+              b-upload(v-else @input="fileChange({e: $event, id: ref_id})")
+                .button.btn-des-1(style="margin-top:0;") Add
+              button.button.btn-des-1.dark(@click.prevent="modalAct=false" style="margin-top:0;margin-left:1rem;") Close
+        
+            b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
 
 <script>
+import tableComp from "~/components/html_comp/tableComp.vue";
+import mxn_receiptUpload from "~/mixins/receipt_upload.js";
+import moment from "moment";
 export default {
+  mixins: [mxn_receiptUpload],
+  components: {
+    tableComp
+  },
   props: {
+    type: {
+      type: Number,
+      required: true
+    },
     md_act: {
       type: Boolean,
       default: false
     },
-    load_id: {
-      type: String,
+    ref_id: {
+      type: Number,
+      default: null
+    },
+    mem_id: {
+      type: Number,
       default: null
     }
   },
   watch: {
-    load_id: function(val) {
-      if (val !== null) {
-        this.load_img(val);
-      } else {
-        this.loaded_img = null;
-      }
-    },
     md_act: function(val) {
       if (val !== this.modalAct) {
         this.modalAct = val;
       }
     },
     modalAct: function(val) {
+      if (val === true) {
+        this.loadData();
+      }
       if (val !== this.md_act) {
         this.$emit("closed", val);
       }
@@ -51,34 +89,45 @@ export default {
     return {
       modalAct: false,
       loading: false,
-      loaded_img: null
+      ren_data: []
     };
   },
   methods: {
-    load_img: async function(img_id) {
+    async loadData() {
       const self = this;
       self.loading = true;
-      await self
-        .$axios({
-          url: "/api/receipt/get_cm_receipt/" + img_id,
-          method: "GET",
-          responseType: "blob"
+      await self.$axios
+        .get("/api/receipt/get_list", {
+          params: { ref_id: self.ref_id, type: self.type }
         })
         .then(res => {
-          let c_img_url = window.URL.createObjectURL(new Blob([res.data]));
-          self.loaded_img = c_img_url;
+          self.ren_data = res.data.results;
         })
         .catch(err => {
           console.log(err);
-          self.loaded_img = null;
         });
       self.loading = false;
+    },
+    dateFT(str) {
+      return moment(new Date(str)).format("DD-MM-YYYY hh:mm:ss A");
     }
   }
 };
 </script>
 
 <style lang="scss" scoped>
+.receipt-view /deep/ {
+  .em-sec {
+    border: 1px solid #dbdbdb;
+  }
+  .table {
+    tbody {
+      td {
+        font-size: 12px;
+      }
+    }
+  }
+}
 </style>
 
 

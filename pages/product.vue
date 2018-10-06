@@ -21,7 +21,7 @@
                   .column.is-6
                     label Product Name
                   .column.is-6
-                    h2(v-if="result.product_id && result.product_id === 1") Supreme Cart
+                    h2(v-if="result.product_id && result.product_id === 1") Supreme Card
                     h2(v-else-if="result.product_id && result.product_id === 2") Motorcycle
 
                   template(v-if="result.product_id && result.product_id === 2")

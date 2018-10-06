@@ -292,8 +292,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 }
 
                 &.search-field {
-                    max-width: 30rem;
-                    margin-left: auto !important;
+                    // max-width: 30rem;
                     margin-right: auto;
 
                     .control {
@@ -343,7 +342,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
                     }
                 }
 
-                &.view-field {
+                &.grp_btns{
                     .dropdown {
                         .dropdown-menu {
                             left: auto;
@@ -373,27 +372,20 @@ $primary-light: rgba(217, 189, 104, 0.25);
 
                     .button {
                         color: #666666;
-                        border: none;
-                        height: 2rem;
+                        padding: 4px 12px;
+                        height: auto;
                         font-weight: 500;
-                        -webkit-border-radius: 0;
-                        -moz-border-radius: 0;
-                        border-radius: 0;
                         font-size: 14px;
 
                         &:focus, &:active {
                             -webkit-box-shadow: 0 0 0 0.12em $primary !important;
                             -moz-box-shadow: 0 0 0 0.12em $primary !important;
                             box-shadow: 0 0 0 0.12em $primary !important;
-                        }
-
-                        & > .icon {
-                            margin-top: 2px;
-                            color: $primary;
+                            border-color: transparent;
                         }
                     }
                 }
-
+                
                 &.total-count {
                     flex-grow: 1;
 

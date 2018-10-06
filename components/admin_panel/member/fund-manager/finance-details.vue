@@ -19,7 +19,6 @@
                 th ID
                 th Date
                 th Description
-                th(width="50px") Receipts
                 th Debit
                 th Credit
             template(slot="tbody")
@@ -27,16 +26,12 @@
                 td {{ row.id }}
                 td {{ $store.getters.formatDate(row.date) }}
                 td {{ row.description }}
-                td.has-text-centered
-                  button.button.is-info.is-small(v-if="row.receipt_id" @click.prevent="rec_v_md=true;rec_v_id=row.receipt_id;") View
                 td {{ row.debit }}
                 td {{ row.credit }}
-    receiptView(:md_act="rec_v_md" :load_id="rec_v_id" @closed="rec_v_md=$event;rec_v_id=null;")
 </template>
 
 <script>
 import { mapState, mapActions } from "vuex";
-import receiptView from '~/components/modals/receipt_view.vue'
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import walletShow from "~/components/admin_panel/member/wallet-show.vue";
@@ -44,8 +39,7 @@ export default {
   components: {
     tableComp,
     walletShow,
-    tblTopFilter,
-    receiptView
+    tblTopFilter
   },
   computed: {
     ...mapState({

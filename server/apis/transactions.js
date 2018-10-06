@@ -49,7 +49,7 @@ router.get("/:id", function (req, res, next) {
                                     } else {
                                         let tot_rows = result[0].tot_rows
                                         let opt = {
-                                            sql: `SELECT trans.id, trans.remarks as description, trans.debit, trans.credit, trans.created_at as date, cm.receipt_id
+                                            sql: `SELECT trans.id, trans.remarks as description, trans.debit, trans.credit, trans.created_at as date
                                         FROM transactions_m as trans
                                         LEFT JOIN commissions as cm
                                         ON trans.id=cm.trans_id

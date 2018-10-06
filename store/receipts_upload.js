@@ -1,5 +1,25 @@
-import { Toast } from 'buefy'
+import {
+    Toast
+} from 'buefy'
 import Vue from 'vue'
+
+function mimetype_check(file) {
+    return (
+        file.type === "image/png" ||
+        file.type === "image/jpeg" ||
+        file.type === "application/pdf" ||
+        file.type === "application/msword" ||
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.type === "application/rtf" ||
+        file.type === "text/plain" ||
+        file.type === "image/photoshop" ||
+        file.type === "image/x-photoshop" ||
+        file.type === "image/psd" ||
+        file.type === "application/photoshop" ||
+        file.type === "application/psd" ||
+        file.type === "zz-application/zz-winassoc-psd"
+    )
+}
 
 export const state = () => ({
     sel_file: {}
@@ -26,8 +46,10 @@ export const getters = {
 }
 
 export const actions = {
-    fileChange: ({ commit }, pld) => {
-        if (pld.e[0].type === "image/png" || pld.e[0].type === "image/jpeg") {
+    fileChange: ({
+        commit
+    }, pld) => {
+        if (mimetype_check(pld.e[0])) {
             if (pld.e[0].size <= 5000000) {
                 commit('setFile', pld)
             } else {
@@ -41,7 +63,7 @@ export const actions = {
         } else {
             Toast.open({
                 duration: 3000,
-                message: "Invalid File Selected!",
+                message: "Invalid File Selected! Valid types: .pdf, .doc, .docx, .rtf, .txt, .jpeg, .png, .jpg, .psd",
                 position: "is-bottom",
                 type: "is-danger"
             });

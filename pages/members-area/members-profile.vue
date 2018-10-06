@@ -20,58 +20,67 @@
             template(slot="tbody")
               tr(v-for="row in data")
                 td.ed-con
-                  button.button.ed-btn(v-on:click.prevent="o_e_mem_m(parseInt(row.m.id))")
+                  button.button.ed-btn(v-on:click.prevent="o_e_mem_m(parseInt(row.id))")
                     b-icon(icon="edit")
                     | &nbsp;&nbsp;&nbsp;EDIT
-                td {{ row.m.user_asn_id }}
-                td {{ row.m.email }}
-                td {{ row.m.full_name }}
-                td {{ (row.m.active_sts === 1) ? 'Approved':'Suspended' }}
+                td {{ row.user_asn_id }}
+                td {{ row.email }}
+                td {{ row.full_name }}
+                td {{ (row.active_sts === 1) ? 'Approved':'Suspended' }}
                 td
-                  template(v-if="row.m.is_paid_m == 1") Paid
+                  template(v-if="row.is_paid_m == 1") Paid
                   template(v-else)
-                    button.button.is-small.is-info(@click.prevent="payUser(row.m.id)") Pay
+                    button.button.is-small.is-info(@click.prevent="payUser(row.id)") Pay
                 td.receipt_con
-                  template(v-if="row.ur.receipt")
-                    a.anch(href="#") REF {{ "#"+row.ur.receipt }}
+                  template(v-if="row.tot_rcp_up > 0")
+                    .upload
+                      span Total Receipts {{ row.tot_rcp_up }}&nbsp;&nbsp;&nbsp;
+                      button.button.is-small.is-info(@click.prevent="rec_v_md=true;rv_ref_id=row.id;rv_mem_id=row.id")
+                        | &nbsp;
+                        b-icon(icon="eye" pack="far")
+                        | &nbsp;
+
                   template(v-else)
-                    .upload(v-if="$store.getters['receipts_upload/hasFile'](row.m.id)" @click.prevent="uploadFile(row.m.id)")
+                    .upload(v-if="hasFile(row.id)" @click.prevent="uploadFile(row.id, row.id, 0)")
                       span UPLOAD&nbsp;&nbsp;&nbsp;
                       b-icon(icon="upload")
-                      b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.m.id)")
-                    b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.m.id})")
+                      b-icon.del(icon="times-circle" @click.prevent.stop.native="remFile(row.id)")
+                    b-upload(v-else @input="fileChange({e: $event, id: row.id})")
                       span UPLOAD&nbsp;&nbsp;&nbsp;
                       b-icon(icon="plus-circle")
 
     b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
       .modal-card
         #ed-member-con.modal-card-body
-          ed-member-form(:edit_id="select_edit" v-on:update_member="dataLoad")
+          ed-member-form(:edit_id="select_edit" v-on:update_member="loadData")
+    receiptView(:md_act="rec_v_md" :ref_id="rv_ref_id" :mem_id="rv_mem_id" :type="0" @closed="afterRVClosed")
 </template>
 
 <script>
 import edMemberForm from "~/components/forms/ed-member.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
+import receiptView from "~/components/modals/receipt_view.vue";
 import _ from "lodash";
 
+import mxn_receiptUpload from "~/mixins/receipt_upload.js";
+
 export default {
+  mixins: [mxn_receiptUpload],
   layout: "admin_layout",
   components: {
     edMemberForm,
     tableComp,
-    tblTopFilter
+    tblTopFilter,
+    receiptView
   },
   async mounted() {
-    this.dataLoad();
+    this.loadData();
   },
   computed: {
     modalActive: function() {
       return this.$store.state.edMemModal.modalActive;
     }
-  },
-  destroyed() {
-    this.$store.commit("receipts_upload/resetFile");
   },
   watch: {
     modalActive: function(val) {
@@ -82,6 +91,9 @@ export default {
   },
   data() {
     return {
+      rec_v_md: false,
+      rv_ref_id: null,
+      rv_mem_id: null,
       loading: false,
       data: [],
       num_rows: 1,
@@ -94,7 +106,7 @@ export default {
     };
   },
   methods: {
-    dataLoad: async function() {
+    loadData: async function() {
       this.loading = true;
       try {
         const result = await this.$axios.$get("/api/member", {
@@ -111,7 +123,7 @@ export default {
 
     pageLoad: function(page) {
       this.load_params.page = page;
-      this.dataLoad();
+      this.loadData();
     },
 
     updateFilter: function(param, val) {
@@ -127,7 +139,7 @@ export default {
     },
 
     after_f_settle: _.debounce(function() {
-      this.dataLoad();
+      this.loadData();
     }, 1000),
 
     payUser: function(id) {
@@ -137,7 +149,7 @@ export default {
         .post("/api/member/pay_user", { id })
         .then(res => {
           if (res.data.status === true) {
-            self.dataLoad();
+            self.loadData();
           } else {
             console.log("Error! ", res.data);
           }
@@ -158,39 +170,13 @@ export default {
       this.$store.commit("edMemModal/setModalActive", true);
     },
 
-    uploadFile: function(id) {
-      const self = this;
-      self.loading = true;
-      let form_data = new FormData();
-      form_data.append("id", id);
-      form_data.append(
-        "receipt",
-        self.$store.state.receipts_upload.sel_file[id],
-        self.$store.state.receipts_upload.sel_file[id].name
-      );
-      let config = {
-        headers: { "content-type": "multipart/form-data" }
-      };
-      this.$axios
-        .post("/api/receipt/upload_pd_rcp", form_data, config)
-        .then(res => {
-          if (res.data.status === true) {
-            self.$store.commit("receipts_upload/remFile", id);
-            self.dataLoad();
-          } else {
-            self.loading = false;
-            self.$toast.open({
-              duration: 3000,
-              message: "Uploading Error",
-              position: "is-bottom",
-              type: "is-danger"
-            });
-          }
-        })
-        .catch(err => {
-          self.loading = false;
-          console.log(err);
-        });
+    async afterRVClosed(event) {
+      this.rec_v_md = event;
+      this.rv_ref_id = null;
+      this.rv_mem_id = null;
+      this.loading = true;
+      await this.loadData();
+      this.loading = false;
     }
   }
 };

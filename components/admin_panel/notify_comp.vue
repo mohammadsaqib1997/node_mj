@@ -50,7 +50,7 @@
           //- here is footer
           template(v-if="a_item.type === 0")
             button.button.btn-des-1(@click.prevent="$store.commit('notification/modalActTG', false)")
-              | Ok
+              | Dismiss
 
           template(v-else-if="a_item.type === 1")
             template(v-if="loading !== true")
@@ -60,7 +60,7 @@
                 button.button.btn-des-1(@click.prevent="payUser(a_item.from_id)" style="margin-left:10px")
                   | Pay
               button.button.btn-des-1(v-else @click.prevent="$store.commit('notification/modalActTG', false)")
-                | Ok
+                | Dismiss
 
           template(v-else-if="a_item.type === 2 && a_item.hasOwnProperty('data') && loading !== true")
             h4.title.is-5(v-if="a_item.data.status !== 0" style="margin-bottom:.5rem;") {{ a_item.data.status === 1 ? "Already Paid": "Canceled Request" }}

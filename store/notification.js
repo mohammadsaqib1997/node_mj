@@ -139,6 +139,24 @@ export const actions = {
     commit('set_list_loader', false)
   },
 
+  async multipleRd({ commit, dispatch }, param) {
+    commit('set_list_loader', true)
+    await this.$axios
+      .post('/api/notification/multi_rd', { id: param.ids, read_sts: param.sts })
+      .then(async res => {
+        if (res.data.status === false) {
+          console.log(res.data)
+        } else {
+          await dispatch('load_tbar_list')
+          await dispatch('n_list_load')
+        }
+      })
+      .catch(err => {
+        console.log(err)
+      })
+    commit('set_list_loader', false)
+  },
+
   async remove({ commit, dispatch }, id) {
     commit('set_list_loader', true)
     await this.$axios

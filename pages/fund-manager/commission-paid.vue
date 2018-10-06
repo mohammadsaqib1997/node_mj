@@ -22,25 +22,35 @@
                     td {{ row.description }}
                     td {{ row.amount }}
                     td.receipt_con
-                      template(v-if="row.receipt")
-                        a.anch(href="#" @click.prevent="rec_v_md=true;rec_v_id=row.receipt;") REF {{ "#"+row.receipt }}
+                      template(v-if="row.tot_rcp_up > 0")
+                        .upload
+                          span Total Receipts {{ row.tot_rcp_up }}&nbsp;&nbsp;&nbsp;
+                          button.button.is-small.is-info(@click.prevent="rec_v_md=true;rv_ref_id=row.id;rv_mem_id=row.member_id")
+                            | &nbsp;
+                            b-icon(icon="eye" pack="far")
+                            | &nbsp;
+
                       template(v-else)
-                        .upload(v-if="$store.getters['receipts_upload/hasFile'](row.id)" @click.prevent="uploadFile(row.member_id, row.id)")
+                        .upload(v-if="hasFile(row.id)" @click.prevent="uploadFile(row.member_id, row.id, 1)")
                           span UPLOAD&nbsp;&nbsp;&nbsp;
                           b-icon(icon="upload")
-                          b-icon.del(icon="times-circle" @click.prevent.stop.native="$store.commit('receipts_upload/remFile', row.id)")
-                        b-upload(v-else @input="$store.dispatch('receipts_upload/fileChange', {e: $event, id: row.id})")
+                          b-icon.del(icon="times-circle" @click.prevent.stop.native="remFile(row.id)")
+                        b-upload(v-else @input="fileChange({e: $event, id: row.id})")
                           span UPLOAD&nbsp;&nbsp;&nbsp;
                           b-icon(icon="plus-circle")
-    receiptView(:md_act="rec_v_md" :load_id="rec_v_id" @closed="rec_v_md=$event;rec_v_id=null;")
+    receiptView(:md_act="rec_v_md" :ref_id="rv_ref_id" :mem_id="rv_mem_id" :type="1" @closed="afterRVClosed")
 </template>
 
 <script>
 import _ from "lodash";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
-import receiptView from '~/components/modals/receipt_view.vue'
+import receiptView from "~/components/modals/receipt_view.vue";
+
+import mxn_receiptUpload from "~/mixins/receipt_upload.js";
+
 export default {
+  mixins: [mxn_receiptUpload],
   layout: "admin_layout",
   components: {
     tableComp,
@@ -50,16 +60,14 @@ export default {
   async mounted() {
     const self = this;
     self.loading = true;
-    self.loadCM();
+    await self.loadData();
     self.loading = false;
-  },
-  destroyed() {
-    this.$store.commit("receipts_upload/resetFile");
   },
   data() {
     return {
       rec_v_md: false,
-      rec_v_id: null,
+      rv_ref_id: null,
+      rv_mem_id: null,
       ren_data: [],
       tot_rows: 1,
       loading: false,
@@ -71,7 +79,7 @@ export default {
     };
   },
   methods: {
-    loadCM: async function() {
+    loadData: async function() {
       const self = this;
       await self.$axios
         .get("/api/commission/paid", {
@@ -85,40 +93,6 @@ export default {
           console.log(err);
         });
     },
-    uploadFile: async function(mem_id, cm_id) {
-      const self = this;
-      self.loading = true;
-      let form_data = new FormData();
-      form_data.append("mem_id", mem_id);
-      form_data.append("cm_id", cm_id);
-      form_data.append(
-        "receipt",
-        self.$store.state.receipts_upload.sel_file[cm_id],
-        self.$store.state.receipts_upload.sel_file[cm_id].name
-      );
-      let config = {
-        headers: { "content-type": "multipart/form-data" }
-      };
-      await this.$axios
-        .post("/api/receipt/upload_cm_rcp", form_data, config)
-        .then(async res => {
-          if (res.data.status === true) {
-            self.$store.commit("receipts_upload/remFile", cm_id);
-            await self.loadCM();
-          } else {
-            self.$toast.open({
-              duration: 3000,
-              message: "Uploading Error",
-              position: "is-bottom",
-              type: "is-danger"
-            });
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      self.loading = false;
-    },
     async set_params(pld) {
       const self = this;
       let param_val = _.get(self.params, pld.param, null);
@@ -129,14 +103,23 @@ export default {
         _.set(self.params, pld.param, pld.value);
         self.loading = true;
         self.after_settle(async function() {
-          await self.loadCM();
+          await self.loadData();
           self.loading = false;
         });
       }
     },
     after_settle: _.debounce(function(cb) {
       cb();
-    }, 1000)
+    }, 1000),
+
+    async afterRVClosed(event) {
+      this.rec_v_md = event;
+      this.rv_ref_id = null;
+      this.rv_mem_id = null;
+      this.loading = true;
+      await this.loadData();
+      this.loading = false;
+    }
   }
 };
 </script>

@@ -6,7 +6,7 @@
           h1 Notifications
       .body
         .section
-          tblTopFilter(:is_remove_btn="has_sel_remove" @remove_call="rm_sel_noti" :f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="String(params.limit)" :s_txt="params.search" @change_s_txt="set_params({ param: 'search', value: $event })" @change_act_view="set_params({ param: 'limit', value: parseInt($event) })")
+          tblTopFilter(:is_remove_btn="has_sel_row" :is_read_unread_btns="has_sel_row" @read_call="read_tg_sel" @remove_call="rm_sel_noti" :f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="String(params.limit)" :s_txt="params.search" @change_s_txt="set_params({ param: 'search', value: $event })" @change_act_view="set_params({ param: 'limit', value: parseInt($event) })")
           tableComp(:arr="ren_data" :loading="loading" :total_record="tot_rows" :per_page="parseInt(params.limit)" :page_set="params.page" @page_change="set_params({ param: 'page', value: $event })")
             template(slot="thead")
               tr
@@ -26,7 +26,6 @@
                 td {{ $store.getters['formatDate'](row.date) }}
                 td.rm-cont.has-text-centered(@click.stop="")
                   b-checkbox(@input="select_row(ind, $event)" v-model="selected_row[ind]")
-                  //- .remove-btn(@click.prevent.stop="$store.dispatch('notification/remove', row.id)") Remove
 </template>
 
 <script>
@@ -57,7 +56,7 @@ export default {
     filter_val: function() {
       return _.find(this.tbl_list_filters, { value: this.params.filter }).title;
     },
-    has_sel_remove: function() {
+    has_sel_row: function() {
       return (
         _.filter(this.selected_row, row => {
           return row === true;
@@ -143,6 +142,19 @@ export default {
         }
       });
       self.$store.dispatch("notification/remove", grb_ids.join("|"));
+    },
+    read_tg_sel: function(event) {
+      const self = this;
+      let grb_ids = [];
+      _.each(self.selected_row, (bool, ind) => {
+        if (bool === true) {
+          grb_ids.push(self.ren_data[ind].id);
+        }
+      });
+      self.$store.dispatch("notification/multipleRd", {
+        ids: grb_ids.join("|"),
+        sts: event === true ? 1 : 0
+      });
     }
   }
 };
@@ -157,6 +169,7 @@ export default {
           padding: 0.7rem;
           color: #454545;
           vertical-align: middle;
+          text-align: center;
         }
       }
     }

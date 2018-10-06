@@ -102,11 +102,16 @@ router.get("/un_paid", function (req, res) {
                         let tot_rows = results[0].tot_rows
 
                         connection.query(
-                            `SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
-                            FROM commissions
-                            WHERE status=0 
-                            ${(search !== '') ? 'AND (trans_id LIKE ? OR remarks LIKE ? OR amount LIKE ? OR created_at LIKE ?)' : ''}
-                            ORDER BY trans_id DESC
+                            `SELECT 
+                                cm.trans_id as id, 
+                                cm.member_id, 
+                                cm.remarks as description, 
+                                cm.amount,
+                                cm.created_at as date
+                            FROM commissions as cm
+                            WHERE cm.status=0 
+                            ${(search !== '') ? 'AND (cm.trans_id LIKE ? OR cm.remarks LIKE ? OR cm.amount LIKE ? OR cm.created_at LIKE ?)' : ''}
+                            ORDER BY cm.trans_id DESC
                             LIMIT ${limit}
                             OFFSET ${offset}`,
                             ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
@@ -160,11 +165,20 @@ router.get("/paid", function (req, res) {
                         let tot_rows = result[0].tot_rows
 
                         connection.query(
-                            `SELECT trans_id as id, member_id, remarks as description, amount, receipt_id as receipt, created_at as date
-                            FROM commissions
-                            WHERE status=1 
-                            ${(search !== '') ? 'AND (trans_id LIKE ? OR remarks LIKE ? OR amount LIKE ? OR created_at LIKE ?)' : ''}
-                            ORDER BY trans_id DESC
+                            `SELECT 
+                                cm.trans_id as id, 
+                                cm.member_id, 
+                                cm.remarks as description, 
+                                cm.amount, 
+                                COUNT(u_rcp.id) as tot_rcp_up,
+                                cm.created_at as date
+                            FROM commissions as cm
+                            LEFT JOIN user_receipts as u_rcp
+                            ON u_rcp.ref_id = cm.trans_id AND u_rcp.type = 1 
+                            WHERE cm.status=1 
+                            ${(search !== '') ? 'AND (cm.trans_id LIKE ? OR cm.remarks LIKE ? OR cm.amount LIKE ? OR cm.created_at LIKE ?)' : ''}
+                            GROUP BY cm.trans_id
+                            ORDER BY cm.trans_id DESC
                             LIMIT ${limit}
                             OFFSET ${offset}`,
                             ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],

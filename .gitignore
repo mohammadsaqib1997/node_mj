@@ -26,6 +26,8 @@ yarn.lock
 server/uploads/*/*.jpg
 server/uploads/*/*.png
 server/uploads/reports/*.csv
+server/uploads/receipts/*
+!server/uploads/receipts/readme.md
 
 static/docs
 static/gallery

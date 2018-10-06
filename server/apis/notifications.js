@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const moment = require("moment")
 
 const db = require('../db.js')
 
@@ -242,6 +241,47 @@ router.post('/read_it', function (req, res) {
               res.json({ status: true })
             }
           })
+      }
+    })
+  } else {
+    res.json({ status: false, message: "Invalid Parameters!" })
+  }
+})
+
+router.post("/multi_rd", function (req, res) {
+  if (req.body.id !== "" && /^[0|1]$/.test(req.body.read_sts)) {
+    let ids = (req.body.id).split("|")
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({ err })
+      } else {
+        let throw_error = null
+        for (id of ids) {
+          await new Promise(resolve => {
+            connection.query(`
+            UPDATE notifications
+            SET ?
+            WHERE id=?
+            `, [
+                { seen: req.body.read_sts },
+                id
+              ], function (error, result) {
+                if (error) {
+                  throw_error = error
+                }
+                resolve()
+              })
+          })
+          if (throw_error) break
+        }
+
+        connection.release()
+        if (throw_error) {
+          res.status(500).json({ error: throw_error })
+        } else {
+          res.json({ status: true })
+        }
+
       }
     })
   } else {
