@@ -1,54 +1,54 @@
 <template lang="pug">
   b-modal.receipt-view(:active="modalAct" :canCancel="false")
-    .modal-content
-      .box.main-box
-        .header
-          h1 Receipt View
-        .body
-          .section
-            section.section.em-sec(v-if="ren_data.length < 1")
-              .content.has-text-grey.has-text-centered
-                p
-                  span.icon.is-large
-                    i.far.fa-frown.fa-3x
-                p Nothing here.
+    .box.main-box
+      .header
+        h1 Receipt View
+      .body
+        .section
+          section.section.em-sec(v-if="ren_data.length < 1")
+            .content.has-text-grey.has-text-centered
+              p
+                span.icon.is-large
+                  i.far.fa-frown.fa-3x
+              p Nothing here.
 
-            table.table.is-fullwidth.is-bordered(v-else)
-              thead
-                tr
-                  th Date
-                  th File
-                  th Action
-              tbody
-                tr(v-for="row in ren_data")
-                  td {{ dateFT(row.date) }}
-                  td {{ row.file_name }}
-                  td 
-                    b-field(grouped)
-                      p.control
-                        button.button.is-small.is-danger(@click.prevent="deleteReceipt(row.id)")
-                          b-icon(icon="trash")
-                      p.control
-                        button.button.is-small.is-info(@click.prevent="download(row.id, row.file_name, type)")
-                          b-icon(icon="download")
+          table.table.is-fullwidth.is-bordered(v-else)
+            thead
+              tr
+                th Date
+                th File
+                th Action
+            tbody
+              tr(v-for="row in ren_data")
+                td {{ dateFT(row.date) }}
+                td {{ row.file_name }}
+                td 
+                  b-field(grouped)
+                    p.control
+                      button.button.is-small.is-danger(@click.prevent="deleteReceipt(row.id)")
+                        b-icon(icon="trash")
+                    p.control
+                      button.button.is-small.is-info(@click.prevent="download(row.id, row.file_name, type)")
+                        b-icon(icon="download")
 
-            hr
-            b-field(grouped style="justify-content: flex-end;")
-              button.button.btn-des-1(v-if="hasFile(ref_id)" style="margin-top:0;" @click.prevent="uploadFile(mem_id, ref_id, type)")
-                b-icon(icon="upload")
-              b-upload(v-else @input="fileChange({e: $event, id: ref_id})")
-                .button.btn-des-1(style="margin-top:0;") Add
-              button.button.btn-des-1.dark(@click.prevent="modalAct=false" style="margin-top:0;margin-left:1rem;") Close
-        
-            b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
+          hr
+          b-field(grouped style="justify-content: flex-end;")
+            button.button.btn-des-1(v-if="hasFile(ref_id)" style="margin-top:0;" @click.prevent="uploadFile(mem_id, ref_id, type)")
+              b-icon(icon="upload")
+            b-upload(v-else @input="fileChange({e: $event, id: ref_id})")
+              .button.btn-des-1(style="margin-top:0;") Add
+            button.button.btn-des-1.dark(@click.prevent="modalAct=false" style="margin-top:0;margin-left:1rem;") Close
+      
+          b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
 
 <script>
 import tableComp from "~/components/html_comp/tableComp.vue";
 import mxn_receiptUpload from "~/mixins/receipt_upload.js";
+import mxn_modal from '~/mixins/modal.js'
 import moment from "moment";
 export default {
-  mixins: [mxn_receiptUpload],
+  mixins: [mxn_receiptUpload, mxn_modal],
   components: {
     tableComp
   },
@@ -56,10 +56,6 @@ export default {
     type: {
       type: Number,
       required: true
-    },
-    md_act: {
-      type: Boolean,
-      default: false
     },
     ref_id: {
       type: Number,
@@ -70,24 +66,8 @@ export default {
       default: null
     }
   },
-  watch: {
-    md_act: function(val) {
-      if (val !== this.modalAct) {
-        this.modalAct = val;
-      }
-    },
-    modalAct: function(val) {
-      if (val === true) {
-        this.loadData();
-      }
-      if (val !== this.md_act) {
-        this.$emit("closed", val);
-      }
-    }
-  },
   data() {
     return {
-      modalAct: false,
       loading: false,
       ren_data: []
     };

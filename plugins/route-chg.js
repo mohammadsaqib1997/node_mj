@@ -37,7 +37,8 @@ const visible = [
     'contact',
     'coming-soon',
     'career',
-    'admin-login'
+    'admin-login',
+    'downloads'
 ]
 
 export default ({ app, error }) => {

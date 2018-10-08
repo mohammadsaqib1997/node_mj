@@ -3,29 +3,13 @@ const router = express.Router()
 const _ = require('lodash')
 const moment = require("moment")
 
-const multer = require('multer')
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, __dirname + '/../uploads/receipts')
-  },
-  filename: function (req, file, cb) {
-    let date = Date.now()
-    if (req.body.type == 0)
-      req.body.id = date
-    cb(null, date + typeGet(file.mimetype))
-  }
-})
-const upload = multer({
-  storage
-})
-
-
 const db = require('../db.js')
 
 router.get("/", function (req, res) {
   let offset = 0,
     limit = 10,
-    search = ""
+    search = "",
+    filter_qry = ""
   if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
     limit = req.query.limit
   }
@@ -38,6 +22,13 @@ router.get("/", function (req, res) {
     search = req.query.search
   }
 
+  if (/^[0-9]$/.test(req.query.filter)) {
+    filter_qry = `
+      ${search !== "" ? 'AND':''}
+      u_var.level=${req.query.filter}
+    `
+  }
+
 
   db.getConnection(function (err, connection) {
     if (err) {
@@ -46,7 +37,14 @@ router.get("/", function (req, res) {
       })
     } else {
       connection.query(
-        `SELECT COUNT(*) as total_rows FROM members ${(search !== '') ? 'WHERE user_asn_id LIKE ? OR email LIKE ? OR full_name LIKE ?' : ''}`,
+        `SELECT COUNT(*) as total_rows 
+        FROM members as m
+        LEFT JOIN info_var_m as u_var
+        ON m.id = u_var.member_id
+        ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
+        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ?)' : ''}
+        ${(filter_qry !== '') ? filter_qry:''}
+        `,
         ['%' + search + '%', '%' + search + '%', '%' + search + '%'],
         function (error, results, fields) {
           if (error) {
@@ -66,11 +64,16 @@ router.get("/", function (req, res) {
                   m.full_name, 
                   m.active_sts, 
                   m.is_paid_m, 
+                  u_var.level,
                   COUNT(ur.id) as tot_rcp_up 
                 FROM members as m
                 LEFT JOIN user_receipts as ur
                 ON m.id=ur.ref_id AND ur.type=0 
-                ${(search !== '') ? 'WHERE m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ?' : ''}
+                LEFT JOIN info_var_m as u_var
+                ON m.id = u_var.member_id
+                ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
+                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ?)' : ''}
+                ${(filter_qry !== '') ? filter_qry:''}
                 GROUP BY m.id
                 ORDER BY m.id DESC
                 LIMIT ${limit}
@@ -103,6 +106,82 @@ router.get("/", function (req, res) {
         })
     }
   })
+})
+
+router.get('/member_info/:id', function (req, res, next) {
+  if (req.decoded.data.type !== 0) {
+    if (/^[0-9]*$/.test(req.params.id)) {
+      db.getConnection(function (err, connection) {
+        if (err) {
+          res.status(500).json({
+            error: err
+          })
+        } else {
+          connection.query(
+            `SELECT 
+              m.id,
+              m.active_sts,
+              m.address,
+              m.city,
+              m.cnic_num,
+              m.contact_num,
+              m.dob,
+              m.email,
+              m.full_name,
+              m.ref_user_asn_id,
+              m.user_asn_id,
+              u_prd.product_id,
+              u_prd.buyer_type,
+              u_prd.buyer_qty_prd,
+              u_prd.buyer_pay_type,
+              u_var.package_act_date,
+              u_var.level,
+              u_var.wallet,
+              u_bank.bank_name,
+              u_bank.branch_code,
+              u_bank.account_number,
+              u_bank.account_title,
+              u_bank.iban_number,
+              u_bank.address as bk_address
+            FROM members as m
+            LEFT JOIN user_product_details as u_prd
+            ON m.id = u_prd.member_id
+            LEFT JOIN info_var_m as u_var
+            ON m.id = u_var.member_id
+            LEFT JOIN user_bank_details as u_bank
+            ON m.id = u_bank.member_id
+            WHERE m.id=?`,
+            req.params.id,
+            function (err, results) {
+              connection.release()
+
+              if (err) {
+                res.status(500).json({
+                  error: err
+                })
+              } else {
+                let result = (results.length > 0) ? results[0] : {}
+                res.json({
+                  result
+                })
+              }
+
+            }
+          )
+        }
+      })
+    } else {
+      res.json({
+        status: false,
+        message: "Invalid id!"
+      })
+    }
+  } else {
+    res.json({
+      status: false,
+      message: "Permission denied!"
+    })
+  }
 })
 
 router.get("/get_terms_sts", (req, res) => {
@@ -864,31 +943,6 @@ router.post('/update', function (req, res) {
     }
   })
 
-})
-
-router.post('/receipt_add', upload.single('receipt'), function (req, res) {
-
-  db.getConnection(function (err, connection) {
-    if (err) {
-      res.status(500).json({
-        err
-      })
-    } else {
-      connection.query('INSERT INTO `user_receipts` SET ?', req.body, function (error, results, fields) {
-        connection.release();
-
-        if (error) {
-          res.status(500).json({
-            error
-          })
-        } else {
-          res.json({
-            status: true
-          })
-        }
-      })
-    }
-  })
 })
 
 router.post('/pay_user', function (req, res) {

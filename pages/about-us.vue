@@ -57,6 +57,7 @@
           .column.is-2
           .column
             h3.title-3 Downloads
+              nuxt-link(to='/downloads') View All
             a.columns.is-gapless.box_cont.is-mobile(href="/docs/MJ Supreme Profile.pdf" download)
               .column.is-3
                 .bk_img.simple(:style="'background-image: url(/img/download_img.png)'")
@@ -231,6 +232,13 @@ export default {
 
   .title-3 {
     margin-bottom: 2rem;
+    a {
+      font-size: 12px;
+      display: inline-block;
+      margin:0 8px;
+      color: #9e9e9e;
+      text-decoration: underline;
+    }
   }
 
   .box_cont {

@@ -6,7 +6,7 @@
             h1 Members Profile
       .body
         .section
-          tblTopFilter(:act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="updateFilter('limit', $event)" @change_s_txt="updateFilter('search', $event)")
+          tblTopFilter(:f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="updateFilter('limit', $event)" @change_s_txt="updateFilter('search', $event)")
           table-comp(:arr="data" :loading="loading" :total_record="num_rows" :per_page="parseInt(load_params.limit)" :page_set="load_params.page" @page_change="pageLoad")
             template(slot="thead")
               tr
@@ -18,9 +18,9 @@
                 th Paid Status
                 th Receipt
             template(slot="tbody")
-              tr(v-for="row in data")
+              tr(v-for="row in data" @click.prevent="loadMemInfo(row.id)")
                 td.ed-con
-                  button.button.ed-btn(v-on:click.prevent="o_e_mem_m(parseInt(row.id))")
+                  button.button.ed-btn(v-on:click.prevent.stop="o_e_mem_m(parseInt(row.id))")
                     b-icon(icon="edit")
                     | &nbsp;&nbsp;&nbsp;EDIT
                 td {{ row.user_asn_id }}
@@ -30,8 +30,8 @@
                 td
                   template(v-if="row.is_paid_m == 1") Paid
                   template(v-else)
-                    button.button.is-small.is-info(@click.prevent="payUser(row.id)") Pay
-                td.receipt_con
+                    button.button.is-small.is-info(@click.prevent.stop="payUser(row.id)") Pay
+                td.receipt_con(@click.stop)
                   template(v-if="row.tot_rcp_up > 0")
                     .upload
                       span Total Receipts {{ row.tot_rcp_up }}&nbsp;&nbsp;&nbsp;
@@ -54,6 +54,7 @@
         #ed-member-con.modal-card-body
           ed-member-form(:edit_id="select_edit" v-on:update_member="loadData")
     receiptView(:md_act="rec_v_md" :ref_id="rv_ref_id" :mem_id="rv_mem_id" :type="0" @closed="afterRVClosed")
+    memberInfo(:md_act="mem_info_md" :mem_id="mem_info_md_mem_id" @closed="mem_info_md=false;mem_info_md_mem_id=null;")
 </template>
 
 <script>
@@ -61,6 +62,7 @@ import edMemberForm from "~/components/forms/ed-member.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import receiptView from "~/components/modals/receipt_view.vue";
+import memberInfo from "~/components/modals/member_info.vue";
 import _ from "lodash";
 
 import mxn_receiptUpload from "~/mixins/receipt_upload.js";
@@ -72,7 +74,8 @@ export default {
     edMemberForm,
     tableComp,
     tblTopFilter,
-    receiptView
+    receiptView,
+    memberInfo
   },
   async mounted() {
     this.loadData();
@@ -80,6 +83,9 @@ export default {
   computed: {
     modalActive: function() {
       return this.$store.state.edMemModal.modalActive;
+    },
+    filter_val: function() {
+      return _.find(this.tbl_list_filters, { value: this.load_params.filter }).title;
     }
   },
   watch: {
@@ -91,6 +97,8 @@ export default {
   },
   data() {
     return {
+      mem_info_md: false,
+      mem_info_md_mem_id: null,
       rec_v_md: false,
       rv_ref_id: null,
       rv_mem_id: null,
@@ -98,10 +106,24 @@ export default {
       data: [],
       num_rows: 1,
       select_edit: null,
+      tbl_list_filters: [
+        { title: "Level Filter", value: '' },
+        { title: "Level 0", value: 0 },
+        { title: "Level 1", value: 1 },
+        { title: "Level 2", value: 2 },
+        { title: "Level 3", value: 3 },
+        { title: "Level 4", value: 4 },
+        { title: "Level 5", value: 5 },
+        { title: "Level 6", value: 6 },
+        { title: "Level 7", value: 7 },
+        { title: "Level 8", value: 8 },
+        { title: "Level 9", value: 9 }
+      ],
       load_params: {
         limit: "10",
         search: "",
-        page: 1
+        page: 1,
+        filter: ''
       }
     };
   },
@@ -121,9 +143,18 @@ export default {
       this.loading = false;
     },
 
+    loadMemInfo(id) {
+      this.mem_info_md = true;
+      this.mem_info_md_mem_id = id;
+    },
+
     pageLoad: function(page) {
       this.load_params.page = page;
       this.loadData();
+    },
+
+    change_filter_tr: function(val) {
+      this.updateFilter("filter", _.find(this.tbl_list_filters, { title: val }).value);
     },
 
     updateFilter: function(param, val) {
