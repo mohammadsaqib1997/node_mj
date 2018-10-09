@@ -28,7 +28,7 @@ export default {
         id: "Cookiebot",
         "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
         type: "text/javascript",
-        async
+        async: true
       }
     ]
   },
@@ -46,7 +46,7 @@ export default {
   destroyed() {
     this.$store.commit("jwtTokenSet", null);
     this.socket ? this.socket.disconnect() : "";
-    
+
   },
   components: {
     topHeader,
