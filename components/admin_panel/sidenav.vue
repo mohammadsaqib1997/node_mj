@@ -197,6 +197,31 @@ export default {
           ]
         },
         {
+          name: "partners-area",
+          active: false,
+          img: null,
+          icon: '<i class="far fa-handshake"></i>',
+          url: false,
+          title: "Partners Area",
+          show: [2],
+          children: [
+            {
+              name: "add-new-partner",
+              active: false,
+              url: "/partners-area/add-new-partner",
+              title: "Add New Partner",
+              show: [2]
+            },
+            {
+              name: "partners-profile",
+              active: false,
+              url: "/partners-area/partners-profile",
+              title: "Partners Profile",
+              show: [2]
+            }
+          ]
+        },
+        {
           name: "system-level",
           active: false,
           img: "system-level",
@@ -244,7 +269,7 @@ export default {
           url: "/notifications",
           title: "Notifications",
           show: [0, 1, 2]
-        },
+        }
       ]
     };
   },

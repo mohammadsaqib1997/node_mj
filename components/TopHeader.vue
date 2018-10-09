@@ -1,5 +1,6 @@
 <template lang="pug">
     .top-header
+        script(id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="560ee249-27e9-4c7e-aba3-46dcedf5de68" type="text/javascript" async)
         .container
             nav.navbar.is-transparent
                 .navbar-menu.is-active
