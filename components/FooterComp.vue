@@ -28,7 +28,7 @@
                             li.item
                                 nuxt-link(to="/about-us") Business Plan
                             li.item
-                                nuxt-link(to="/coming-soon") Supreme Partners & Associates
+                                nuxt-link(to="/partners-and-associates") Supreme Partners & Associates
                             li.item
                                 a(@click.prevent="move_to_member") Members
                     .column.is-2

@@ -24,9 +24,16 @@ router.post('/tokenLogin', (req, res) => {
   if (token) {
     jwt.verify(token, secret, function (err, decoded) {
       if (err) {
-        return res.json({ status: false, message: err.message });
+        return res.json({
+          status: false,
+          message: err.message
+        });
       } else {
-        return res.json({ status: true, token: token, user: decoded.data });
+        return res.json({
+          status: true,
+          token: token,
+          user: decoded.data
+        });
       }
     });
 
@@ -44,7 +51,10 @@ router.use((req, res, next) => {
   if (token) {
     jwt.verify(token, secret, function (err, decoded) {
       if (err) {
-        return res.json({ status: false, message: err.message });
+        return res.json({
+          status: false,
+          message: err.message
+        });
       } else {
         req.decoded = decoded;
         next();
@@ -57,6 +67,77 @@ router.use((req, res, next) => {
       message: 'No token provided.'
     });
   }
+})
+
+router.get('/list_partner', (req, res) => {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 12,
+        search = ""
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `SELECT COUNT(*) as total_rows 
+        FROM partners
+        ${(search !== '') ? 'WHERE': ''}
+        ${(search !== '') ? '(email LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}`,
+        [
+          '%' + search + '%',
+          '%' + search + '%',
+          '%' + search + '%'
+        ],
+        function (error, results, fields) {
+          if (error) {
+            connection.release();
+            res.status(500).json({
+              error
+            })
+          } else {
+            let rows_count = results[0].total_rows
+            connection.query(
+              `SELECT full_name, email, discount, cont_num, city, address, logo
+              FROM partners
+              ${(search !== '') ? 'WHERE': ''}
+              ${(search !== '') ? '(email LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
+              ORDER BY id DESC
+              LIMIT ${limit}
+              OFFSET ${offset}`,
+              [
+                '%' + search + '%',
+                '%' + search + '%',
+                '%' + search + '%'
+              ],
+              function (error, results, fields) {
+                connection.release();
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    total_rows: rows_count
+                  })
+                }
+              }
+            )
+          }
+        }
+      )
+    }
+  })
 })
 
 router.post('/check_email', (req, res) => {
@@ -72,7 +153,9 @@ router.post('/check_email', (req, res) => {
         } else {
           if (results.length > 0) {
             connection.release();
-            res.json({ count: results.length })
+            res.json({
+              count: results.length
+            })
           } else {
             connection.query('SELECT email FROM `moderators` where binary `email`=?', [req.body.email], function (error, results, fields) {
               if (error) {
@@ -81,7 +164,9 @@ router.post('/check_email', (req, res) => {
               } else {
                 if (results.length > 0) {
                   connection.release();
-                  res.json({ count: results.length })
+                  res.json({
+                    count: results.length
+                  })
                 } else {
                   connection.query('SELECT email FROM `admins` where binary `email`=?', [req.body.email], function (error, results, fields) {
                     if (error) {
@@ -89,7 +174,9 @@ router.post('/check_email', (req, res) => {
                       sendDBError(res, error)
                     } else {
                       connection.release();
-                      res.json({ count: results.length })
+                      res.json({
+                        count: results.length
+                      })
                     }
                   })
                 }
@@ -116,9 +203,14 @@ router.post('/check_ref_id', (req, res) => {
           sendDBError(res, error)
         } else {
           if (results.length > 0) {
-            res.json({ count: results.length, user: results[0] })
+            res.json({
+              count: results.length,
+              user: results[0]
+            })
           } else {
-            res.json({ count: results.length })
+            res.json({
+              count: results.length
+            })
           }
         }
       });
@@ -259,7 +351,7 @@ router.post('/login', (req, res) => {
         connection.release();
         return sendDBError(res, throw_error)
       }
-      
+
     }
   })
 
@@ -340,7 +432,9 @@ router.post('/signup', (req, res) => {
                 });
               } else {
                 connection.release()
-                res.json({ status: true })
+                res.json({
+                  status: true
+                })
               }
             })
           }
@@ -361,14 +455,13 @@ function sendDBError(res, err) {
 
 function tokenGen(data, type) {
   let token = jwt.sign({
-    data: {
-      email: data.email,
-      user_id: data.id,
-      type: type
-    }
-  },
-    secret,
-    {
+      data: {
+        email: data.email,
+        user_id: data.id,
+        type: type
+      }
+    },
+    secret, {
       expiresIn: "1 days"
     })
   return token

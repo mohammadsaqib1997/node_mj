@@ -40,7 +40,8 @@ const visible = [
     'coming-soon',
     'career',
     'admin-login',
-    'downloads'
+    'downloads',
+    'partners-and-associates'
 ]
 
 export default ({ app, error }) => {

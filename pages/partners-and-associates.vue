@@ -1,0 +1,177 @@
+<template>
+  <div class="wrapper">
+    <div class="section">
+      <div class="container">
+        <h1 class="title-1 main-title">Supreme Partners And Associates</h1>
+        <b-field class="search-cont">
+          <b-input type='text' @input="update_params('search', $event)" placeholder="Search By(City, Email, Name)"></b-input>
+        </b-field>
+        <div v-if="l_data.length > 0" class="columns is-multiline">
+          <div class="column is-3" v-for="(row, ind) in l_data" :key="ind">
+            <div class="box-cont">
+              <div class="img-con">
+                <img src="~/assets/img/default.png" />
+              </div>
+              <div class="content">
+                <h1 class="title is-4">{{ row.full_name }}</h1>
+                <p>{{ row.email }}</p>
+                <p>{{ row.cont_num }}</p>
+                <p>{{ row.city }}</p>
+                <p>{{ row.address }}</p>
+                <h1 class="title is-6">Discount: {{row.discount}}%</h1>
+              </div>
+            </div>
+          </div>
+          <div class="column is-12 has-text-centered">
+            <div class="pag-cont">
+              <b-pagination :total="num_rows" :per-page="12" :current.sync="load_params.page" @change="update_params('page', $event)"></b-pagination>
+            </div>
+          </div>
+        </div>
+        <section class="not-found" v-else>
+          <h1 class="title">No Data Found!</h1>
+        </section>
+      </div>
+    </div>
+    <b-loading :is-full-page="true" :active="loading" :can-cancel="false"></b-loading>
+  </div>
+</template>
+
+<script>
+import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
+export default {
+  mixins: [mxn_tableFilterListing],
+  methods: {
+    async loadData() {
+      const self = this;
+      self.loading = true;
+      await self.$axios
+        .get("/api/web/list_partner", {
+          params: this.load_params
+        })
+        .then(res => {
+          this.l_data = res.data.data;
+          this.num_rows = res.data.total_rows;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      $("html").animate({ scrollTop: $(".main-title").offset().top }, 500);
+      self.loading = false;
+    }
+  }
+};
+</script>
+
+
+<style lang="scss" scoped>
+.wrapper /deep/ {
+  .container > h1 {
+    margin-bottom: 2rem;
+  }
+
+  .search-cont {
+    margin-bottom: 3rem;
+    input.input {
+      background-color: #ffffff;
+      -webkit-box-shadow: none;
+      -moz-box-shadow: none;
+      box-shadow: none;
+      -webkit-border-radius: 0;
+      -moz-border-radius: 0;
+      border-radius: 0;
+      border: 1px solid transparent;
+      font-size: 15px;
+      color: #3b3f57;
+      padding: 16px 35px 16px 20px;
+      height: auto;
+      &:focus {
+        -webkit-box-shadow: 0 0 2px 0 #d9bd68;
+        -moz-box-shadow: 0 0 2px 0 #d9bd68;
+        box-shadow: 0 0 2px 0 #d9bd68;
+      }
+    }
+  }
+
+  .pag-cont {
+    display: inline-block;
+    margin: 0 auto;
+    .pagination {
+      a {
+        &[role="button"] {
+          -webkit-border-radius: 0;
+          -moz-border-radius: 0;
+          border-radius: 0;
+          border-color: #eeeeee;
+          color: #959595;
+          background-color: white;
+          box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+
+          &.is-current {
+            background-color: #d9bd68;
+            color: #ffffff;
+          }
+        }
+      }
+
+      @media screen and (min-width: 769px) {
+        .pagination-previous {
+          -webkit-box-ordinal-group: 2;
+          -ms-flex-order: 1;
+          order: 1;
+        }
+
+        .pagination-next {
+          -webkit-box-ordinal-group: 4;
+          -ms-flex-order: 3;
+          order: 3;
+        }
+
+        .pagination-list {
+          -webkit-box-ordinal-group: 3;
+          -ms-flex-order: 2;
+          order: 2;
+        }
+      }
+    }
+  }
+
+  .not-found > h1 {
+    color: #8d93ae;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .box-cont {
+    height: 100%;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .img-con {
+      border-bottom: 2px solid #d9bd68;
+
+      img {
+        display: block;
+        max-width: 100%;
+        max-height: 320px;
+      }
+    }
+
+    .content {
+      padding: 1rem;
+
+      .title.is-4 {
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      p {
+        margin-bottom: 5px;
+        color: #7d7d7d;
+      }
+    }
+  }
+}
+</style>
