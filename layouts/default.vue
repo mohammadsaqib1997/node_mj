@@ -21,17 +21,17 @@ import forgotPassForm from "~/components/forms/forgot_password.vue";
 
 import io from "socket.io-client";
 export default {
-  // head: {
-  //   script: [
-  //     {
-  //       src: "https://consent.cookiebot.com/uc.js",
-  //       id: "Cookiebot",
-  //       "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
-  //       type: "text/javascript",
-  //       async: true
-  //     }
-  //   ]
-  // },
+  head: {
+    script: [
+      {
+        src: "https://consent.cookiebot.com/uc.js",
+        id: "Cookiebot",
+        "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
+        type: "text/javascript",
+        async: true
+      }
+    ]
+  },
   async mounted() {
     const self = this;
     self.socket = io();
