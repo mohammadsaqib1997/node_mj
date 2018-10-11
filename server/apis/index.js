@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
 
 let corsOptions = {
   optionsSuccessStatus: 200,
-  origin: (config.dev) ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com'
+  origin: (config.dev) ? 'http://127.0.0.1:3000' : ['http://mj-supreme.com', 'http://www.mj-supreme.com']
 }
 
 router.use("/web", cors(corsOptions), require('./web.js'))
