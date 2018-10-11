@@ -111,7 +111,7 @@ router.get('/list_partner', (req, res) => {
               FROM partners
               ${(search !== '') ? 'WHERE': ''}
               ${(search !== '') ? '(email LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
-              ORDER BY id DESC
+              ORDER BY id ASC
               LIMIT ${limit}
               OFFSET ${offset}`,
               [
@@ -139,6 +139,24 @@ router.get('/list_partner', (req, res) => {
     }
   })
 })
+
+router.get('/partner/logo/:file_name', function (req, res) {
+  if (req.params.file_name !== '') {
+    if (fs.existsSync(__dirname + "/../uploads/partners_logo/" + req.params.file_name)) {
+      not_found = false
+      let file = fs.readFileSync(__dirname + "/../uploads/partners_logo/" + req.params.file_name)
+      return res.send(file)
+    } else {
+      res.status(404).json({
+        message: 'Not found!'
+      })
+    }
+  } else {
+    res.status(404).json({
+      message: 'Not found!'
+    })
+  }
+});
 
 router.post('/check_email', (req, res) => {
 

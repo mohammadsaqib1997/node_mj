@@ -7,11 +7,9 @@
           <b-input type='text' @input="update_params('search', $event)" placeholder="Search By(City, Email, Name)"></b-input>
         </b-field>
         <div v-if="l_data.length > 0" class="columns is-multiline">
-          <div class="column is-3" v-for="(row, ind) in l_data" :key="ind">
+          <div class="column is-3" v-for="(row, ind) in l_data" :key="ind+row.email">
             <div class="box-cont">
-              <div class="img-con">
-                <img src="~/assets/img/default.png" />
-              </div>
+              <partnerImg :logo="row.logo" />
               <div class="content">
                 <h1 class="title is-4">{{ row.full_name }}</h1>
                 <p>{{ row.email }}</p>
@@ -39,8 +37,12 @@
 
 <script>
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
+import partnerImg from "~/components/html_comp/lazy_partner_img.vue";
 export default {
   mixins: [mxn_tableFilterListing],
+  components: {
+    partnerImg
+  },
   methods: {
     async loadData() {
       const self = this;
@@ -148,16 +150,6 @@ export default {
     background-color: white;
     box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.1);
     overflow: hidden;
-
-    .img-con {
-      border-bottom: 2px solid #d9bd68;
-
-      img {
-        display: block;
-        max-width: 100%;
-        max-height: 320px;
-      }
-    }
 
     .content {
       padding: 1rem;
