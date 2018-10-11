@@ -195,78 +195,78 @@
 </template>
 
 <script>
-  import moment from "moment";
-  import mxn_modal from "~/mixins/modal.js";
-  export default {
-    mixins: [mxn_modal],
-    props: {
-      mem_id: {
-        type: Number,
-        default: null
-      }
-    },
-    data() {
-      return {
-        loading: true,
-        mem_info: {}
-      };
-    },
-    methods: {
-      gen_date: function (str, addYear) {
-        return moment(new Date(str))
-          .add(addYear, "year")
-          .format("DD MMM YYYY");
-      },
-      async loadData() {
-        const self = this;
-        self.loading = true;
-        await self.$axios
-          .get("/api/member/member_info/" + self.mem_id)
-          .then(res => {
-            self.mem_info = res.data.result;
-          })
-          .catch(err => {
-            console.log(err);
-          });
-        self.loading = false;
-      }
+import moment from "moment";
+import mxn_modal from "~/mixins/modal.js";
+export default {
+  mixins: [mxn_modal],
+  props: {
+    mem_id: {
+      type: Number,
+      default: null
     }
-  };
+  },
+  data() {
+    return {
+      loading: true,
+      mem_info: {}
+    };
+  },
+  methods: {
+    gen_date: function(str, addYear) {
+      return moment(new Date(str))
+        .add(addYear, "year")
+        .format("DD MMM YYYY");
+    },
+    async loadData() {
+      const self = this;
+      self.loading = true;
+      await self.$axios
+        .get("/api/member/member_info/" + self.mem_id)
+        .then(res => {
+          self.mem_info = res.data.result;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      self.loading = false;
+    }
+  }
+};
 </script>
 
 <style lang="scss" scoped>
-  .member_info /deep/ {
-    .section {
-      min-height: 200px;
+.member_info /deep/ {
+  .section {
+    min-height: 200px;
 
-      .mem-info-con {
-        >.detail {
-          margin-bottom: 1rem;
+    .mem-info-con {
+      > .detail {
+        margin-bottom: 1rem;
 
-          >.columns {
-            margin-bottom: 0.7rem;
-            border-bottom: 1px solid #f1f1f1;
+        > .columns {
+          margin-bottom: 0.7rem;
+          border-bottom: 1px solid #f1f1f1;
 
-            >.column {
-              padding-top: 0.5rem;
-              padding-bottom: 0.5rem;
-            }
+          > .column {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
           }
         }
+      }
 
-        label {
-          font-weight: 300;
-          line-height: normal;
-          font-size: 1.2rem;
-        }
+      label {
+        font-weight: 300;
+        line-height: normal;
+        font-size: 1.2rem;
+      }
 
-        h2 {
-          font-weight: bold;
-          line-height: normal;
-          font-size: 1.2rem;
-          color: #3d3e5a;
-        }
+      h2 {
+        font-weight: bold;
+        line-height: normal;
+        font-size: 1.2rem;
+        color: #3d3e5a;
       }
     }
   }
+}
 </style>

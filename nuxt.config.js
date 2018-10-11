@@ -18,6 +18,9 @@ module.exports = {
       { src: '/js/jquery-3.3.1.min.js' },
     ]
   },
+  css : [
+    '~/css/main.css'
+  ],
   plugins: [
     '~/plugins/s-vue-validator.js',
     '~/plugins/vue-map.js',

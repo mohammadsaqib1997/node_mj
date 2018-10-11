@@ -35,31 +35,15 @@
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
+import mxn_cityAC from "~/mixins/city-ac.js";
 export default {
+  mixins: [mxn_cityAC],
   directives: {
     mask
   },
-  async mounted() {
-    let data = await this.$axios.$get("/api/web/pk");
-    this.cities = data.cities;
-  },
-  computed: {
-    filteredCityArray() {
-      return this.cities.filter(option => {
-        return (
-          option
-            .toString()
-            .toLowerCase()
-            .indexOf(this.ac_city.toLowerCase()) >= 0
-        );
-      });
-    }
-  },
   data() {
     return {
-      cities: [],
       ref_name: "",
-      ac_city: "",
       form: {
         full_name: "",
         email: "",
@@ -131,8 +115,7 @@ export default {
         .maxLength(100);
     },
     "form.city": function(value) {
-      return Validator.value(value)
-        .required();
+      return Validator.value(value).required();
     },
     "form.ref_code": {
       cache: false,

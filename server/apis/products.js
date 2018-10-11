@@ -7,7 +7,7 @@ router.get("/", function (req, res) {
 
   db.getConnection(function (err, connection) {
     if (err) {
-      res.status(500).json({ error })
+      res.status(500).json({ err })
     } else {
       connection.query('SELECT * FROM `products`', function (error, results, fields) {
         connection.release();

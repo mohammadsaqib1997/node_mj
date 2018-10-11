@@ -52,35 +52,23 @@ import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
+import mxn_cityAC from "~/mixins/city-ac.js";
 export default {
+  mixins: [mxn_cityAC],
   computed: {
     profile: function() {
       return this.$store.state.profile.profile;
-    },
-    filteredCityArray() {
-      return this.cities.filter(option => {
-        return (
-          option
-            .toString()
-            .toLowerCase()
-            .indexOf(this.ac_city.toLowerCase()) >= 0
-        );
-      });
     }
   },
   async mounted() {
     this.form.loading = true;
     await this.$store.dispatch("profile/loadProfile");
     this.setData(this.profile);
-    let ct_data = await this.$axios.$get("/api/web/pk");
-    this.cities = ct_data.cities;
     this.form.loading = false;
   },
   data() {
     return {
       prd_list: [],
-      cities: [],
-      ac_city: "",
       fet_m_data: null,
       user_asn_id: "",
       status: "",

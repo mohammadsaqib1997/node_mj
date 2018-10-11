@@ -125,21 +125,11 @@ import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
+import mxn_cityAC from "~/mixins/city-ac.js";
 export default {
+  mixins: [mxn_cityAC],
   components: {
     pgErrorComp
-  },
-  computed: {
-    filteredCityArray() {
-      return this.cities.filter(option => {
-        return (
-          option
-            .toString()
-            .toLowerCase()
-            .indexOf(this.ac_city.toLowerCase()) >= 0
-        );
-      });
-    }
   },
   async mounted() {
     const self = this;
@@ -180,8 +170,6 @@ export default {
         { code: 1, name: "On Cash" },
         { code: 2, name: "On Installment" }
       ],
-      cities: [],
-      ac_city: "",
       prd_list: [],
       ref_code: "",
       con_pass: "",

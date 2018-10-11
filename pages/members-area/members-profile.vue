@@ -6,8 +6,8 @@
             h1 Members Profile
       .body
         .section
-          tblTopFilter(:f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="updateFilter('limit', $event)" @change_s_txt="updateFilter('search', $event)")
-          table-comp(:arr="data" :loading="loading" :total_record="num_rows" :per_page="parseInt(load_params.limit)" :page_set="load_params.page" @page_change="pageLoad")
+          tblTopFilter(:f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="update_params('limit', $event)" @change_s_txt="update_params('search', $event)")
+          table-comp(:arr="l_data" :loading="loading" :total_record="num_rows" :per_page="parseInt(load_params.limit)" :page_set="load_params.page" @page_change="update_params('page', $event)")
             template(slot="thead")
               tr
                 th(width="50px")
@@ -18,7 +18,7 @@
                 th Paid Status
                 th Receipt
             template(slot="tbody")
-              tr(v-for="row in data" @click.prevent="loadMemInfo(row.id)")
+              tr(v-for="row in l_data" @click.prevent="loadMemInfo(row.id)")
                 td.ed-con
                   button.button.ed-btn(v-on:click.prevent.stop="o_e_mem_m(parseInt(row.id))")
                     b-icon(icon="edit")
@@ -66,9 +66,10 @@ import memberInfo from "~/components/modals/member_info.vue";
 import _ from "lodash";
 
 import mxn_receiptUpload from "~/mixins/receipt_upload.js";
+import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 
 export default {
-  mixins: [mxn_receiptUpload],
+  mixins: [mxn_receiptUpload, mxn_tableFilterListing],
   layout: "admin_layout",
   components: {
     edMemberForm,
@@ -76,9 +77,6 @@ export default {
     tblTopFilter,
     receiptView,
     memberInfo
-  },
-  async mounted() {
-    this.loadData();
   },
   computed: {
     modalActive: function() {
@@ -102,9 +100,6 @@ export default {
       rec_v_md: false,
       rv_ref_id: null,
       rv_mem_id: null,
-      loading: false,
-      data: [],
-      num_rows: 1,
       select_edit: null,
       tbl_list_filters: [
         { title: "Level Filter", value: '' },
@@ -119,12 +114,6 @@ export default {
         { title: "Level 8", value: 8 },
         { title: "Level 9", value: 9 }
       ],
-      load_params: {
-        limit: "10",
-        search: "",
-        page: 1,
-        filter: ''
-      }
     };
   },
   methods: {
@@ -135,7 +124,7 @@ export default {
           params: this.load_params
         });
         this.num_rows = result.total_rows;
-        this.data = result.data;
+        this.l_data = result.data;
       } catch (err) {
         console.log(err);
       }
@@ -147,31 +136,6 @@ export default {
       this.mem_info_md = true;
       this.mem_info_md_mem_id = id;
     },
-
-    pageLoad: function(page) {
-      this.load_params.page = page;
-      this.loadData();
-    },
-
-    change_filter_tr: function(val) {
-      this.updateFilter("filter", _.find(this.tbl_list_filters, { title: val }).value);
-    },
-
-    updateFilter: function(param, val) {
-      let new_params = _.cloneDeep(this.load_params);
-      if (new_params[param] !== val) {
-        this.num_rows = 1;
-        _.set(new_params, "page", 1);
-        _.set(new_params, param, val);
-        this.load_params = new_params;
-        this.loading = true;
-        this.after_f_settle();
-      }
-    },
-
-    after_f_settle: _.debounce(function() {
-      this.loadData();
-    }, 1000),
 
     payUser: function(id) {
       const self = this;

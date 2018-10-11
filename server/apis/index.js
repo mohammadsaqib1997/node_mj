@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
 
 let corsOptions = {
   optionsSuccessStatus: 200,
-  origin: (config.dev) ? 'http://127.0.0.1:3000' : 'http://144.208.75.78:3000'
+  origin: (config.dev) ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com'
 }
 
 router.use("/web", cors(corsOptions), require('./web.js'))
@@ -45,6 +45,7 @@ router.use("/receipt", cors(corsOptions), require('./receipts.js'))
 router.use("/notification", cors(corsOptions), require('./notifications.js'))
 router.use("/report", cors(corsOptions), require('./reports.js'))
 router.use("/reward", cors(corsOptions), require('./rewards.js'))
+router.use("/partner", cors(corsOptions), require('./partners.js'))
 
 router.all("*", function (req, res) {
   res.status(403).json({ error: 'Invalid Request!' })

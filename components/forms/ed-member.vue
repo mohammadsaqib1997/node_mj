@@ -82,23 +82,13 @@ import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
+import mxn_cityAC from "~/mixins/city-ac.js";
 export default {
+  mixins: [mxn_cityAC],
   props: {
     edit_id: {
       type: Number,
       default: null
-    }
-  },
-  computed: {
-    filteredCityArray() {
-      return this.cities.filter(option => {
-        return (
-          option
-            .toString()
-            .toLowerCase()
-            .indexOf(this.ac_city.toLowerCase()) >= 0
-        );
-      });
     }
   },
   async mounted() {
@@ -109,8 +99,6 @@ export default {
     this.setFData(load_data.data[0].m);
     this.setPrdData(load_data.data[0].upd);
     this.prd_list = list_pds.data;
-    let ct_data = await this.$axios.$get("/api/web/pk");
-    this.cities = ct_data.cities;
     this.form.loading = false;
   },
   data() {
@@ -127,8 +115,6 @@ export default {
         { code: 2, name: "On Installment" }
       ],
       sts_list: [{ code: 1, name: "Approved" }, { code: 0, name: "Suspended" }],
-      cities: [],
-      ac_city: "",
       fet_m_data: null,
       f_data: {
         user_asn_id: "",
