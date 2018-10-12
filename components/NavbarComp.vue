@@ -13,6 +13,7 @@
                     .navbar-end
                         nuxt-link.navbar-item(to="/about-us") Company
                         nuxt-link.navbar-item(to="/products") Products
+                        nuxt-link.navbar-item(to="/partners-and-associates") Partners
                         nuxt-link.navbar-item(to="/media") Media
                         nuxt-link.navbar-item(to="/blog") Blog
                         nuxt-link.navbar-item(to="/contact") Contact

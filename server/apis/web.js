@@ -301,7 +301,7 @@ router.post("/admin/login", (req, res) => {
               } else {
                 resp = {
                   status: false,
-                  message: "Invalid Credentials!"
+                  message: "Sorry, the specified combination do not match. Reset your credentials if required."
                 }
               }
               return resolve()
@@ -354,7 +354,7 @@ router.post('/login', (req, res) => {
               } else {
                 resp = {
                   status: false,
-                  message: "Invalid Credentials!"
+                  message: "Sorry, the specified combination do not match. Reset your credentials if required."
                 }
               }
               return resolve()

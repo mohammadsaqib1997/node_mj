@@ -2,7 +2,8 @@
     .copyrights
         .columns
             .column
-                p Copyright © {{ year }} MJ-Supreme. Designed by FocusMedia360
+                p Copyright © {{ year }} MJ-Supreme. Designed by 
+                  a(href="http://focusme360.com" target="_blank") FocusMedia360
             .column
             .column
                 ul.bottom-link
@@ -32,6 +33,11 @@ export default {
 
   > .columns {
     padding: 20px 0 10px;
+  }
+
+  p > a {
+    color: #8d93ae;
+    text-decoration: underline;
   }
 
   .bottom-link {

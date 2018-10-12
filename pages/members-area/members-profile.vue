@@ -102,7 +102,9 @@ export default {
       rv_mem_id: null,
       select_edit: null,
       tbl_list_filters: [
-        { title: "Level Filter", value: '' },
+        { title: "Filter", value: '' },
+        { title: "UnPaid", value: 'unpaid' },
+        { title: "Paid", value: 'paid' },
         { title: "Level 0", value: 0 },
         { title: "Level 1", value: 1 },
         { title: "Level 2", value: 2 },

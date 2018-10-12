@@ -22,10 +22,10 @@ router.get("/", function (req, res) {
     search = req.query.search
   }
 
-  if (/^[0-9]$/.test(req.query.filter)) {
+  if (/^[0-9]$|^(unpaid|paid)$/.test(req.query.filter)) {
     filter_qry = `
       ${search !== "" ? 'AND':''}
-      u_var.level=${req.query.filter}
+      ${(/^[0-9]$/.test(req.query.filter)) ? 'u_var.level': 'm.is_paid_m'}='${(/^[0-9]$/.test(req.query.filter)) ? req.query.filter : (req.query.filter == 'paid' ? 1:0)}'
     `
   }
 
