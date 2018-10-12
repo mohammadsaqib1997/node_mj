@@ -7,12 +7,16 @@ const db = require('../db.js')
 router.get('/wallet', function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {
-      res.status(500).json({ err })
+      res.status(500).json({
+        err
+      })
     } else {
       connection.query('SELECT wallet FROM `company_var` WHERE id=1', function (error, results, fields) {
         if (error) {
           connection.release();
-          res.status(500).json({ error })
+          res.status(500).json({
+            error
+          })
         } else {
           let comp_wallet = 0
           if (results.length > 0) {
@@ -21,7 +25,9 @@ router.get('/wallet', function (req, res) {
           connection.query('SELECT SUM(wallet) as user_wallet FROM info_var_m', function (error, results, fields) {
             connection.release();
             if (error) {
-              res.status(500).json({ error })
+              res.status(500).json({
+                error
+              })
             } else {
               let user_wallet = 0
               if (results.length > 0) {
@@ -44,13 +50,17 @@ router.post('/withdraw', function (req, res) {
     let amount = parseInt(req.body.amount)
     db.getConnection(function (err, connection) {
       if (err) {
-        res.status(500).json({ err })
+        res.status(500).json({
+          err
+        })
       } else {
 
         connection.beginTransaction(async function (err) {
           if (err) {
             connection.release()
-            res.status(500).json({ err })
+            res.status(500).json({
+              err
+            })
           } else {
             let throw_error = null
 
@@ -99,18 +109,24 @@ router.post('/withdraw', function (req, res) {
             if (throw_error) {
               return connection.rollback(function () {
                 connection.release()
-                res.status(500).json({ throw_error })
+                res.status(500).json({
+                  throw_error
+                })
               });
             } else {
               connection.commit(function (err) {
                 if (err) {
                   return connection.rollback(function () {
                     connection.release()
-                    res.status(500).json({ err })
+                    res.status(500).json({
+                      err
+                    })
                   });
                 } else {
                   connection.release()
-                  res.json({ status: true })
+                  res.json({
+                    status: true
+                  })
                 }
               })
             }
@@ -131,13 +147,17 @@ router.get("/member_counts", function (req, res) {
 
   db.getConnection(function (err, connection) {
     if (err) {
-      res.status(500).json({ err })
+      res.status(500).json({
+        err
+      })
     } else {
       connection.query('SELECT COUNT(*) AS total, SUM(is_paid_m) as paid_total FROM `members`', function (error, results, fields) {
         connection.release();
 
         if (error) {
-          res.status(500).json({ error })
+          res.status(500).json({
+            error
+          })
         } else {
           res.json({
             data: {
@@ -154,7 +174,9 @@ router.get("/member_counts", function (req, res) {
 router.get("/monthly_reg_members", function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
-      res.status(500).json({ err })
+      res.status(500).json({
+        err
+      })
     } else {
       let throw_error = null
       let grab_months = {
@@ -206,7 +228,9 @@ router.get("/monthly_reg_members", function (req, res) {
       connection.release();
 
       if (throw_error) {
-        res.status(500).json({ error: throw_error })
+        res.status(500).json({
+          error: throw_error
+        })
       } else {
         res.json({
           data: grab_months
@@ -219,18 +243,24 @@ router.get("/monthly_reg_members", function (req, res) {
 router.get('/total_cm', function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
-      res.status(500).json({ err })
+      res.status(500).json({
+        err
+      })
     } else {
       connection.query("SELECT SUM(amount) as total_paid FROM commissions WHERE status=1", function (error, results) {
         if (error) {
           connection.release()
-          res.status(500).json({ error })
+          res.status(500).json({
+            error
+          })
         } else {
           let total_paid = results[0].total_paid !== null ? results[0].total_paid : 0
           connection.query("SELECT SUM(amount) as total_un_paid FROM commissions WHERE status=0", function (error, results) {
             connection.release()
             if (error) {
-              res.status(500).json({ error })
+              res.status(500).json({
+                error
+              })
             } else {
               let total_un_paid = results[0].total_un_paid !== null ? results[0].total_un_paid : 0
               res.json({
@@ -248,9 +278,13 @@ router.get('/total_cm', function (req, res) {
 router.get('/trans_list', function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
-      res.status(500).json({ err })
+      res.status(500).json({
+        err
+      })
     } else {
-      let offset = 0, limit = 10, search = ""
+      let offset = 0,
+        limit = 10,
+        search = ""
 
       if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
         limit = req.query.limit
@@ -270,7 +304,9 @@ router.get('/trans_list', function (req, res) {
         function (error, result) {
           if (error) {
             connection.release()
-            res.status(500).json({ error })
+            res.status(500).json({
+              error
+            })
           } else {
             let tot_balance = result[0].tot_balance
 
@@ -282,7 +318,9 @@ router.get('/trans_list', function (req, res) {
               function (error, result) {
                 if (error) {
                   connection.release()
-                  res.status(500).json({ error })
+                  res.status(500).json({
+                    error
+                  })
                 } else {
                   let tot_rows = result[0].tot_rows
 
@@ -294,16 +332,49 @@ router.get('/trans_list', function (req, res) {
                     LIMIT ${limit}
                     OFFSET ${offset}`,
                     ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
-                    function (error, results) {
-                      connection.release()
+                    function (error, main_result) {
                       if (error) {
-                        res.status(500).json({ error })
-                      } else {
-                        res.json({
-                          results,
-                          tot_balance,
-                          tot_rows
+                        connection.release()
+                        res.status(500).json({
+                          error
                         })
+                      } else {
+                        if (main_result.length > 0) {
+                          connection.query(
+                            `SELECT SUM(debit) - SUM(credit) as rows_balance, 
+                                  (SELECT SUM(debit) - SUM(credit) FROM transactions_comp where id < ${main_result[main_result.length-1].id}) as last_balance
+                              FROM transactions_comp
+                              WHERE
+                              (id >= ${main_result[main_result.length-1].id} AND id <= ${main_result[0].id})`,
+                            [req.params.id, req.params.id],
+                            function (error, result) {
+                              connection.release();
+                              if (error) {
+                                res.status(500).json({
+                                  error
+                                })
+                              } else {
+                                let rows_balance = result[0].rows_balance !== null ? result[0].rows_balance : 0
+                                let last_balance = result[0].last_balance !== null ? result[0].last_balance : 0
+                                res.json({
+                                  data: main_result,
+                                  tot_rows,
+                                  tot_balance,
+                                  last_balance,
+                                  rows_balance
+                                })
+                              }
+                            }
+                          )
+                        } else {
+                          res.json({
+                            data: main_result,
+                            tot_rows,
+                            tot_balance,
+                            last_balance: 0,
+                            rows_balance: 0
+                          })
+                        }
                       }
                     })
                 }

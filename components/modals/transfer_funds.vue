@@ -148,9 +148,7 @@ export default {
                 self.reset_funds_form();
                 msg = "Successfully Funds Transfer.";
                 await self.$store.dispatch("member/loadWallet");
-                await self.$store.dispatch(
-                  "member/transactions/loadTransactions"
-                );
+                self.$store.commit('member/setLoad_trans', true)
               } else {
                 is_err = true;
                 msg = res.data.message;
