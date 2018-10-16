@@ -6,7 +6,7 @@
             h1(v-if="a_item.type === 0") Notify
             h1(v-else-if="a_item.type === 1") Confirmation
             h1(v-else-if="a_item.type === 2") Withdrawal Request
-            h1(v-else-if="a_item.type === 3") Claim Request
+            h1(v-else-if="a_item.type === 3") Reward Request
             h1(v-else) Notify
       .body
         .section
@@ -41,11 +41,22 @@
             template(v-if="a_item.type === 3")
               h3.title Reward Info
               .columns.is-gapless.rwds_load_content
-                .column.is-5
-                  label Select Reward Type:
+                .column.is-6
+                  label Reward Type:
                 .column
-                  h3 {{ lvl_rwds[a_item.data.lvl][a_item.data.type].title }}
-                  span.icon(v-html="lvl_rwds[a_item.data.lvl][a_item.data.type].icon")
+                  h3 {{ a_item.data.type == 1 ? 'Self Reward':'Auto Reward' }}
+              .columns.is-gapless.rwds_load_content
+                .column.is-6
+                  label Reward Level:
+                .column
+                  h3 {{ getLvlRwd(a_item.data.type, a_item.data.level, 'lvl') }}
+              .columns.is-gapless.rwds_load_content
+                .column.is-6
+                  label Reward Selected:
+                .column
+                  h3 {{ getLvlRwd(a_item.data.type, a_item.data.level, 'rwds.['+a_item.data.reward_selected+']') }}
+
+                  //- span.icon(v-html="lvl_rwds[a_item.data.lvl][a_item.data.type].icon")
 
           //- here is footer
           template(v-if="a_item.type === 0")
@@ -75,17 +86,18 @@
                   | Close
 
           template(v-else-if="a_item.type === 3 && a_item.hasOwnProperty('data') && loading !== true")
+            hr
             h4.title.is-5(v-if="a_item.data.status !== 0" style="margin-bottom:.5rem;") {{ a_item.data.status === 1 ? "Already Claim": "Canceled Claim" }}
             .level
-              .level-left(v-if="a_item.data.status === 0 && date_gt(a_item.data.clm_date, a_item.date) === 0")
+              .level-left(v-if="a_item.data.status === 0")
                 b-field.cancel_rs_fld(v-if="cancel_fm.is === true")
                   b-input(placeholder="Cancel Reason" v-model="cancel_fm.msg" expanded)
                   p.control
-                    button.button.is-primary.btn-des-1(@click.prevent="claim_ch_sts(a_item.data.mem_id, a_item.data.lvl, 2)") Cancel
+                    button.button.is-primary.btn-des-1(@click.prevent="claim_ch_sts(2)") Cancel
                 template(v-else)
                   button.button.btn-des-1(@click.prevent="cancel_fm.is=true;")
                     | Cancel
-                  button.button.btn-des-1(@click.prevent="claim_ch_sts(a_item.data.mem_id, a_item.data.lvl, 1)" style="margin-left:10px")
+                  button.button.btn-des-1(@click.prevent="claim_ch_sts(1)" style="margin-left:10px")
                     | Accept
               .level-right
                 button.button.btn-des-1(@click.prevent="$store.commit('notification/modalActTG', false)")
@@ -99,7 +111,9 @@
 
 <script>
 import moment from "moment";
+import mxn_rewardsData from "~/mixins/rewards-data.js";
 export default {
+  mixins: [mxn_rewardsData],
   watch: {
     mdActive: function(val) {
       if (val === false) {
@@ -126,78 +140,6 @@ export default {
       cancel_fm: {
         is: false,
         msg: ""
-      },
-      lvl_rwds: {
-        "3": [
-          {
-            title: "Laptop",
-            icon: '<i class="fas fa-laptop"></i>'
-          },
-          {
-            title: "Rs. 25,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ],
-        "4": [
-          {
-            title: "Mobile",
-            icon: '<i class="fas fa-mobile-alt"></i>'
-          },
-          {
-            title: "Rs. 50,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ],
-        "5": [
-          {
-            title: "CG-125 Motorcycle",
-            icon: '<i class="fas fa-motorcycle"></i>'
-          },
-          {
-            title: "Rs. 100,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ],
-        "6": [
-          {
-            title: "Ummrah With Dubai Tour",
-            icon: '<i class="fas fa-ticket-alt"></i>'
-          },
-          {
-            title: "Rs. 200,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ],
-        "7": [
-          {
-            title: "Malaysia Tour",
-            icon: '<i class="fas fa-ticket-alt"></i>'
-          },
-          {
-            title: "Rs. 300,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ],
-        "8": [
-          {
-            title: "Gli New Model Current Year",
-            icon: '<i class="fas fa-car"></i>'
-          },
-          {
-            title: "$. 18,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ],
-        "9": [
-          {
-            title: "Toyota Fortuner 2018",
-            icon: '<i class="fas fa-shuttle-van"></i>'
-          },
-          {
-            title: "$. 50,000/-",
-            icon: '<i class="fas fa-money-bill-alt"></i>'
-          }
-        ]
       }
     };
   },
@@ -266,15 +208,14 @@ export default {
         type: is_err === true ? "is-danger" : "is-success"
       });
     },
-    claim_ch_sts: async function(mem_id, lvl, sts) {
+    claim_ch_sts: async function(sts) {
       const self = this;
       let is_err = false;
       let msg = "";
       self.$store.commit("notification/set_loader", true);
       await self.$axios
         .post("/api/reward/sts_change", {
-          mem_id,
-          lvl,
+          clm_id: self.a_item.ref_id,
           sts,
           reason: self.cancel_fm.msg
         })
@@ -303,12 +244,6 @@ export default {
         position: "is-bottom",
         type: is_err === true ? "is-danger" : "is-success"
       });
-    },
-    date_gt(clm_date, notify_date) {
-      let a = moment(clm_date),
-        b = moment(notify_date);
-
-      return a.diff(b, "seconds");
     }
   }
 };

@@ -1,6 +1,5 @@
 {
-    "buyer_type_list": [
-        {
+    "buyer_type_list": [{
             "code": 1,
             "name": "Individual"
         },
@@ -9,8 +8,7 @@
             "name": "Reseller"
         }
     ],
-    "pay_type_list": [
-        {
+    "pay_type_list": [{
             "code": 1,
             "name": "On Cash"
         },
@@ -45,12 +43,17 @@
     },
     "claim_rewards": {
         "type": {
+            "0": "Auto Rewards",
+            "1": "Self Rewards"
+        },
+        "reward_selected": {
             "0": "Level Reward",
             "1": "Cash"
         },
         "status": {
             "0": "Pending",
-            "1": "Approved"
+            "1": "Approved",
+            "2": "Cancelled"
         }
     }
 }

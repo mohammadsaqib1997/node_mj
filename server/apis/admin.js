@@ -385,4 +385,217 @@ router.get('/trans_list', function (req, res) {
   })
 })
 
+router.post('/user_id_check', function (req, res) {
+  if (req.decoded.data.type > 0 && /^[0-9]*$/.test(req.body.recv_user_ans_id)) {
+    let recv_u_asn_id = req.body.recv_user_ans_id
+
+    db.getConnection(function (error, connection) {
+      if (error) {
+        res.status(500).json({
+          error
+        })
+      } else {
+        connection.query('SELECT count(*) as count, full_name FROM members WHERE user_asn_id=?', recv_u_asn_id, function (error, results, fields) {
+          connection.release();
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            res.json({
+              data: results[0]
+            })
+          }
+        })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: 'Invalid parameters!'
+    })
+  }
+})
+
+router.post("/transfer_funds", function (req, res) {
+
+  if (req.decoded.data.type > 0 && /^[0-9]*$/.test(req.body.user_asn_id) && /^[0-9]*$/.test(req.body.amount)) {
+    let recv_user_asn_id = req.body.user_asn_id
+    let amount = parseInt(req.body.amount)
+
+    if (amount >= 100) {
+
+      db.getConnection(function (error, connection) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          connection.beginTransaction(async function (err) {
+            if (err) {
+              connection.release()
+              res.status(500).json({
+                err
+              })
+            } else {
+              let throw_error = null
+
+              await new Promise(resolve => {
+
+                connection.query(
+                  `SELECT wallet FROM company_var WHERE id=1`,
+                  function (error, results, fields) {
+                    if (error) {
+                      throw_error = error
+                      return resolve()
+                    } else {
+
+                      let company_params = {
+                        wallet: parseInt(results[0].wallet) - amount,
+                      }
+
+                      connection.query('UPDATE company_var SET ? WHERE id=1', company_params, function (error, results, fields) {
+                        if (error) {
+                          throw_error = error
+                          return resolve()
+                        } else {
+
+                          connection.query(
+                            `SELECT ivm.wallet, ivm.member_id
+                            FROM members as m
+                            JOIN info_var_m as ivm
+                            ON m.id=ivm.member_id
+                            WHERE m.user_asn_id=?`,
+                            recv_user_asn_id,
+                            function (error, results, fields) {
+                              if (error) {
+                                throw_error = error
+                                return resolve()
+                              } else {
+                                let recv_id = results[0].member_id
+                                let recv_params = {
+                                  wallet: parseInt(results[0].wallet) + amount
+                                }
+
+                                connection.query(
+                                  `UPDATE info_var_m SET ? WHERE member_id=?`,
+                                  [recv_params, recv_id],
+                                  function (error, results, fields) {
+                                    if (error) {
+                                      throw_error = error
+                                      return resolve()
+                                    } else {
+
+                                      connection.query('INSERT INTO `transactions_comp` SET ?', {
+                                        remarks: "Funds Transfered To User ID " + recv_user_asn_id,
+                                        credit: amount
+                                      }, function (error, results, fields) {
+                                        if (error) {
+                                          throw_error = error
+                                          return resolve()
+                                        } else {
+
+                                          connection.query(
+                                            `INSERT INTO \`notifications\` SET ?`, {
+                                              from_type: 1,
+                                              to_type: 1,
+                                              from_id: 1,
+                                              to_id: 1,
+                                              message: "Successfully Funds Transfered To User ID " + recv_user_asn_id,
+                                              notify_type: 0
+                                            },
+                                            function (error, results, fields) {
+                                              if (error) {
+                                                throw_error = error
+                                                return resolve()
+                                              } else {
+
+                                                connection.query(
+                                                  `INSERT INTO \`transactions_m\` SET ?`, {
+                                                    member_id: recv_id,
+                                                    remarks: "Funds Received From Admin",
+                                                    debit: amount
+                                                  },
+                                                  function (error, results, fields) {
+                                                    if (error) {
+                                                      throw_error = error
+                                                      return resolve()
+                                                    } else {
+
+                                                      connection.query(
+                                                        `INSERT INTO \`notifications\` SET ?`, {
+                                                          from_type: 1,
+                                                          to_type: 0,
+                                                          from_id: 1,
+                                                          to_id: recv_id,
+                                                          from_txt: 'Admin',
+                                                          message: "Funds Received From Admin",
+                                                          notify_type: 0
+                                                        },
+                                                        function (error, results, fields) {
+                                                          if (error) {
+                                                            throw_error = error
+                                                          }
+                                                          return resolve()
+                                                        })
+                                                    }
+                                                  })
+                                              }
+                                            })
+                                        }
+                                      })
+                                    }
+                                  })
+                              }
+                            })
+                        }
+                      })
+                    }
+                  })
+              })
+
+              if (throw_error) {
+                return connection.rollback(function () {
+                  connection.release()
+                  res.status(500).json({
+                    throw_error
+                  })
+                });
+              } else {
+                connection.commit(function (err) {
+                  if (err) {
+                    return connection.rollback(function () {
+                      connection.release()
+                      res.status(500).json({
+                        err
+                      })
+                    });
+                  } else {
+                    connection.release()
+                    res.json({
+                      status: true
+                    })
+                  }
+                })
+              }
+
+            }
+          })
+        }
+      })
+
+    } else {
+      res.json({
+        status: false,
+        message: 'Minimum transfer funds send 100.'
+      })
+    }
+  } else {
+    res.json({
+      status: false,
+      message: 'Invalid parameters!'
+    })
+  }
+})
+
 module.exports = router

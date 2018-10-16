@@ -265,7 +265,7 @@ router.post("/terms_accept", (req, res) => {
 })
 
 router.get('/get_level_info', function (req, res) {
-  if (req.decoded.data.user_id) {
+  if (req.decoded.data.user_id && req.decoded.data.type === 0) {
     db.getConnection(function (err, connection) {
       if (err) {
         res.status(500).json({
@@ -282,6 +282,43 @@ router.get('/get_level_info', function (req, res) {
             if (results.length > 0) {
               res.json({
                 child_count: results[0].h_childs_count
+              })
+            } else {
+              res.json({
+                status: false,
+                message: "You are not active member!"
+              })
+            }
+          }
+        })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "No user found!"
+    })
+  }
+})
+
+router.get('/get_direct_ref_c', function (req, res) {
+  if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          error: err
+        })
+      } else {
+        connection.query("SELECT direct_ref_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+          connection.release()
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (results.length > 0) {
+              res.json({
+                ref_count: results[0].direct_ref_count
               })
             } else {
               res.json({

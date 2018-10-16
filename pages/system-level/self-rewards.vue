@@ -6,47 +6,24 @@
     table.table.is-fullwidth.is-bordered(v-else)
       thead
         tr
-          th Level
-          //- th Commission
+          th(width="150px") Level
           th Rewards
-          th(width="300px") Total No. People Possible
+          th(width="300px") Per Level People
       tbody
         tr(v-for="row in gen_data" :class="{ passed: (row.passed === true), active: (row.active === true) }")
           td 
             b-icon(v-if="row.active === true" pack="fas" icon="caret-right")
             | {{ row.lvl }}
-          //- td {{ row.cm }}
           td {{ row.rwd }}
           td 
             | {{ row.pp }}
-            button.button.is-small.claim-btn(v-if="row.claim_rwds && row.claim_rwds.can_claim === true && !isSubmited(row)" @click.prevent="setItemMD(row.lvl_id)") Claim Reward
+            button.button.is-small.claim-btn(v-if="row.claim_rwds && row.claim_rwds.can_claim === true && !isSubmited(row)" @click.prevent="claimSbt(row.lvl_id)") Claim Reward
             button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 0") In Process
-            button.button.is-small.claim-btn(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 2" @click.prevent="setItemMD(row.lvl_id, true)") Re-Claim
             button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 1") Claimed
 
             b-tooltip(v-if="row.active === true" :label="row.comp_prg+'%'" position="is-top" type="is-light" animated)
               progress.progress.is-warning(:value="row.comp_prg" max="100")
     b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
-
-    b-modal.modal-des-1.md-claim(:active.sync="md_active" :has-modal-card="true" :canCancel="md_close_btn" @close="closeMDTrg")
-      .modal-card
-        .modal-card-body
-          .section(v-if="active_item_md != null")
-            .columns
-              .column
-                .prd-cont(:class="{ active: sel_c_rwd === 0 }" @click.prevent="sel_c_rwd=0")
-                  span.icon(v-html="active_item_md.rwd.icon")
-                  .title {{ active_item_md.rwd.title }}
-
-              .column
-                .prd-cont(:class="{ active: sel_c_rwd === 1 }" @click.prevent="sel_c_rwd=1")
-                  span.icon
-                    i.fas.fa-money-bill-alt
-                  .title Cash
-                  .sub-title {{ active_item_md.cash.title }}
-            b-field.has-text-centered(v-if="sel_c_rwd !== null")
-              button.button.btn-des-1(@click.prevent="claimSbt") Claim Reward
-        b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
 </template>
 
 <script>
@@ -57,13 +34,13 @@ export default {
     const self = this;
     self.loading = true;
     await self.$axios
-      .get("/api/member/get_level_info")
+      .get("/api/member/get_direct_ref_c")
       .then(res => {
         if (res.data.status !== false) {
-          let c_tot = parseInt(res.data.child_count);
+          let c_tot = parseInt(res.data.ref_count);
           for (let ind in self.gen_data) {
             let g_data = self.gen_data[ind];
-            if (g_data.pp >= res.data.child_count) {
+            if (g_data.pp >= c_tot) {
               self.gen_data[ind]["active"] = true;
               let pend_per = Math.round(
                 ((g_data.pp - c_tot) / g_data.pp) * 100
@@ -85,7 +62,7 @@ export default {
       .catch(err => {
         console.log(err);
       });
-    self.loadClaims();
+    await self.loadClaims();
     self.loading = false;
   },
   data() {
@@ -93,163 +70,74 @@ export default {
       {
         lvl_id: 0,
         lvl: "You",
-        cm: "None",
         rwd: "None",
         pp: 1
       },
       {
         lvl_id: 1,
         lvl: "1st Level",
-        cm: "None",
         rwd: "None",
         pp: 1
       },
       {
         lvl_id: 2,
         lvl: "2nd Level",
-        cm: "None",
         rwd: "None",
         pp: 1
       },
       {
         lvl_id: 3,
         lvl: "3rd Level",
-        cm: "None",
-        rwd: "Laptop OR 25,000 Cash",
+        rwd: "CD 70",
         pp: 1,
         claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "Rs. 25,000/-"
-          },
-          rwd: {
-            title: "Laptop",
-            icon: '<i class="fas fa-laptop"></i>'
-          }
+          can_claim: false
         }
       },
       {
         lvl_id: 4,
         lvl: "4th Level",
-        cm: "None",
-        rwd: "Mobile OR 50,000 Cash",
+        rwd: "120 SQYD PLOT",
         pp: 1,
         claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "Rs. 50,000/-"
-          },
-          rwd: {
-            title: "Mobile",
-            icon: '<i class="fas fa-mobile-alt"></i>'
-          }
+          can_claim: false
         }
       },
       {
         lvl_id: 5,
         lvl: "5th Level",
-        cm: "None",
-        rwd: "CG-125 Motorcycle OR 100,000 Cash",
-        pp: 1,
-        claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "Rs. 100,000/-"
-          },
-          rwd: {
-            title: "CG-125 Motorcycle",
-            icon: '<i class="fas fa-motorcycle"></i>'
-          }
-        }
+        rwd: "Coming Soon",
+        pp: 1
       },
       {
         lvl_id: 6,
         lvl: "6th Level",
-        cm: "None",
-        rwd: "Ummrah With Dubai Tour OR 200,000 Cash",
-        pp: 1,
-        claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "Rs. 200,000/-"
-          },
-          rwd: {
-            title: "Ummrah With Dubai Tour",
-            icon: '<i class="fas fa-ticket-alt"></i>'
-          }
-        }
+        rwd: "Coming Soon",
+        pp: 1
       },
       {
         lvl_id: 7,
         lvl: "7th Level",
-        cm: "None",
-        rwd: "Malaysia Tour Or 300,000 Cash",
-        pp: 1,
-        claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "Rs. 300,000/-"
-          },
-          rwd: {
-            title: "Malaysia Tour",
-            icon: '<i class="fas fa-ticket-alt"></i>'
-          }
-        }
+        rwd: "Coming Soon",
+        pp: 1
       },
       {
         lvl_id: 8,
         lvl: "8th Level",
-        cm: "None",
-        rwd: "Gli New Model Current Year OR 18,000 $",
-        pp: 1,
-        claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "$. 18,000/-"
-          },
-          rwd: {
-            title: "Gli New Model Current Year",
-            icon: '<i class="fas fa-car"></i>'
-          }
-        }
+        rwd: "Coming Soon",
+        pp: 1
       },
       {
         lvl_id: 9,
         lvl: "9th Level",
-        cm: "None",
-        rwd: "Toyota Fortuner 2018 OR 50,000 $",
-        pp: 1,
-        claim_rwds: {
-          can_claim: false,
-          cash: {
-            title: "$. 50,000/-"
-          },
-          rwd: {
-            title: "Toyota Fortuner 2018",
-            icon: '<i class="fas fa-shuttle-van"></i>'
-          }
-        }
+        rwd: "Coming Soon",
+        pp: 1
       }
-      // {
-      //   lvl: "10th Level",
-      //   cm: "None",
-      //   rwd: "World Tour OR 100,000 $",
-      //   pp: 1
-      // }
     ];
     let dir_inc = 0;
     for (let ind in gen_data) {
       if (ind > 0) {
-        let next_pp = gen_data[ind - 1].pp * 4;
-        gen_data[ind].pp = next_pp;
-        dir_inc++;
-        if (dir_inc === 1) {
-          gen_data[ind].cm = "1000 x " + next_pp + " = " + 1000 * next_pp;
-        } else if (dir_inc === 2) {
-          gen_data[ind].cm = "300 x " + next_pp + " = " + 300 * next_pp;
-        } else {
-          gen_data[ind].cm = "200 x " + next_pp + " = " + 200 * next_pp;
-        }
+        gen_data[ind].pp = gen_data[ind - 1].pp * 4;
       }
     }
     return {
@@ -258,15 +146,7 @@ export default {
       per_deny: false,
       loading: true,
       gen_data,
-      submited_claims: [],
-      active_item_md: null,
-      md_active: false,
-      sel_c_rwd: null,
-      md_close_btn: ["x"],
-      form: {
-        loading: false,
-        data: {}
-      }
+      submited_claims: []
     };
   },
   methods: {
@@ -282,7 +162,7 @@ export default {
       const self = this;
       self.loading = true;
       await self.$axios
-        .get("/api/reward/")
+        .get("/api/reward/self_rwds")
         .then(res => {
           if (res.data.results.length > 0) {
             let result = res.data.results;
@@ -300,35 +180,16 @@ export default {
         });
       self.loading = false;
     },
-    setItemMD(lvl_id, has_re_claim) {
-      const self = this;
-      self.re_claim_sbt =
-        typeof has_re_claim !== undefined ? has_re_claim : false;
-      let find_item = _.find(self.gen_data, { lvl_id });
-      if (find_item) {
-        let rwd_item = _.cloneDeep(find_item.claim_rwds);
-        rwd_item["lvl_id"] = lvl_id;
-        self.active_item_md = rwd_item;
-        self.md_active = true;
-      }
-    },
-    closeMDTrg() {
-      const self = this;
-      self.sel_c_rwd = null;
-      self.active_item_md = null;
-      self.md_close_btn = ["x"];
-    },
-    async claimSbt() {
+    async claimSbt(lvl_id) {
       const self = this;
       let msg = "",
         is_err = false;
-      self.form.loading = true;
-      self.md_close_btn = false;
-      let url = self.re_claim_sbt === true ? '/api/reward/re-claim' : '/api/reward/claim'
+      self.loading = true;
+      console.log("claim_lvl", lvl_id);
       await self.$axios
-        .post(url, {
-          type: self.sel_c_rwd,
-          level: self.active_item_md.lvl_id
+        .post("/api/reward/claim", {
+          is_self: 1,
+          level: lvl_id
         })
         .then(res => {
           if (res.data.status === true) {
@@ -343,15 +204,16 @@ export default {
           is_err = true;
           console.log(err);
         });
-      self.form.loading = false;
-      self.md_active = false;
+      self.loading = false;
       self.$toast.open({
         duration: 3000,
         message: msg,
         position: "is-bottom",
         type: is_err ? "is-danger" : "is-success"
       });
-      self.loadClaims();
+      if (is_err !== true) {
+        await self.loadClaims();
+      }
     }
   }
 };
@@ -454,39 +316,6 @@ export default {
         td {
           border-bottom: none;
         }
-      }
-    }
-  }
-  .md-claim {
-    .prd-cont {
-      background-color: #3d3e5a;
-      height: 100%;
-      text-align: center;
-      padding: 1rem;
-      border-radius: 5px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      &.active,
-      &:hover {
-        border: 2px solid #d9bd68;
-      }
-      .icon {
-        font-size: 3rem;
-        width: auto;
-        height: auto;
-        color: #f1f1f1;
-      }
-      .title {
-        color: #f1f1f1;
-        line-height: normal;
-        margin-top: 1.5rem;
-        margin-bottom: 0;
-        text-transform: uppercase;
-        font-weight: 300;
-      }
-      .sub-title {
-        font-size: 20px;
-        color: #d9bd68;
       }
     }
   }

@@ -16,6 +16,8 @@
         .navbar-end
           .navbar-item(v-if="$store.state.user.data.type === 0")
             topBarCompMem
+          .navbar-item(v-else-if="$store.state.user.data.type === 2")
+            topBarCompAdmin
           .navbar-item.has-dropdown.is-hoverable
             .navbar-item
               .count-unread-msg(v-if="$store.state.notification.total_unread > 0")
@@ -41,17 +43,19 @@
             .navbar-dropdown
               nuxt-link.navbar-item(to="/user/profile") PROFILE
               a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
-    notifyComp
+    mdNotify
 </template>
 
 <script>
 import _ from "lodash";
-import notifyComp from "~/components/admin_panel/notify_comp.vue";
+import mdNotify from "~/components/modals/notification.vue";
 import topBarCompMem from '~/components/admin_panel/member/top-bar-comp.vue'
+import topBarCompAdmin from '~/components/admin_panel/admin/top-bar-comp.vue'
 export default {
   components: {
-    notifyComp,
-    topBarCompMem
+    mdNotify,
+    topBarCompMem,
+    topBarCompAdmin
   },
   async mounted() {
     await this.$store.dispatch("profile/loadName");

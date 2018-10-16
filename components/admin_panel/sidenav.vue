@@ -225,9 +225,25 @@ export default {
           name: "system-level",
           active: false,
           img: "system-level",
-          url: "/system-level",
+          url: false,
           title: "System Level",
-          show: [0]
+          show: [0],
+          children: [
+            {
+              name: "auto-rewards",
+              active: false,
+              url: "/system-level/auto-rewards",
+              title: "Auto Rewards",
+              show: [0]
+            },
+            {
+              name: "self-rewards",
+              active: false,
+              url: "/system-level/self-rewards",
+              title: "Self Rewards",
+              show: [0]
+            },
+          ]
         },
         {
           name: "product",

@@ -63,7 +63,9 @@ export const mutations = {
 }
 
 export const actions = {
-  async load_tbar_list({ commit }) {
+  async load_tbar_list({
+    commit
+  }) {
     await this.$axios
       .get("/api/notification/top_5")
       .then(res => {
@@ -79,14 +81,23 @@ export const actions = {
       });
   },
 
-  async n_list_load({ commit, dispatch, state }) {
+  async n_list_load({
+    commit,
+    dispatch,
+    state
+  }) {
     await this.$axios
-      .get("/api/notification", { params: state.load_params })
+      .get("/api/notification", {
+        params: state.load_params
+      })
       .then(async res => {
         if (!res.data.status) {
           if (res.data.result.length === 0 && res.data.total_rows > 0 && state.load_params.page > 1) {
             commit('set_list_loader', true)
-            commit('set_load_params', { param: 'page', value: state.load_params.page - 1 })
+            commit('set_load_params', {
+              param: 'page',
+              value: state.load_params.page - 1
+            })
             await dispatch('n_list_load')
             commit('set_list_loader', false)
           } else {
@@ -104,11 +115,18 @@ export const actions = {
       });
   },
 
-  async set_params({ commit, state, dispatch }, pld) {
+  async set_params({
+    commit,
+    state,
+    dispatch
+  }, pld) {
     let param_val = _.get(state.load_params, pld.param, null)
     if (param_val !== null && param_val !== pld.value) {
       if (pld.param !== 'page') {
-        commit('set_load_params', { param: 'page', value: 1 })
+        commit('set_load_params', {
+          param: 'page',
+          value: 1
+        })
       }
       commit('set_load_params', pld)
       commit('set_list_loader', true)
@@ -120,11 +138,20 @@ export const actions = {
     }
   },
 
-  async readToggle({ commit, state, dispatch }, hit_id) {
+  async readToggle({
+    commit,
+    state,
+    dispatch
+  }, hit_id) {
     commit('set_list_loader', true)
-    let n_item = _.find(state.n_list, { id: hit_id })
+    let n_item = _.find(state.n_list, {
+      id: hit_id
+    })
     await this.$axios
-      .post('/api/notification/read_it', { id: hit_id, sts: (n_item.read === 1) ? 0 : 1 })
+      .post('/api/notification/read_it', {
+        id: hit_id,
+        sts: (n_item.read === 1) ? 0 : 1
+      })
       .then(async res => {
         if (res.data.status === false) {
           console.log(res.data)
@@ -139,10 +166,16 @@ export const actions = {
     commit('set_list_loader', false)
   },
 
-  async multipleRd({ commit, dispatch }, param) {
+  async multipleRd({
+    commit,
+    dispatch
+  }, param) {
     commit('set_list_loader', true)
     await this.$axios
-      .post('/api/notification/multi_rd', { id: param.ids, read_sts: param.sts })
+      .post('/api/notification/multi_rd', {
+        id: param.ids,
+        read_sts: param.sts
+      })
       .then(async res => {
         if (res.data.status === false) {
           console.log(res.data)
@@ -157,10 +190,15 @@ export const actions = {
     commit('set_list_loader', false)
   },
 
-  async remove({ commit, dispatch }, id) {
+  async remove({
+    commit,
+    dispatch
+  }, id) {
     commit('set_list_loader', true)
     await this.$axios
-      .post('/api/notification/user_remove', { id })
+      .post('/api/notification/user_remove', {
+        id
+      })
       .then(async res => {
         if (res.data.status === false) {
           console.log(res.data)
@@ -175,11 +213,19 @@ export const actions = {
     commit('set_list_loader', false)
   },
 
-  async show_notif({ commit, state, dispatch }, open_id) {
+  async show_notif({
+    commit,
+    state,
+    dispatch
+  }, open_id) {
     let n_pg = true
-    let n_item = _.cloneDeep((_.find(state.n_list, { id: open_id })))
+    let n_item = _.cloneDeep((_.find(state.n_list, {
+      id: open_id
+    })))
     if (typeof n_item === 'undefined') {
-      n_item = _.cloneDeep((_.find(state.tbar_list, { id: open_id })))
+      n_item = _.cloneDeep((_.find(state.tbar_list, {
+        id: open_id
+      })))
       n_pg = false
     }
     commit('set_active_item', n_item)
@@ -188,7 +234,9 @@ export const actions = {
     commit('set_loader', true)
     if (n_item.read === 0) {
       await this.$axios
-        .post('/api/notification/read_it', { id: n_item.id })
+        .post('/api/notification/read_it', {
+          id: n_item.id
+        })
         .then(async res => {
           if (res.data.status === false) {
             console.log(res.data)
@@ -205,7 +253,7 @@ export const actions = {
           console.log(err)
         })
     }
-    if (n_item.type === 1) {
+    if (n_item.type === 1) { // new member request to active
       await this.$axios
         .get('/api/notification/member_info/' + n_item.from_id)
         .then(res => {
@@ -218,7 +266,7 @@ export const actions = {
         .catch(err => {
           console.log(err)
         })
-    } else if (n_item.type === 2) {
+    } else if (n_item.type === 2) { // withdrawal request from member
       let split_val = (n_item.msg).split('Transaction ID ')
       let trans_id = split_val.length > 1 ? parseInt(split_val[1]) : null
       if (trans_id) {
@@ -236,25 +284,19 @@ export const actions = {
             console.log(err)
           })
       }
-    } else if (n_item.type === 3) {
-      let split_val = (n_item.msg).split('Reward Level -> ')
-      let lvl = split_val.length > 1 ? parseInt(split_val[1]) : null
-      if (lvl) {
-        await this.$axios
-          .get('/api/notification/claim_info/' + n_item.from_id + "/" + lvl)
-          .then(res => {
-            if (!res.data.status) {
-              n_item['data'] = res.data.data
-              n_item['data']['lvl'] = lvl
-              n_item['data']['mem_id'] = n_item.from_id
-            } else {
-              console.log(res.data)
-            }
-          })
-          .catch(err => {
-            console.log(err)
-          })
-      }
+    } else if (n_item.type === 3) { // self/auto reward level request from member
+      await this.$axios
+        .get('/api/notification/claim_info/' + n_item.ref_id)
+        .then(res => {
+          if (!res.data.status) {
+            n_item['data'] = res.data.data
+          } else {
+            console.log(res.data)
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        })
     }
 
     commit('set_loader', false)
