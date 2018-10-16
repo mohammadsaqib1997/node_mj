@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const moment = require('moment')
 
 const db = require('../db.js')
 
@@ -399,6 +400,8 @@ router.post("/sts_change", function (req, res) {
                                         if (req.body.sts === 2) {
                                             notify_msg += " Reason is: " + req.body.reason
                                             params['cancel_reason'] = req.body.reason
+                                        } else {
+                                            params['approved_at'] = moment().format('YYYY-MM-DD HH-mm-ss')
                                         }
 
                                         connection.query(
