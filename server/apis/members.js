@@ -309,7 +309,7 @@ router.get('/get_direct_ref_c', function (req, res) {
           error: err
         })
       } else {
-        connection.query("SELECT direct_ref_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+        connection.query("SELECT (SUM(direct_ref_count)+SUM(in_direct_ref_count)) as ref_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
           connection.release()
           if (error) {
             res.status(500).json({
@@ -318,7 +318,7 @@ router.get('/get_direct_ref_c', function (req, res) {
           } else {
             if (results.length > 0) {
               res.json({
-                ref_count: results[0].direct_ref_count
+                ref_count: results[0].ref_count
               })
             } else {
               res.json({

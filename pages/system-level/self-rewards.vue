@@ -185,7 +185,6 @@ export default {
       let msg = "",
         is_err = false;
       self.loading = true;
-      console.log("claim_lvl", lvl_id);
       await self.$axios
         .post("/api/reward/claim", {
           is_self: 1,
