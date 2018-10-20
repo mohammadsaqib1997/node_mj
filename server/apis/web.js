@@ -6,7 +6,10 @@ const db = require('../db.js')
 const secret = require("./../config").secret
 const jwt = require('jsonwebtoken')
 const _ = require('lodash');
+const moment = require('moment');
 const fs = require('fs');
+const gm = require('gm')
+// const trans_email = require('../e-conf.js')
 
 router.get("/pk", function (req, res) {
   let data = JSON.parse(fs.readFileSync(__dirname + '/../files/pk.json', 'utf8'))
@@ -67,6 +70,87 @@ router.use((req, res, next) => {
       message: 'No token provided.'
     });
   }
+})
+
+router.get('/get_winners', function (req, res) {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let throw_error = null,
+        data = {
+          auto_rewards: [],
+          self_rewards: []
+        },
+        date = moment(),
+        startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
+        endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+
+      await new Promise(resolve => {
+        connection.query(
+          `SELECT clm.reward_selected, clm.level, m.full_name, u_img.file_name
+          FROM claim_rewards as clm
+          JOIN members as m
+          ON clm.member_id=m.id
+          LEFT JOIN u_images as u_img
+          ON m.id=u_img.user_id AND u_img.user_type=0
+          WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+          LIMIT 3
+          `,
+          function (error, results, fields) {
+            if (error) {
+              throw_error = error
+            } else {
+              data['auto_rewards'] = results
+            }
+            return resolve()
+          })
+      })
+
+      if (throw_error !== null) {
+        connection.release();
+        return res.status(500).json({
+          err: throw_error
+        })
+      }
+
+      await new Promise(resolve => {
+        connection.query(
+          `SELECT clm.reward_selected, clm.level, m.full_name, u_img.file_name
+          FROM claim_rewards as clm
+          JOIN members as m
+          ON clm.member_id=m.id
+          LEFT JOIN u_images as u_img
+          ON m.id=u_img.user_id AND u_img.user_type=0
+          WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+          LIMIT 3
+          `,
+          function (error, results, fields) {
+            if (error) {
+              throw_error = error
+            } else {
+              data['self_rewards'] = results
+            }
+            return resolve()
+          })
+      })
+
+      if (throw_error !== null) {
+        connection.release();
+        res.status(500).json({
+          err: throw_error
+        })
+      } else {
+        connection.release();
+        res.json({
+          data
+        })
+      }
+
+    }
+  })
 })
 
 router.get('/list_partner', (req, res) => {
@@ -146,6 +230,38 @@ router.get('/partner/logo/:file_name', function (req, res) {
       not_found = false
       let file = fs.readFileSync(__dirname + "/../uploads/partners_logo/" + req.params.file_name)
       return res.send(file)
+    } else {
+      res.status(404).json({
+        message: 'Not found!'
+      })
+    }
+  } else {
+    res.status(404).json({
+      message: 'Not found!'
+    })
+  }
+});
+
+router.get('/user/img/:file_name', function (req, res) {
+  if (req.params.file_name !== '') {
+    if (fs.existsSync(__dirname + "/../uploads/profile/" + req.params.file_name)) {
+      gm(__dirname + '/../uploads/profile/' + req.params.file_name)
+        .gravity('Center')
+        .background('transparent')
+        .resize(180, 180)
+        .extent(180, 180)
+        .stream('jpg', function (err, stdout, stderr) {
+          if (err) return res.status(404).json({
+            message: "Not Found!"
+          })
+          stdout.pipe(res)
+
+          stdout.on('error', function (err) {
+            return res.status(404).json({
+              message: "Not Found!"
+            })
+          });
+        })
     } else {
       res.status(404).json({
         message: 'Not found!'

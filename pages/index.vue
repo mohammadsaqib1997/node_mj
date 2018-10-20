@@ -37,7 +37,7 @@
                 | MJ Supreme would be providing you with a year of complete health care...
               nuxt-link.button(to="/products") View More
     upcoming-prod-section
-    //- winnerSec
+    winnerSec
     .section.sct-5
       .container
         .columns
