@@ -94,6 +94,13 @@ export default {
               show: [1, 2]
             },
             {
+              name: "expenses",
+              active: false,
+              url: "/fund-manager/expenses",
+              title: "Expenses",
+              show: [1, 2]
+            },
+            {
               name: "finance-details",
               active: false,
               url: "/fund-manager/finance-details",

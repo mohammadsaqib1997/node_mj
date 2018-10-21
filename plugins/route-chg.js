@@ -11,6 +11,7 @@ const authRoutes = [
     { name: "fund-manager-commission-unpaid", type_allowed: [1, 2] },
     { name: "fund-manager-finance-details", type_allowed: [0, 1, 2] },
     { name: "fund-manager-invoices", type_allowed: [0] },
+    { name: "fund-manager-expenses", type_allowed: [1, 2] },
     { name: "members-area-total-members", type_allowed: [1, 2] },
     { name: "members-area-add-new-member", type_allowed: [0, 1, 2] },
     { name: "members-area-members-profile", type_allowed: [1, 2] },

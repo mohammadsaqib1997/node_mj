@@ -55,5 +55,9 @@
             "1": "Approved",
             "2": "Cancelled"
         }
+    },
+    "transactions_comp": {
+        "0": "normal finance entry",
+        "1": "expenses finance entry"
     }
 }
