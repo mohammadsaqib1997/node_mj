@@ -23,7 +23,9 @@
                         .column.name
                           span {{ row.full_name }}
                       .score-cont
-                        span RWD: {{ getLvlRwd(0, row.level, 'rwds.['+row.reward_selected+']') }}
+                        span RWD: {{ getLvlRwd(0, row.rwd_level, 'rwds.['+row.reward_selected+']') }}
+                        br
+                        span.rwd-lvl RWD LVL: {{ getLvlRwd(0, row.rwd_level, 'lvl') }}
               .sld-indic(v-if="auto_rds.length > 1")
                 .arr.left(@click.prevent="prev_slide('auto_rds', 'act_sld_auto')")
                 .arr.right(@click.prevent="next_slide('auto_rds', 'act_sld_auto')")
@@ -51,7 +53,9 @@
                         .column.name
                           span {{ row.full_name }}
                       .score-cont
-                        span RWD: {{ getLvlRwd(1, row.level, 'rwds.['+row.reward_selected+']') }}
+                        span RWD: {{ getLvlRwd(1, row.rwd_level, 'rwds.['+row.reward_selected+']') }}
+                        br
+                        span.rwd-lvl RWD LVL: {{ getLvlRwd(1, row.rwd_level, 'lvl') }}
               .sld-indic(v-if="self_rds.length > 1")
                 .arr.left(@click.prevent="prev_slide('self_rds', 'act_sld_self')")
                 .arr.right(@click.prevent="next_slide('self_rds', 'act_sld_self')")
@@ -237,6 +241,9 @@ export default {
         position: relative;
         .sld-indic {
           text-align: center;
+          @media screen and (max-width: 1087px) {
+            margin-top: 2rem;
+          }
           .arr {
             width: 30px;
             height: 30px;
@@ -367,6 +374,10 @@ export default {
           color: #fff;
           text-align: right;
           margin-right: 15px;
+
+          .rwd-lvl {
+            font-size: 18px;
+          }
 
           // @media screen and (min-width: 1088px) and (max-width: 1279px) {
           //   font-size: 35px;

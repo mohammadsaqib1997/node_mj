@@ -90,14 +90,17 @@ router.get('/get_winners', function (req, res) {
 
       await new Promise(resolve => {
         connection.query(
-          `SELECT clm.reward_selected, clm.level, m.full_name, u_img.file_name
+          `SELECT clm.reward_selected, clm.level as rwd_level, m.full_name, u_img.file_name, i_var.level
           FROM claim_rewards as clm
           JOIN members as m
           ON clm.member_id=m.id
+          JOIN info_var_m as i_var
+          ON m.id=i_var.member_id
           LEFT JOIN u_images as u_img
           ON m.id=u_img.user_id AND u_img.user_type=0
           WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
-          LIMIT 3
+          ORDER BY clm.approved_at
+          LIMIT 4
           `,
           function (error, results, fields) {
             if (error) {
@@ -118,14 +121,17 @@ router.get('/get_winners', function (req, res) {
 
       await new Promise(resolve => {
         connection.query(
-          `SELECT clm.reward_selected, clm.level, m.full_name, u_img.file_name
+          `SELECT clm.reward_selected, clm.level as rwd_level, m.full_name, u_img.file_name, i_var.level
           FROM claim_rewards as clm
           JOIN members as m
           ON clm.member_id=m.id
+          JOIN info_var_m as i_var
+          ON m.id=i_var.member_id
           LEFT JOIN u_images as u_img
           ON m.id=u_img.user_id AND u_img.user_type=0
           WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
-          LIMIT 3
+          ORDER BY clm.approved_at
+          LIMIT 4
           `,
           function (error, results, fields) {
             if (error) {
