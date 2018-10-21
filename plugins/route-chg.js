@@ -43,7 +43,8 @@ const visible = [
     'career',
     'admin-login',
     'downloads',
-    'partners-and-associates'
+    'partners-and-associates',
+    'winners-of-the-month'
 ]
 
 export default ({ app, error }) => {

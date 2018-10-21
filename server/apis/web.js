@@ -72,6 +72,150 @@ router.use((req, res, next) => {
   }
 })
 
+router.get('/get_list_winners_auto', function (req, res) {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 15,
+        date = moment(),
+        startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
+        endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      let throw_error = null
+      let tot_rows = 0
+
+      await new Promise(resolve => {
+        connection.query(
+          `SELECT COUNT(*) as tot_rows
+          FROM claim_rewards as clm
+          WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+          `,
+          function (error, result) {
+            if (error) {
+              throw_error = error
+            } else {
+              tot_rows = result[0].tot_rows
+            }
+            resolve()
+          })
+      })
+
+      if(throw_error !== null) {
+        connection.release()
+        return res.status(500).json({ error: throw_error })
+      }
+
+      connection.query(
+        `SELECT clm.reward_selected, clm.level as rwd_level, m.full_name, u_img.file_name, i_var.level
+        FROM claim_rewards as clm
+        JOIN members as m
+        ON clm.member_id=m.id
+        JOIN info_var_m as i_var
+        ON m.id=i_var.member_id
+        LEFT JOIN u_images as u_img
+        ON m.id=u_img.user_id AND u_img.user_type=0
+        WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+        ORDER BY clm.approved_at
+        LIMIT ${limit}
+        OFFSET ${offset}
+        `,
+        function (error, result) {
+          connection.release()
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            res.json({
+              result,
+              tot_rows
+            })
+          }
+        })
+    }
+  })
+})
+
+router.get('/get_list_winners_self', function (req, res) {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 15,
+        date = moment(),
+        startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
+        endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      let throw_error = null
+      let tot_rows = 0
+
+      await new Promise(resolve => {
+        connection.query(
+          `SELECT COUNT(*) as tot_rows
+          FROM claim_rewards as clm
+          WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+          `,
+          function (error, result) {
+            if (error) {
+              throw_error = error
+            } else {
+              tot_rows = result[0].tot_rows
+            }
+            resolve()
+          })
+      })
+
+      if(throw_error !== null) {
+        connection.release()
+        return res.status(500).json({ error: throw_error })
+      }
+
+      connection.query(
+        `SELECT clm.reward_selected, clm.level as rwd_level, m.full_name, u_img.file_name, i_var.level
+        FROM claim_rewards as clm
+        JOIN members as m
+        ON clm.member_id=m.id
+        JOIN info_var_m as i_var
+        ON m.id=i_var.member_id
+        LEFT JOIN u_images as u_img
+        ON m.id=u_img.user_id AND u_img.user_type=0
+        WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+        ORDER BY clm.approved_at
+        LIMIT ${limit}
+        OFFSET ${offset}
+        `,
+        function (error, result) {
+          connection.release()
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            res.json({
+              result,
+              tot_rows
+            })
+          }
+        })
+    }
+  })
+})
+
 router.get('/get_winners', function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
@@ -256,6 +400,38 @@ router.get('/user/img/:file_name', function (req, res) {
         .background('transparent')
         .resize(180, 180)
         .extent(180, 180)
+        .stream('jpg', function (err, stdout, stderr) {
+          if (err) return res.status(404).json({
+            message: "Not Found!"
+          })
+          stdout.pipe(res)
+
+          stdout.on('error', function (err) {
+            return res.status(404).json({
+              message: "Not Found!"
+            })
+          });
+        })
+    } else {
+      res.status(404).json({
+        message: 'Not found!'
+      })
+    }
+  } else {
+    res.status(404).json({
+      message: 'Not found!'
+    })
+  }
+});
+
+router.get('/user/thumb/:file_name', function (req, res) {
+  if (req.params.file_name !== '') {
+    if (fs.existsSync(__dirname + "/../uploads/profile/" + req.params.file_name)) {
+      gm(__dirname + '/../uploads/profile/' + req.params.file_name)
+        .gravity('Center')
+        .background('transparent')
+        .resize(50, 50)
+        .extent(50, 50)
         .stream('jpg', function (err, stdout, stderr) {
           if (err) return res.status(404).json({
             message: "Not Found!"
