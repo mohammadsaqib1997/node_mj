@@ -145,7 +145,7 @@ export default {
         {
           thmb: "https://img.youtube.com/vi/vYPXaJieZCM/maxresdefault.jpg",
           src: "https://www.youtube.com/embed/vYPXaJieZCM?rel=0&amp;showinfo=0",
-          title: "MR SHAMS MANAGING DIRECTOR"
+          title: "MR SHAMS SENIOR MEMBER"
         }
       ],
       prs_act_slide: 0,

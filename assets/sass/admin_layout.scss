@@ -5,7 +5,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
     background-color: #f6f6f6;
 
     & /deep/ {
-        .whatsapp_link{
+        .whatsapp_link {
             background-color: #00e676;
             z-index: 999;
             position: fixed;
@@ -42,7 +42,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
         .main-box {
             padding: 0;
 
-            & > .header {
+            &>.header {
                 padding: 1rem 2rem 1rem 2.5rem;
                 border-bottom: 3px solid #dcdcdc;
                 position: relative;
@@ -167,7 +167,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                             margin-bottom: 0.5rem;
                         }
 
-                        h2, label {
+                        h2,
+                        label {
                             line-height: 2rem;
                         }
 
@@ -233,7 +234,9 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 }
             }
 
-            .pagination-previous:focus, .pagination-next:focus, .pagination-link:focus {
+            .pagination-previous:focus,
+            .pagination-next:focus,
+            .pagination-link:focus {
                 border-color: $primary;
             }
 
@@ -259,7 +262,9 @@ $primary-light: rgba(217, 189, 104, 0.25);
 
             .select {
                 select {
-                    &:focus, &:active {
+
+                    &:focus,
+                    &:active {
                         border-color: $primary;
                         box-shadow: 0 0 0 0.125em $primary-light;
                     }
@@ -270,7 +275,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 .input {
                     border-radius: 0;
 
-                    &:focus, &:active {
+                    &:focus,
+                    &:active {
                         border-color: $primary;
                     }
                 }
@@ -281,10 +287,10 @@ $primary-light: rgba(217, 189, 104, 0.25);
             align-items: center;
             margin-bottom: 2rem !important;
 
-            & > .field {
+            &>.field {
                 margin-bottom: 0;
 
-                &.rm-cont > .button{
+                &.rm-cont>.button {
                     padding: 4px 10px;
                     border-radius: 0;
                     text-transform: uppercase;
@@ -312,17 +318,18 @@ $primary-light: rgba(217, 189, 104, 0.25);
                             color: $primary;
                         }
 
-                        & > .select {
+                        &>.select {
                             &:after {
                                 border-color: #afafaf;
                                 top: 22px;
                             }
 
-                            & > select {
+                            &>select {
                                 border-color: #eeeeee;
                                 height: 2.8rem;
 
-                                &:focus, &:active {
+                                &:focus,
+                                &:active {
                                     -webkit-box-shadow: none;
                                     -moz-box-shadow: none;
                                     box-shadow: none;
@@ -342,7 +349,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
                     }
                 }
 
-                &.grp_btns{
+                &.grp_btns {
                     .dropdown {
                         .dropdown-menu {
                             left: auto;
@@ -377,7 +384,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                         font-weight: 500;
                         font-size: 14px;
 
-                        &:focus, &:active {
+                        &:focus,
+                        &:active {
                             -webkit-box-shadow: 0 0 0 0.12em $primary !important;
                             -moz-box-shadow: 0 0 0 0.12em $primary !important;
                             box-shadow: 0 0 0 0.12em $primary !important;
@@ -385,7 +393,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
                         }
                     }
                 }
-                
+
                 &.total-count {
                     flex-grow: 1;
 
@@ -405,12 +413,12 @@ $primary-light: rgba(217, 189, 104, 0.25);
             @media screen and (max-width: 768px) {
                 display: block !important;
 
-                & > .field {
+                &>.field {
                     margin-bottom: 1rem;
                     margin-left: 0 !important;
                     justify-content: center;
 
-                    & > .control {
+                    &>.control {
                         text-align: center;
                     }
 
@@ -427,8 +435,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 padding: 0;
                 text-align: center;
 
-                & > .columns {
-                    & > .column {
+                &>.columns {
+                    &>.column {
                         padding-top: 2rem !important;
                         padding-bottom: 2rem !important;
                         border-right: 2px solid #7c7d9e;
@@ -442,7 +450,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                                 border-right: none;
                             }
 
-                            &:nth-child(1), &:nth-child(2) {
+                            &:nth-child(1),
+                            &:nth-child(2) {
                                 border-bottom: 2px solid #7c7d9e;
                             }
                         }
@@ -457,7 +466,9 @@ $primary-light: rgba(217, 189, 104, 0.25);
                         }
 
                         @media screen and (min-width: 769px) and (max-width: 1023px) {
-                            &:nth-child(1), &:nth-child(3) {
+
+                            &:nth-child(1),
+                            &:nth-child(3) {
                                 border-right: 2px solid #7c7d9e;
                             }
 
@@ -465,12 +476,13 @@ $primary-light: rgba(217, 189, 104, 0.25);
                                 border-bottom: none;
                             }
 
-                            &:nth-child(1), &:nth-child(2) {
+                            &:nth-child(1),
+                            &:nth-child(2) {
                                 border-bottom: 2px solid #7c7d9e;
                             }
                         }
 
-                        & > h1 {
+                        &>h1 {
                             color: $primary;
                             margin-bottom: 0;
                             font-size: 4.5rem;
@@ -478,7 +490,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
                             line-height: 4.5rem;
                         }
 
-                        & > h5 {
+                        &>h5 {
                             color: #ffffff;
                             text-transform: uppercase;
                             font-size: 0.9rem;
@@ -511,7 +523,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
         }
 
         .table-des-1 {
-            & > table {
+            &>table {
                 color: #666666;
 
                 thead {
@@ -542,13 +554,14 @@ $primary-light: rgba(217, 189, 104, 0.25);
                                 border-radius: 0;
                                 background-color: transparent;
 
-                                &:focus, &:hover {
+                                &:focus,
+                                &:hover {
                                     -webkit-box-shadow: 0 0 0 0.12em inset #bbbbbb !important;
                                     -moz-box-shadow: 0 0 0 0.12em inset #bbbbbb !important;
                                     box-shadow: 0 0 0 0.12em inset #bbbbbb !important;
                                 }
 
-                                & > .icon {
+                                &>.icon {
                                     color: $primary;
                                 }
                             }
@@ -578,11 +591,11 @@ $primary-light: rgba(217, 189, 104, 0.25);
                                     box-shadow: 0 0 0 0.12em inset #bbbbbb !important;
                                 }
 
-                                & > .icon {
+                                &>.icon {
                                     color: $primary;
                                 }
 
-                                & > .del {
+                                &>.del {
                                     position: absolute;
                                     right: 8px;
                                     color: #ff3860;
@@ -709,7 +722,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 top: 18px;
             }
 
-            input.input, .cus-des-1 .select > select {
+            input.input,
+            .cus-des-1 .select>select {
                 background-color: #f5f6f7;
                 -webkit-box-shadow: none;
                 -moz-box-shadow: none;
@@ -723,7 +737,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 height: 3.2rem;
                 padding: 0 1rem;
 
-                &:focus, &:active {
+                &:focus,
+                &:active {
                     border-color: transparent;
                     -webkit-box-shadow: 0 0 2px 0 $primary;
                     -moz-box-shadow: 0 0 2px 0 $primary;
@@ -734,7 +749,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 &.is-danger {
                     border: 1px solid #ff3860 !important;
 
-                    &:focus, &:active {
+                    &:focus,
+                    &:active {
                         -webkit-box-shadow: 0 0 2px 0 #ff3860;
                         -moz-box-shadow: 0 0 2px 0 #ff3860;
                         box-shadow: 0 0 2px 0 #ff3860;
@@ -759,7 +775,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
             .b-radio.radio {
                 font-size: inherit;
 
-                input[type=radio] + .check {
+                input[type=radio]+.check {
                     border-color: $primary;
 
                     &:before {
@@ -767,14 +783,15 @@ $primary-light: rgba(217, 189, 104, 0.25);
                     }
 
                     &:hover {
-                        input[type=radio] + .check {
+                        input[type=radio]+.check {
                             border-color: $primary;
                         }
                     }
                 }
             }
 
-            .error, .success {
+            .error,
+            .success {
                 font-size: 22px;
                 text-align: center;
                 margin-bottom: 2rem;

@@ -1,5 +1,5 @@
 <template lang="pug">
-  .wrapper
+  .admin-dashboard
     countSts
     .box.main-box
       .header.columns.is-gapless

@@ -47,20 +47,26 @@ export const actions = {
   //    console.log(res.locals)
   //    commit('csrfTokenSet', res.locals.csrftoken)
   // },
-  async initAuthCheck({ commit }) {
+  async initAuthCheck({
+    commit,
+    dispatch
+  }) {
     return new Promise(async resolve => {
       if (localStorage.getItem("user") !== "") {
         try {
           if (JSON.parse(localStorage.getItem('user')).hasOwnProperty("token")) {
             await setTimeout(async () => {
               await this.$axios.post(
-                "/api/web/tokenLogin",
-                {
+                "/api/web/tokenLogin", {
                   token: JSON.parse(localStorage.getItem('user')).token
                 }
               ).then(res => {
                 if (res.data.status) {
-                  commit("setUser", { token: res.data.token, data: res.data.user });
+                  commit("setUser", {
+                    token: res.data.token,
+                    data: res.data.user
+                  });
+                  dispatch("checkUserEmail");
                 } else {
                   localStorage.removeItem("user")
                   commit('setUser', null)
@@ -84,16 +90,47 @@ export const actions = {
     })
   },
 
-  login({ commit }, payload) {
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ token: payload.token })
-    );
-    commit('setUser', payload)
+  checkUserEmail({
+    state,
+    commit
+  }) {
+    const userData = state.user.data
+    if (userData.type === 0) {
+      if (userData.email === null) {
+        commit('showMsgs/setMsgData', {
+          title: "Add Your Email!",
+          message: "Please add your e-mail to verify your account and more secure."
+        })
+        commit('showMsgs/setMsgAct', true)
+      } else {
+        // this.$axios.get("/api/startup/email-info").then(res => {
+        //   console.log(res.data)
+        // }).catch(err => {
+        //   console.log(err)
+        // })
+      }
+    }
   },
 
-  logout({ commit }) {
+  login({
+    commit,
+    dispatch
+  }, payload) {
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        token: payload.token
+      })
+    );
+    commit('setUser', payload)
+    dispatch("checkUserEmail");
+  },
+
+  logout({
+    commit
+  }) {
     localStorage.removeItem("user")
+    commit('initAuthSet', false)
     commit('setUser', null)
     commit('hasTermsLoadedSet', false)
   }

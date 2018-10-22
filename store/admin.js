@@ -1,5 +1,3 @@
-import { Toast } from 'buefy'
-
 export const state = () => ({
   wallet: 0,
   loading: false

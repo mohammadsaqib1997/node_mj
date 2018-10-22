@@ -40,7 +40,9 @@ export default {
     tblTopFilter
   },
   async mounted() {
+    this.$store.commit('notification/set_list_loader', true)
     await this.$store.dispatch("notification/n_list_load");
+    this.$store.commit('notification/set_list_loader', false)
   },
   destroyed() {
     this.$store.commit("notification/set_n_list", []);
