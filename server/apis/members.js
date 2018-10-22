@@ -109,7 +109,7 @@ router.get("/", function (req, res) {
 })
 
 router.get('/member_info/:id', function (req, res, next) {
-  if (req.decoded.data.type !== 0) {
+  if (req.decoded.data.type > 0) {
     if (/^[0-9]*$/.test(req.params.id)) {
       db.getConnection(function (err, connection) {
         if (err) {
@@ -137,6 +137,8 @@ router.get('/member_info/:id', function (req, res, next) {
               u_var.package_act_date,
               u_var.level,
               u_var.wallet,
+              u_var.direct_ref_count as direct_ref,
+              u_var.in_direct_ref_count as indirect_ref,
               u_bank.bank_name,
               u_bank.branch_code,
               u_bank.account_number,
@@ -1080,17 +1082,6 @@ router.post('/pay_user', function (req, res) {
 })
 
 module.exports = router
-
-function typeGet(mimetype) {
-  let type = ""
-  if (mimetype === "image/png") {
-    type = ".png"
-  }
-  if (mimetype === "image/jpeg") {
-    type = ".jpg"
-  }
-  return type
-}
 
 async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
   let throw_error = null

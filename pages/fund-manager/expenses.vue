@@ -9,7 +9,8 @@
           <form class="form" @submit.prevent="addExpanse">
             <h3>Add Expenses</h3>
             <b-field grouped>
-              <b-field :type="(validation.hasError('f_data.remarks')) ? 'is-danger':''" :message="validation.firstError('f_data.remarks')" expanded>
+              <b-field :type="(validation.hasError('f_data.remarks')) ? 'is-danger':''" :message="validation.firstError('f_data.remarks')"
+                expanded>
                 <b-input placeholder="Expense Remarks" v-model="f_data.remarks"></b-input>
               </b-field>
               <b-field :type="(validation.hasError('f_data.debit')) ? 'is-danger':''" :message="validation.firstError('f_data.debit')">
@@ -27,8 +28,16 @@
           </form>
           <hr>
 
-          <tblTopFilter :act_view="String(load_params.limit)" :s_txt="load_params.search" @change_act_view="update_params('limit', parseInt($event))" @change_s_txt="update_params('search', $event)"></tblTopFilter>
-          <tableComp :arr="l_data" :loading="loading" :striped="true" :total_record="num_rows" :per_page="parseInt(load_params.limit)" :page_set="load_params.page" @page_change="update_params('page', $event)">
+          <tblTopFilter :act_view="String(load_params.limit)" :s_txt="load_params.search" @change_act_view="update_params('limit', parseInt($event))"
+            @change_s_txt="update_params('search', $event)"></tblTopFilter>
+          <b-field class="total-count">
+            <p class="control has-text-right">
+              <span>Total Expanses:</span>
+              <span class="count">{{ tot_balance }}/-</span>
+            </p>
+          </b-field>
+          <tableComp :arr="l_data" :loading="loading" :striped="true" :total_record="num_rows" :per_page="parseInt(load_params.limit)"
+            :page_set="load_params.page" @page_change="update_params('page', $event)">
             <template slot="thead">
               <tr>
                 <th>ID</th>
@@ -77,6 +86,7 @@ export default {
   },
   data() {
     return {
+      tot_balance: "",
       f_data: {
         remarks: "",
         debit: "",
@@ -120,6 +130,7 @@ export default {
         .then(res => {
           self.l_data = res.data.data;
           self.num_rows = res.data.tot_rows;
+          self.tot_balance = res.data.tot_balance;
         })
         .catch(err => {
           console.log(err);
@@ -139,7 +150,7 @@ export default {
             })
             .then(async res => {
               self.reset();
-              await self.loadData()
+              await self.loadData();
               self.loading = false;
               self.$toast.open({
                 duration: 3000,
@@ -178,9 +189,22 @@ export default {
 <style lang="scss" scoped>
 .wrapper {
   /deep/ {
-    hr {
+    .section > hr {
       background-color: #d9bd68;
     }
+
+    .total-count {
+      > p {
+        font-size: 16px;
+        font-weight: 500;
+        color: #959595;
+        > .count {
+          margin-left: 5px;
+          color: #666666;
+        }
+      }
+    }
+
     .form {
       > h3 {
         font-size: 20px;

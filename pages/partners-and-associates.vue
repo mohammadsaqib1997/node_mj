@@ -4,7 +4,7 @@
       <div class="container">
         <h1 class="title-1 main-title">Supreme Partners And Associates</h1>
         <b-field class="search-cont">
-          <b-input type='text' @input="update_params('search', $event)" placeholder="Search By(City, Email, Name)"></b-input>
+          <b-input type='text' @input="update_params('search', $event)" placeholder="Search By(City, Vender Name, Discount)"></b-input>
         </b-field>
         <div v-if="l_data.length > 0" class="columns is-multiline">
           <div class="column is-3" v-for="(row, ind) in l_data" :key="ind+row.email">

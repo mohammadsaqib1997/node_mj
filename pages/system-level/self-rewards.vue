@@ -40,10 +40,10 @@ export default {
           let c_tot = parseInt(res.data.ref_count);
           for (let ind in self.gen_data) {
             let g_data = self.gen_data[ind];
-            if (g_data.pp >= c_tot) {
+            if (g_data.act_p >= c_tot) {
               self.gen_data[ind]["active"] = true;
               let pend_per = Math.round(
-                ((g_data.pp - c_tot) / g_data.pp) * 100
+                ((g_data.act_p - c_tot) / g_data.act_p) * 100
               );
               self.gen_data[ind]["comp_prg"] = 100 - pend_per;
               break;
@@ -71,25 +71,29 @@ export default {
         lvl_id: 0,
         lvl: "You",
         rwd: "None",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 1,
         lvl: "1st Level",
         rwd: "None",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 2,
         lvl: "2nd Level",
         rwd: "None",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 3,
         lvl: "3rd Level",
         rwd: "CD 70",
         pp: 1,
+        act_p: 1,
         claim_rwds: {
           can_claim: false
         }
@@ -99,6 +103,7 @@ export default {
         lvl: "4th Level",
         rwd: "120 SQYD PLOT",
         pp: 1,
+        act_p: 1,
         claim_rwds: {
           can_claim: false
         }
@@ -107,37 +112,43 @@ export default {
         lvl_id: 5,
         lvl: "5th Level",
         rwd: "Coming Soon",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 6,
         lvl: "6th Level",
         rwd: "Coming Soon",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 7,
         lvl: "7th Level",
         rwd: "Coming Soon",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 8,
         lvl: "8th Level",
         rwd: "Coming Soon",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       },
       {
         lvl_id: 9,
         lvl: "9th Level",
         rwd: "Coming Soon",
-        pp: 1
+        pp: 1,
+        act_p: 1,
       }
     ];
     let dir_inc = 0;
     for (let ind in gen_data) {
       if (ind > 0) {
         gen_data[ind].pp = gen_data[ind - 1].pp * 4;
+        gen_data[ind].act_p = gen_data[ind - 1].act_p + gen_data[ind].pp
       }
     }
     return {

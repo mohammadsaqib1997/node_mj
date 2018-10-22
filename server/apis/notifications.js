@@ -38,8 +38,7 @@ router.get('/', function (req, res) {
           )`
       } else if (req.query.filter === 'rewards') {
         filter_qry = `(
-          message LIKE '%Claim Request%' OR 
-          message LIKE 'Re-Claim Request%'
+          message LIKE '%Reward%'
           )`
       } else if (req.query.filter === 'general') {
         filter_qry = `(

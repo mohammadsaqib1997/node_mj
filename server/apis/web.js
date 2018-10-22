@@ -326,7 +326,7 @@ router.get('/list_partner', (req, res) => {
         `SELECT COUNT(*) as total_rows 
         FROM partners
         ${(search !== '') ? 'WHERE': ''}
-        ${(search !== '') ? '(email LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}`,
+        ${(search !== '') ? '(discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}`,
         [
           '%' + search + '%',
           '%' + search + '%',
@@ -344,7 +344,7 @@ router.get('/list_partner', (req, res) => {
               `SELECT full_name, email, discount, cont_num, city, address, logo
               FROM partners
               ${(search !== '') ? 'WHERE': ''}
-              ${(search !== '') ? '(email LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
+              ${(search !== '') ? '(discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
               ORDER BY id ASC
               LIMIT ${limit}
               OFFSET ${offset}`,
@@ -377,9 +377,23 @@ router.get('/list_partner', (req, res) => {
 router.get('/partner/logo/:file_name', function (req, res) {
   if (req.params.file_name !== '') {
     if (fs.existsSync(__dirname + "/../uploads/partners_logo/" + req.params.file_name)) {
-      not_found = false
-      let file = fs.readFileSync(__dirname + "/../uploads/partners_logo/" + req.params.file_name)
-      return res.send(file)
+      gm(__dirname + '/../uploads/partners_logo/' + req.params.file_name)
+        .gravity('Center')
+        .background('transparent')
+        .resize(320, 320)
+        .extent(320, 320)
+        .stream('jpg', function (err, stdout, stderr) {
+          if (err) return res.status(404).json({
+            message: "Not Found!"
+          })
+          stdout.pipe(res)
+
+          stdout.on('error', function (err) {
+            return res.status(404).json({
+              message: "Not Found!"
+            })
+          });
+        })
     } else {
       res.status(404).json({
         message: 'Not found!'

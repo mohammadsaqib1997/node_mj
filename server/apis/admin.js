@@ -410,11 +410,9 @@ router.get('/expense_list', function (req, res) {
         }
 
         connection.query(
-          `SELECT COUNT(*) as tot_rows 
+          `SELECT SUM(debit) - SUM(credit) as tot_balance
           FROM transactions_comp
-          WHERE type=1
-          ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}`,
-          ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+          WHERE type=1`,
           function (error, result) {
             if (error) {
               connection.release()
@@ -422,28 +420,45 @@ router.get('/expense_list', function (req, res) {
                 error
               })
             } else {
-              let tot_rows = result[0].tot_rows
-
+              let tot_balance = result[0].tot_balance
               connection.query(
-                `SELECT * 
+                `SELECT COUNT(*) as tot_rows 
                 FROM transactions_comp
                 WHERE type=1
-                ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}
-                ORDER BY id DESC
-                LIMIT ${limit}
-                OFFSET ${offset}`,
+                ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}`,
                 ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
-                function (error, results) {
-                  connection.release()
+                function (error, result) {
                   if (error) {
+                    connection.release()
                     res.status(500).json({
                       error
                     })
                   } else {
-                    res.json({
-                      data: results,
-                      tot_rows
-                    })
+                    let tot_rows = result[0].tot_rows
+
+                    connection.query(
+                      `SELECT * 
+                      FROM transactions_comp
+                      WHERE type=1
+                      ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}
+                      ORDER BY id DESC
+                      LIMIT ${limit}
+                      OFFSET ${offset}`,
+                      ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                      function (error, results) {
+                        connection.release()
+                        if (error) {
+                          res.status(500).json({
+                            error
+                          })
+                        } else {
+                          res.json({
+                            data: results,
+                            tot_rows,
+                            tot_balance
+                          })
+                        }
+                      })
                   }
                 })
             }

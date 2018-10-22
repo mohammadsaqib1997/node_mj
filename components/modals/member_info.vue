@@ -13,15 +13,33 @@
               <div class="detail status">
                 <h1 class="title is-4">Status</h1>
                 <div class="columns is-variable is-1">
-                  <div class="column"><label>Level</label></div>
+                  <div class="column"><label>Auto Level</label></div>
                   <div class="column">
-                    <h2>{{ mem_info.level }}</h2>
+                    <h2>{{ getLvlRwd(0, mem_info.level, 'lvl') }}</h2>
+                  </div>
+                </div>
+                <div class="columns is-variable is-1">
+                  <div class="column"><label>Self Level</label></div>
+                  <div class="column">
+                    <h2>{{ getSelfLevel(parseInt(mem_info.direct_ref)+parseInt(mem_info.indirect_ref)) }}</h2>
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
                   <div class="column"><label>Wallet</label></div>
                   <div class="column">
                     <h2>{{ mem_info.wallet }}/-</h2>
+                  </div>
+                </div>
+                <div class="columns is-variable is-1">
+                  <div class="column"><label>Direct Referrals</label></div>
+                  <div class="column">
+                    <h2>{{ mem_info.direct_ref }}</h2>
+                  </div>
+                </div>
+                <div class="columns is-variable is-1">
+                  <div class="column"><label>In-Direct Referrals</label></div>
+                  <div class="column">
+                    <h2>{{ mem_info.indirect_ref }}</h2>
                   </div>
                 </div>
               </div>
@@ -182,7 +200,8 @@
                 </div>
               </div>
             </div>
-            <b-field class="has-text-centered">
+            <b-field class="btns-cont">
+              <button class="button btn-des-1" @click.prevent="exportData">Export To Excel</button>
               <button class="button btn-des-1 dark" @click="modalAct=false;">Close</button>
             </b-field>
           </template>
@@ -197,8 +216,9 @@
 <script>
 import moment from "moment";
 import mxn_modal from "~/mixins/modal.js";
+import mxn_rewardsData from "~/mixins/rewards-data.js";
 export default {
-  mixins: [mxn_modal],
+  mixins: [mxn_modal, mxn_rewardsData],
   props: {
     mem_id: {
       type: Number,
@@ -224,6 +244,130 @@ export default {
         .get("/api/member/member_info/" + self.mem_id)
         .then(res => {
           self.mem_info = res.data.result;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      self.loading = false;
+    },
+    async exportData() {
+      const self = this;
+      self.loading = true;
+      let mem_info = self.mem_info;
+      let send_data = [
+        { name: "Status", value: "" },
+        { name: "Auto Level", value: self.getLvlRwd(0, mem_info.level, "lvl") },
+        {
+          name: "Self Level",
+          value: self.getSelfLevel(
+            parseInt(mem_info.direct_ref) + parseInt(mem_info.indirect_ref)
+          )
+        },
+        {
+          name: "Wallet",
+          value: (mem_info.wallet ? mem_info.wallet : "0") + "/-"
+        },
+        { name: "Direct Referrals", value: mem_info.direct_ref },
+        { name: "In-Direct Referrals", value: mem_info.indirect_ref },
+        { name: "Account", value: "" },
+        { name: "ID", value: mem_info.user_asn_id },
+        { name: "Full Name", value: mem_info.full_name },
+        {
+          name: "Date Of Birth",
+          value: mem_info.dob
+            ? self.$store.getters.formatDate(mem_info.dob)
+            : ""
+        },
+        { name: "CNIC", value: mem_info.cnic_num },
+        { name: "Email", value: mem_info.email },
+        { name: "Contact Number", value: mem_info.contact_num },
+        { name: "Address", value: mem_info.address },
+        { name: "City", value: mem_info.city },
+        { name: "Referral ID", value: mem_info.ref_user_asn_id },
+        {
+          name: "Status",
+          value: mem_info.active_sts == 1 ? "Approved" : "Suspended"
+        },
+        { name: "Product Detail", value: "" },
+        {
+          name: "Product Name",
+          value: mem_info.product_id
+            ? mem_info.product_id === 1
+              ? "Supreme Card"
+              : "Motorcycle"
+            : ""
+        }
+      ];
+
+      if (mem_info.product_id && mem_info.product_id === 2) {
+        send_data.push({
+          name: "Buyer Type",
+          value: mem_info.buyer_type
+            ? mem_info.buyer_type === 1
+              ? "Individual"
+              : "Reseller"
+            : ""
+        });
+        if (mem_info.buyer_type && mem_info.buyer_type === 2) {
+          send_data.push({
+            name: "Quantity Of Bikes",
+            value: mem_info.buyer_qty_prd ? mem_info.buyer_qty_prd : ""
+          });
+        }
+
+        send_data.push({
+          name: "Payment Type",
+          value: mem_info.buyer_pay_type
+            ? mem_info.buyer_pay_type === 1
+              ? "On Cash"
+              : "On Installment"
+            : ""
+        });
+      }
+
+      send_data.push(
+        {
+          name: "Package Activation",
+          value: mem_info.package_act_date
+            ? `Start: ${self.gen_date(
+                mem_info.package_act_date,
+                0
+              )} TO End: ${self.gen_date(mem_info.package_act_date, 1)}`
+            : ""
+        },
+        { name: "Bank Detail", value: "" },
+        { name: "Bank Name", value: mem_info.bank_name },
+        { name: "Branch Code", value: mem_info.branch_code },
+        { name: "Account Title", value: mem_info.account_title },
+        { name: "Account Number", value: mem_info.account_number },
+        { name: "IBAN", value: mem_info.iban_number },
+        { name: "Address", value: mem_info.bk_address }
+      );
+      await self
+        .$axios({
+          url: "/api/gen_excel/export_member_info/",
+          method: "POST",
+          data: send_data,
+          responseType: "blob"
+        })
+        .then(res => {
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          let link = document.getElementById("download_anc");
+          if (!link) {
+            link = document.createElement("a");
+            link.id = "download_anc";
+          }
+          link.href = url;
+          link.setAttribute(
+            "download",
+            `info_export_${self.mem_info.full_name}.csv`
+          );
+          if (!document.getElementById("download_anc")) {
+            document.body.appendChild(link);
+          }
+          link.click();
+          let el = document.getElementById("download_anc");
+          el.parentNode.removeChild(el);
         })
         .catch(err => {
           console.log(err);
@@ -265,6 +409,13 @@ export default {
         line-height: normal;
         font-size: 1.2rem;
         color: #3d3e5a;
+      }
+    }
+
+    .btns-cont {
+      justify-content: center;
+      & > .btn-des-1:not(:last-child) {
+        margin-right: 1rem;
       }
     }
   }
