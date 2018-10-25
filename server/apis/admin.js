@@ -275,6 +275,41 @@ router.get('/total_cm', function (req, res) {
   })
 })
 
+router.get('/total_expenses', function (req, res) {
+  if (req.decoded.data.type > 0) {
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `SELECT SUM(debit) - SUM(credit) as tot_expense
+          FROM transactions_comp
+          WHERE type=1`,
+          function (error, results) {
+            connection.release()
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              let tot_expense = results[0].tot_expense !== null ? results[0].tot_expense : 0
+              res.json({
+                tot_expense
+              })
+            }
+          })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: 'Not Permission Yet!'
+    })
+  }
+})
+
 router.get('/trans_list', function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {

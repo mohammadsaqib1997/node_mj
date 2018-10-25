@@ -25,12 +25,12 @@
                   h1 2535
                   h5 Pending Members
               .column.is-12-mobile.is-6-tablet.is-3-widescreen
-                  .amount-wrapepr
+                  .amount-wrapper
                       b Rs.
                       h1 1,563,000
                   h5 Paid Commissions
               .column.is-12-mobile.is-6-tablet.is-3-widescreen
-                  .amount-wrapepr
+                  .amount-wrapper
                       b Rs.
                       h1 1,563,000
                   h5 Un-Paid Commissions

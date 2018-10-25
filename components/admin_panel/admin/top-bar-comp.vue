@@ -2,17 +2,17 @@
   .top-bar-comp
     .funds-cont
       button.button.tr-btn(@click.prevent="transMdAct=true") Transfer Funds
-      button.button.wd-btn(@click.prevent="walletMdAct=true") Withdraw
-    adminWithdrawalMD(:md_act='walletMdAct' @closed="walletMdAct=false")
+      //- button.button.wd-btn(@click.prevent="walletMdAct=true") Withdraw
+    //- adminWithdrawalMD(:md_act='walletMdAct' @closed="walletMdAct=false")
     adminTranFundMD(:md_act='transMdAct' @closed="transMdAct=false")
 </template>
 
 <script>
-import adminWithdrawalMD from "~/components/modals/admin_withdraw.vue";
+// import adminWithdrawalMD from "~/components/modals/admin_withdraw.vue";
 import adminTranFundMD from "~/components/modals/admin_transfer_funds.vue";
 export default {
   components: {
-    adminWithdrawalMD,
+    // adminWithdrawalMD,
     adminTranFundMD
   },
   data() {

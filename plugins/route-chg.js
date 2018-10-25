@@ -45,7 +45,8 @@ const visible = [
     'admin-login',
     'downloads',
     'partners-and-associates',
-    'winners-of-the-month'
+    'winners-of-the-month',
+    'verify-token-token',
 ]
 
 export default ({ app, error }) => {

@@ -9,6 +9,7 @@ let corsOptions = {
   origin: (config.dev) ? 'http://127.0.0.1:3000' : ['http://mj-supreme.com', 'http://www.mj-supreme.com']
 }
 
+router.use("/verify-token", cors(corsOptions), require('./verify-tokens.js'))
 router.use("/web", cors(corsOptions), require('./web.js'))
 
 router.use((req, res, next) => {
@@ -48,6 +49,7 @@ router.use("/reward", cors(corsOptions), require('./rewards.js'))
 router.use("/partner", cors(corsOptions), require('./partners.js'))
 router.use("/startup", cors(corsOptions), require('./startup_check.js'))
 router.use("/gen_excel", cors(corsOptions), require('./gen_excels.js'))
+router.use("/email", cors(corsOptions), require('./emails.js'))
 
 router.all("*", function (req, res) {
   res.status(403).json({ error: 'Invalid Request!' })

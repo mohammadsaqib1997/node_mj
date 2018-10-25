@@ -28,7 +28,7 @@
                     h5 Indirect
                       
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
-          .amount-wrapepr
+          .amount-wrapper
             b Rs.
             h1 {{ wallet }}
           h5 Wallet

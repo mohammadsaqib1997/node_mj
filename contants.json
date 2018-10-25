@@ -59,5 +59,14 @@
     "transactions_comp": {
         "0": "normal finance entry",
         "1": "expenses finance entry"
+    },
+    "tokens": {
+        "type" : {
+            "0": "verify token generated"
+        },
+        "status": {
+            "0": "token is not verify",
+            "1": "token is verified"
+        }
     }
 }

@@ -9,7 +9,6 @@ const _ = require('lodash');
 const moment = require('moment');
 const fs = require('fs');
 const gm = require('gm')
-// const trans_email = require('../e-conf.js')
 
 router.get("/pk", function (req, res) {
   let data = JSON.parse(fs.readFileSync(__dirname + '/../files/pk.json', 'utf8'))
@@ -32,11 +31,41 @@ router.post('/tokenLogin', (req, res) => {
           message: err.message
         });
       } else {
-        return res.json({
-          status: true,
-          token: token,
-          user: decoded.data
-        });
+        db.getConnection(function (error, connection) {
+          if (error) {
+            return res.status(500).json({
+              error
+            });
+          } else {
+            let table = 'members'
+            if(decoded.data.type === 1) {
+              table = 'moderators'
+            }else if (decoded.data.type === 2) {
+              table = 'admins'
+            }
+            connection.query(
+              `SELECT email FROM ${table} WHERE id=?`,
+              decoded.data.user_id,
+              function (error, result) {
+                connection.release()
+                if (error) {
+                  return res.status(500).json({
+                    error
+                  });
+                } else {
+                  return res.json({
+                    status: true,
+                    token: token,
+                    user: {
+                      user_id: decoded.data.user_id,
+                      email: result[0].email,
+                      type: decoded.data.type
+                    }
+                  });
+                }
+              })
+          }
+        })
       }
     });
 
@@ -108,9 +137,11 @@ router.get('/get_list_winners_auto', function (req, res) {
           })
       })
 
-      if(throw_error !== null) {
+      if (throw_error !== null) {
         connection.release()
-        return res.status(500).json({ error: throw_error })
+        return res.status(500).json({
+          error: throw_error
+        })
       }
 
       connection.query(
@@ -180,9 +211,11 @@ router.get('/get_list_winners_self', function (req, res) {
           })
       })
 
-      if(throw_error !== null) {
+      if (throw_error !== null) {
         connection.release()
-        return res.status(500).json({ error: throw_error })
+        return res.status(500).json({
+          error: throw_error
+        })
       }
 
       connection.query(

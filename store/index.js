@@ -97,17 +97,31 @@ export const actions = {
     const userData = state.user.data
     if (userData.type === 0) {
       if (userData.email === null) {
+        commit('showMsgs/resetData')
         commit('showMsgs/setMsgData', {
           title: "Add Your Email!",
           message: "Please add your e-mail to verify your account and more secure."
         })
         commit('showMsgs/setMsgAct', true)
       } else {
-        // this.$axios.get("/api/startup/email-info").then(res => {
-        //   console.log(res.data)
-        // }).catch(err => {
-        //   console.log(err)
-        // })
+        this.$axios.get("/api/startup/email-info").then(res => {
+          if (res.data.status && (res.data.email_v_sts === 0 || res.data.email_v_sts === 1)) {
+            if (res.data.email_v_sts === 0 && res.data.last_email === false) {
+              commit('showMsgs/resetData')
+              commit('showMsgs/setMsgData', {
+                title: "Varify Your Email!",
+                message: 'Please verify your e-mail.',
+                action: {
+                  txt: 'Send E-mail',
+                  param: 'send-verify-email'
+                }
+              })
+              commit('showMsgs/setMsgAct', true)
+            }
+          }
+        }).catch(err => {
+          console.log(err)
+        })
       }
     }
   },

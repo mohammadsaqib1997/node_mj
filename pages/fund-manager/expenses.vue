@@ -32,7 +32,7 @@
             @change_s_txt="update_params('search', $event)"></tblTopFilter>
           <b-field class="total-count">
             <p class="control has-text-right">
-              <span>Total Expanses:</span>
+              <span>Total Expenses:</span>
               <span class="count">{{ tot_balance }}/-</span>
             </p>
           </b-field>

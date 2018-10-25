@@ -4,12 +4,16 @@ const secret = require("./config").secret
 const app = require('express')()
 const server = require('http').Server(app)
 const port = process.env.PORT || 3000
+var path = require('path');
 
 app.disable('x-powered-by')
 
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
 const io = require('socket.io')(server)
+
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug')
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
