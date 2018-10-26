@@ -37,7 +37,6 @@ module.exports = {
   ],
   plugins: [
     '~/plugins/s-vue-validator.js',
-    '~/plugins/vue-map.js',
     {
       src: '~/plugins/route-chg.js',
       ssr: false
@@ -74,20 +73,20 @@ module.exports = {
     }
   },
   build: {
-    vendors: ['babel-polyfill'],
-    extend(config, {
-      isClient
-    }) {
-      if (!isClient) {
-        config.externals.splice(0, 0, function (context, request, callback) {
-          if (/^vue2-google-maps($|\/)/.test(request)) {
-            callback(null, false)
-          } else {
-            callback()
-          }
-        })
-      }
-    }
+    // vendors: ['babel-polyfill'],
+    // extend(config, {
+    //   isClient
+    // }) {
+    //   if (!isClient) {
+    //     config.externals.splice(0, 0, function (context, request, callback) {
+    //       if (/^vue2-google-maps($|\/)/.test(request)) {
+    //         callback(null, false)
+    //       } else {
+    //         callback()
+    //       }
+    //     })
+    //   }
+    // }
   },
   //mode: "spa"
 }

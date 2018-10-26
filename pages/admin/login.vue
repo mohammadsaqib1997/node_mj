@@ -12,7 +12,7 @@
             b-input(type="text" placeholder="example@app.com" v-model="email")
 
           b-field(label="Password" :addons="false" :type="(validation.hasError('password')) ? 'is-danger':''" :message="validation.firstError('password')")
-            a.control.fp_link(@click.prevent="$store.commit('isForgotPasswordSet', true)") Forgot ?
+            //- a.control.fp_link(@click.prevent="$store.commit('isForgotPasswordSet', true)") Forgot ?
             b-input(type="password" placeholder="******" v-model="password")
 
           b-field.has-text-centered

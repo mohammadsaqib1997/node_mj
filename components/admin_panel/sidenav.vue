@@ -249,7 +249,7 @@ export default {
               url: "/system-level/self-rewards",
               title: "Self Rewards",
               show: [0]
-            },
+            }
           ]
         },
         {
@@ -442,6 +442,7 @@ export default {
   z-index: 6;
   background-color: #f6f6f6;
   .wrapper {
+    padding-bottom: 0 !important;
     & > ul {
       & > li {
         .nav-item {
@@ -511,7 +512,7 @@ export default {
               background-size: contain;
               background-position: center;
               background-repeat: no-repeat;
-              background-image: url("~/assets/img/arrow.png");
+              background-image: url("/img/arrow.png");
             }
           }
           & > .dropdown {
@@ -544,7 +545,7 @@ export default {
                       background-size: contain;
                       background-position: center;
                       background-repeat: no-repeat;
-                      background-image: url("~/assets/img/arrow.png");
+                      background-image: url("/img/arrow.png");
                     }
                   }
                   & > .popover {

@@ -42,15 +42,15 @@
               img.arrow-ic(src="~/assets/img/arrow.png")
             .navbar-dropdown
               nuxt-link.navbar-item(to="/user/profile") PROFILE
-              a.navbar-item(@click.prevent="$store.dispatch('logout')") LOGOUT
+              a.navbar-item(@click.prevent="logoutTr") LOGOUT
     mdNotify
 </template>
 
 <script>
 import _ from "lodash";
 import mdNotify from "~/components/modals/notification.vue";
-import topBarCompMem from '~/components/admin_panel/member/top-bar-comp.vue'
-import topBarCompAdmin from '~/components/admin_panel/admin/top-bar-comp.vue'
+import topBarCompMem from "~/components/admin_panel/member/top-bar-comp.vue";
+import topBarCompAdmin from "~/components/admin_panel/admin/top-bar-comp.vue";
 export default {
   components: {
     mdNotify,
@@ -78,6 +78,10 @@ export default {
     navbarActToggle: function(e) {
       e.target.closest(".navbar-burger").classList.toggle("is-active");
       document.getElementById("navbar").classList.toggle("is-active");
+    },
+    logoutTr() {
+      this.$store.dispatch("logout");
+      this.$router.push('/')
     }
   }
 };

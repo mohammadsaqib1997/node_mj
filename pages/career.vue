@@ -179,7 +179,7 @@ export default {
         .t-emp
           &.active
             &:before
-              background-image: url("~/assets/img/emp-icon-active.png")
+              background-image: url("/img/emp-icon-active.png")
 
       .tab-body
         .tab-content

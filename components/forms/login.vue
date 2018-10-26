@@ -71,7 +71,11 @@ export default {
                 setTimeout(() => {
                   self.form.loading = false;
                   self.$store.commit("loginModalActiveSet", false);
-                  self.$router.push("/dashboard");
+                  if (res.data.user.is_paid === 1) {
+                    self.$router.push("/dashboard");
+                  } else {
+                    self.$router.push("/user/profile");
+                  }
                 }, 1500);
               } else {
                 self.form.loading = false;

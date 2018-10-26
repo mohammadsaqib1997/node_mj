@@ -37,14 +37,17 @@ router.post('/tokenLogin', (req, res) => {
               error
             });
           } else {
-            let table = 'members'
-            if(decoded.data.type === 1) {
+            let table = 'members',
+              colm = "`email`, `is_paid_m`"
+            if (decoded.data.type === 1) {
               table = 'moderators'
-            }else if (decoded.data.type === 2) {
+              colm = "`email`"
+            } else if (decoded.data.type === 2) {
               table = 'admins'
+              colm = "`email`"
             }
             connection.query(
-              `SELECT email FROM ${table} WHERE id=?`,
+              `SELECT ${colm} FROM ${table} WHERE id=?`,
               decoded.data.user_id,
               function (error, result) {
                 connection.release()
@@ -53,14 +56,18 @@ router.post('/tokenLogin', (req, res) => {
                     error
                   });
                 } else {
+                  let user = {
+                    user_id: decoded.data.user_id,
+                    email: result[0].email,
+                    type: decoded.data.type
+                  }
+                  if (decoded.data.type === 0) {
+                    user['is_paid'] = result[0].is_paid_m
+                  }
                   return res.json({
                     status: true,
                     token: token,
-                    user: {
-                      user_id: decoded.data.user_id,
-                      email: result[0].email,
-                      type: decoded.data.type
-                    }
+                    user
                   });
                 }
               })
@@ -676,7 +683,7 @@ router.post('/login', (req, res) => {
       // member check
       await new Promise(resolve => {
         connection.query(
-          'SELECT id, email, active_sts FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
+          'SELECT id, email, active_sts, is_paid_m FROM `members` WHERE BINARY (`email`=? OR `user_asn_id`=?) AND BINARY `password`=?',
           [req.body.email, req.body.email, req.body.password],
           function (error, results) {
             if (error) {
@@ -685,10 +692,12 @@ router.post('/login', (req, res) => {
             } else {
               if (results.length === 1) {
                 if (results[0].active_sts === 1) {
+                  user = userData(results[0], 0)
+                  user['is_paid'] = results[0].is_paid_m
                   resp = {
                     status: true,
                     token: tokenGen(results[0], 0),
-                    user: userData(results[0], 0)
+                    user
                   }
                 } else {
                   resp = {

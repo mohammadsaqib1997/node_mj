@@ -27,6 +27,11 @@ const authRoutes = [
     { name: "rewards-rewards-completed", type_allowed: [1, 2] },
 ]
 
+const un_paid_routes = [
+    { name: 'user-profile' },
+    { name: 'user-bank-details' }
+]
+
 const unAuthRoutes = [
     'signup',
     'admin-login'
@@ -47,6 +52,7 @@ const visible = [
     'partners-and-associates',
     'winners-of-the-month',
     'verify-token-token',
+    'terms-and-condition'
 ]
 
 export default ({ app, error }) => {
@@ -79,19 +85,49 @@ export default ({ app, error }) => {
             }
         } else {
             if (_.indexOf(unAuthRoutes, to.name) > -1) {
-                app.router.push('/dashboard')
+                if(app.store.state.user.data.type === 0 && app.store.state.user.data.is_paid === 0) {
+                    app.router.push('/user/profile')
+                }else{
+                    app.router.push('/dashboard')
+                }
             } else {
                 let findAuthR = _.find(authRoutes, o => { return o.name === to.name })
                 if (findAuthR) {
-                    if (_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) {
+                    if(_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) {
                         error({ statusCode: 403, message: "Not permission on this page!" })
                         setTimeout(function () {
                             app.store.commit('pageLoadingSet', false)
                         }, 500)
-                    } else {
-                        setTimeout(function () {
-                            app.store.commit('pageLoadingSet', false)
-                        }, 500)
+                    }else{
+                        if (typeof app.store.state.user.data.is_paid !== 'undefined') {
+                            if (app.store.state.user.data.is_paid === 0) {
+                                let findUnpaidR = _.find(un_paid_routes, o => {
+                                    return o.name === to.name
+                                })
+                                if (findUnpaidR) {
+                                    setTimeout(function () {
+                                        app.store.commit('pageLoadingSet', false)
+                                    }, 500)
+                                } else {
+                                    error({
+                                        statusCode: 403,
+                                        message: "You are un-paid member. Contact administrator to get verify your account."
+                                    })
+                                    setTimeout(function () {
+                                        app.store.commit('pageLoadingSet', false)
+                                    }, 500)
+                                }
+
+                            } else {
+                                setTimeout(function () {
+                                    app.store.commit('pageLoadingSet', false)
+                                }, 500)
+                            }
+                        } else {
+                            setTimeout(function () {
+                                app.store.commit('pageLoadingSet', false)
+                            }, 500)
+                        }                        
                     }
                 } else {
                     if (_.indexOf(visible, to.name) < 0) {

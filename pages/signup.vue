@@ -291,15 +291,15 @@ export default {
               .t-card
                   &.active
                       &:before
-                          background-image: url("~/assets/img/credit-card-active.png")
+                          background-image: url("/img/credit-card-active.png")
                   &:before
-                      background-image: url("~/assets/img/credit-card.png")
+                      background-image: url("/img/credit-card.png")
               .t-bike
                   &.active
                       &:before
-                          background-image: url("~/assets/img/motorcycle-active.png")
+                          background-image: url("/img/motorcycle-active.png")
                   &:before
-                      background-image: url("~/assets/img/motorcycle.png")
+                      background-image: url("/img/motorcycle.png")
           .tab-body
               .tab-content
                 display: none

@@ -66,7 +66,9 @@ export const actions = {
                     token: res.data.token,
                     data: res.data.user
                   });
-                  dispatch("checkUserEmail");
+                  if (res.data.user.is_paid && res.data.user.is_paid === 1) {
+                    dispatch("checkUserEmail");
+                  }
                 } else {
                   localStorage.removeItem("user")
                   commit('setUser', null)
@@ -137,7 +139,9 @@ export const actions = {
       })
     );
     commit('setUser', payload)
-    dispatch("checkUserEmail");
+    if (payload.data.is_paid && payload.data.is_paid === 1) {
+      dispatch("checkUserEmail");
+    }
   },
 
   logout({

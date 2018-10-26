@@ -135,7 +135,7 @@ export default {
   text-align: center;
   margin-bottom: 1rem;
   box-shadow: 0 5px 3px -3px #999;
-  background-image: url("~/assets/img/au_banner_1.jpg");
+  background-image: url("/img/au_banner_1.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -187,7 +187,7 @@ export default {
     position: relative;
     width: 100%;
     height: 520px;
-    background-image: url("~/assets/img/au_banner_2.png");
+    background-image: url("/img/au_banner_2.png");
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;

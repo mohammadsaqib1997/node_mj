@@ -80,7 +80,7 @@ export default {
   position: relative;
   margin-bottom: 1rem;
   box-shadow: 0 5px 3px -3px #999;
-  background-image: url("~/assets/img/hm-img-1.jpg");
+  background-image: url("/img/hm-img-1.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -172,7 +172,7 @@ export default {
 
 .sct-5 {
   padding: 6rem 3.5rem;
-  background-image: url("~/assets/img/hm-op-img-2.png");
+  background-image: url("/img/hm-op-img-2.png");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;

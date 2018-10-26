@@ -252,11 +252,11 @@ export default {
       cursor: pointer;
 
       &.prev {
-        background-image: url("~/assets/img/sld-prev-icon.png");
+        background-image: url("/img/sld-prev-icon.png");
       }
 
       &.next {
-        background-image: url("~/assets/img/sld-next-icon.png");
+        background-image: url("/img/sld-next-icon.png");
       }
     }
   }
@@ -320,14 +320,14 @@ export default {
       }
 
       &.prev {
-        background-image: url("~/assets/img/sld-prev-btn.png");
+        background-image: url("/img/sld-prev-btn.png");
         margin-right: 30px;
       }
 
       &.next {
         margin-left: 30px;
         order: 2;
-        background-image: url("~/assets/img/sld-next-btn.png");
+        background-image: url("/img/sld-next-btn.png");
       }
     }
 
@@ -434,7 +434,7 @@ export default {
                   height: 50px;
                   width: 50px;
                   margin: 8px auto;
-                  background-image: url("~/assets/img/play-btn.png");
+                  background-image: url("/img/play-btn.png");
                   background-repeat: no-repeat;
                   background-size: contain;
                   background-position: center;
@@ -468,7 +468,7 @@ export default {
           &:after {
             content: " ";
             position: absolute;
-            background-image: url("~/assets/img/vid-plr-icon.png");
+            background-image: url("/img/vid-plr-icon.png");
             background-repeat: no-repeat;
             background-size: contain;
             background-position: center;
@@ -557,11 +557,11 @@ export default {
         cursor: pointer;
 
         &.prev {
-          background-image: url("~/assets/img/sld-prev-btn.png");
+          background-image: url("/img/sld-prev-btn.png");
         }
 
         &.next {
-          background-image: url("~/assets/img/sld-next-btn.png");
+          background-image: url("/img/sld-next-btn.png");
         }
         @media screen and (min-width: 1131px) {
           &.prev {

@@ -334,7 +334,7 @@ export default {
               border-radius: 0
               &:before
                 content: " "
-                background-image: url("~/assets/img/vw-icon.png")
+                background-image: url("/img/vw-icon.png")
                 height: 30px
                 width: 30px
                 background-size: contain
@@ -355,7 +355,7 @@ export default {
             .btn-cont
               .button
                 &:before
-                  background-image: url("~/assets/img/vw-icon-ac.png")
+                  background-image: url("/img/vw-icon-ac.png")
 
   .sct-4
     .slider-cont
@@ -379,10 +379,10 @@ export default {
           display: inline-block
           margin-bottom: 1.5rem
         &.prev
-          background-image: url("~/assets/img/sld-prev-btn-lt.png")
+          background-image: url("/img/sld-prev-btn-lt.png")
         &.next
           order: 2
-          background-image: url("~/assets/img/sld-next-btn-lt.png")
+          background-image: url("/img/sld-next-btn-lt.png")
       .slide-wrapper
         width: 100%
         @media screen and (min-width: 769px)

@@ -254,10 +254,10 @@ export default {
             background-position: center;
             margin-right: 5px;
             &.left {
-              background-image: url("~/assets/img/sld-prev-icon.png");
+              background-image: url("/img/sld-prev-icon.png");
             }
             &.right {
-              background-image: url("~/assets/img/sld-next-icon.png");
+              background-image: url("/img/sld-next-icon.png");
               margin-right: 0;
             }
           }

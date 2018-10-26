@@ -152,7 +152,7 @@ export default {
               position: absolute
               height: 30px
               width: 30px
-              background-image: url("~/assets/img/qst-mark-img.png")
+              background-image: url("/img/qst-mark-img.png")
               background-repeat: no-repeat
               background-size: contain
               left: 1.4rem

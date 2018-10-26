@@ -103,7 +103,7 @@ export default {
     text-align: center
     margin-bottom: 1rem
     box-shadow: 0 5px 3px -3px #999
-    background-image: url('~/assets/img/au_banner_1.jpg')
+    background-image: url('/img/au_banner_1.jpg')
     background-repeat: no-repeat
     background-size: cover
     background-position: center
@@ -167,7 +167,7 @@ export default {
             position: absolute
             height: 30px
             width: 30px
-            background-image: url("~/assets/img/qst-mark-img.png")
+            background-image: url("/img/qst-mark-img.png")
             background-repeat: no-repeat
             background-size: contain
             background-position: center
@@ -178,7 +178,7 @@ export default {
             position: absolute
             height: 20px
             width: 20px
-            background-image: url("~/assets/img/add-icon.png")
+            background-image: url("/img/add-icon.png")
             background-repeat: no-repeat
             background-size: contain
             background-position: center
@@ -186,7 +186,7 @@ export default {
             top: 26px
           &.active
             &:after
-              background-image: url("~/assets/img/subtract-icon.png")
+              background-image: url("/img/subtract-icon.png")
           h1.title
             font-size: 24px
             font-weight: 200

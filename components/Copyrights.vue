@@ -12,7 +12,7 @@
                     li.item
                         nuxt-link(to="/coming-soon") Privacy Policy
                     li.item
-                        a(href="/docs/Terms & Conditions.docx") Terms & Conditions
+                        a(href="/terms-and-condition") Terms & Conditions
 
 
 </template>
