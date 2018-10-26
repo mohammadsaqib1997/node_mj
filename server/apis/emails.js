@@ -3,6 +3,7 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const config = require('../config')
 const trans_email = require('../e-conf.js')
+const moment = require('moment')
 
 const db = require('../db.js')
 
@@ -25,6 +26,7 @@ router.post('/verify', function (req, res) {
 
             let temp_data = {}
             let send_email = null
+            let insert_id = null
 
             await new Promise(resolve => {
               connection.query(
@@ -56,35 +58,10 @@ router.post('/verify', function (req, res) {
                       function (error, result) {
                         if (error) {
                           throw_error = error
-                          return resolve()
                         } else {
-                          if (send_email !== null) {
-                            res.render("verify-token", {
-                              host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
-                              name: temp_data.name,
-                              token: temp_data.token
-                            }, function (errPug, html) {
-                              if (errPug) {
-                                throw_error = errPug
-                                return resolve()
-                              }
-                              trans_email.sendMail({
-                                from: '"MJ Supreme" <info@mj-supreme.com>',
-                                to: send_email,
-                                subject: 'Verification Token',
-                                html: html
-                              }, function (err, info) {
-                                if (err) {
-                                  throw_error = err
-                                }
-                                return resolve()
-                              })
-                            })
-                          } else {
-                            throw_error = new Error('Email not found!')
-                            return resolve()
-                          }
+                          insert_id = result.insertId
                         }
+                        return resolve()
                       }
                     )
                   }
@@ -110,9 +87,47 @@ router.post('/verify', function (req, res) {
                   });
                 } else {
                   connection.release()
-                  res.json({
-                    status: true
-                  })
+                  if (send_email !== null) {
+                    res.render("verify-token", {
+                      host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                      name: temp_data.name,
+                      token: temp_data.token
+                    }, function (errPug, html) {
+                      if (errPug) {
+                        last_id_delete_token(insert_id, function (err) {
+                          res.json({
+                            status: false,
+                            message: err ? err.message : errPug.message
+                          })
+                        })
+                      } else {
+                        trans_email.sendMail({
+                          from: '"MJ Supreme" <info@mj-supreme.com>',
+                          to: send_email,
+                          subject: 'Verification Token',
+                          html: html
+                        }, function (err, info) {
+                          if (err) {
+                            last_id_delete_token(insert_id, function (cb_err) {
+                              res.json({
+                                status: false,
+                                message: cb_err ? cb_err.message : err.message
+                              })
+                            })
+                          } else {
+                            res.json({
+                              status: true
+                            })
+                          }
+                        })
+                      }
+                    })
+                  } else {
+                    res.json({
+                      status: false,
+                      message: "Email not found!"
+                    })
+                  }
                 }
               })
             }
@@ -129,4 +144,182 @@ router.post('/verify', function (req, res) {
 
 })
 
+router.post('/forgot-password', function (req, res) {
+  if (req.body.email && req.body.email !== '') {
+    let email_or_id = req.body.email
+    db.getConnection(function (error, connection) {
+      if (error) {
+        res.status(500).json({
+          error
+        })
+      } else {
+        connection.beginTransaction(async function (error) {
+          if (error) {
+            connection.release();
+            res.status(500).json({
+              error
+            })
+          } else {
+            let throw_error = null
+            let str_error = null
+
+            let temp_data = {}
+            let send_email = null
+            let insert_id = null
+
+            await new Promise(resolve => {
+              let last_3_hours = moment().subtract(3, 'h').format('YYYY-MM-DD HH-mm-ss')
+              connection.query(
+                `SELECT m.id, m.full_name, m.email, t.created_at
+                FROM members as m
+                LEFT JOIN tokens as t
+                ON m.id=t.member_id AND t.created_at>'${last_3_hours}' AND t.type=1
+                WHERE m.email=? OR m.user_asn_id=?
+                ORDER BY t.created_at DESC
+                LIMIT 1`,
+                [email_or_id, email_or_id],
+                function (error, result) {
+                  if (error) {
+                    throw_error = error
+                    return resolve()
+                  } else {
+                    if (result.length > 0) {
+                      if (result[0].created_at !== null) {
+                        str_error = "Your request under process please wait..."
+                        return resolve()
+                      } else {
+                        if (result[0].email === null || result[0].email === '') {
+                          str_error = "Your e-mail is not found. Contact administrator to add your e-mail."
+                          return resolve()
+                        } else {
+                          temp_data['name'] = result[0].full_name
+                          send_email = result[0].email
+                          temp_data['token'] = jwt.sign({
+                              data: {
+                                email: result[0].email,
+                                user_id: result[0].id,
+                                type: 1
+                              }
+                            },
+                            config.secret, {
+                              expiresIn: "3 hours"
+                            }
+                          )
+                          connection.query(
+                            `INSERT INTO tokens SET ?`, {
+                              type: 1,
+                              member_id: result[0].id,
+                              token: temp_data['token']
+                            },
+                            function (error, result) {
+                              if (error) {
+                                throw_error = error
+                              } else {
+                                insert_id = result.insertId
+                              }
+                              return resolve()
+                            }
+                          )
+                        }
+                      }
+                    } else {
+                      str_error = "Invalid E-mail or MJ-ID!"
+                      return resolve()
+                    }
+                  }
+                }
+              )
+            })
+
+            if (throw_error || str_error) {
+              return connection.rollback(function () {
+                connection.release()
+                if (throw_error) {
+                  res.status(500).json({
+                    throw_error
+                  })
+                } else {
+                  res.json({
+                    status: false,
+                    message: str_error
+                  })
+                }
+              })
+            } else {
+              connection.commit(function (err) {
+                if (err) {
+                  return connection.rollback(function () {
+                    connection.release()
+                    res.status(500).json({
+                      err
+                    })
+                  });
+                } else {
+                  connection.release()
+                  res.render("forgot-password", {
+                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                    name: temp_data.name,
+                    token: temp_data.token
+                  }, function (errPug, html) {
+                    if (errPug) {
+                      last_id_delete_token(insert_id, function (err) {
+                        res.json({
+                          status: false,
+                          message: err ? err.message : errPug.message
+                        })
+                      })
+                    } else {
+                      trans_email.sendMail({
+                        from: '"MJ Supreme" <info@mj-supreme.com>',
+                        to: send_email,
+                        subject: 'Forgot Password!',
+                        html: html
+                      }, function (err, info) {
+                        if (err) {
+                          last_id_delete_token(insert_id, function (cb_err) {
+                            res.json({
+                              status: false,
+                              message: cb_err ? cb_err.message : err.message
+                            })
+                          })
+                        } else {
+                          res.json({
+                            status: true
+                          })
+                        }
+                      })
+                    }
+                  })
+                }
+              })
+            }
+          }
+        })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Parameters!"
+    })
+  }
+})
+
 module.exports = router
+
+function last_id_delete_token(lastId, cb) {
+  db.getConnection(function (error, connection) {
+    if (error) {
+      cb(error)
+    } else {
+      connection.query('DELETE FROM members WHERE id=?', lastId, function (error, result) {
+        connection.release()
+        if (error) {
+          cb(error)
+        } else {
+          cb()
+        }
+      })
+    }
+  })
+}

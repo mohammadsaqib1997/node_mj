@@ -144,6 +144,7 @@ export const actions = {
     commit
   }) {
     localStorage.removeItem("user")
+    commit('showMsgs/resetData')
     commit('initAuthSet', false)
     commit('setUser', null)
     commit('hasTermsLoadedSet', false)
