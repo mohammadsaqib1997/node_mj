@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const config = require('../config')
 const trans_email = require('../e-conf.js')
 const moment = require('moment')
+const Request = require('request')
 
 const db = require('../db.js')
 
@@ -305,6 +306,90 @@ router.post('/forgot-password', function (req, res) {
   }
 })
 
+router.post('/contact', function (req, res) {
+  Request.post('https://www.google.com/recaptcha/api/siteverify', {
+    form: {
+      secret: '6Le-JHcUAAAAAMWQGZRZ8_-WnUcvNyGOT8-2U-CE',
+      response: req.body.captcha
+    }
+  }, function (err, httpRes, body) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let resBody = JSON.parse(body)
+      if (resBody.success === true) {
+        db.getConnection(function (error, connection) {
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            connection.query(
+              `INSERT INTO contact_us SET ?`, {
+                full_name: req.body.full_name,
+                email: req.body.email,
+                cont_number: req.body.cont_number,
+                subject: req.body.subject,
+                message: req.body.message
+              },
+              function (error, result) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.render("contact", {
+                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                    full_name: req.body.full_name,
+                    email: req.body.email,
+                    cont_number: req.body.cont_number,
+                    subject: req.body.subject,
+                    message: req.body.message
+                  }, function (errPug, html) {
+                    if (errPug) {
+                      res.json({
+                        status: false,
+                        message: errPug.message
+                      })
+                    } else {
+                      trans_email.sendMail({
+                        from: `"${req.body.full_name}" <${req.body.email}>`,
+                        to: 'info@mj-supreme.com',
+                        subject: `Contact Subject: ${req.body.subject}`,
+                        html: html
+                      }, function (err, info) {
+                        if (err) {
+                          res.json({
+                            status: false,
+                            message: err.message
+                          })
+                        } else {
+                          res.json({
+                            status: true
+                          })
+                        }
+                      })
+                    }
+                  })
+                }
+              })
+          }
+        })
+      } else {
+        res.json({
+          status: false,
+          err_code: '111',
+          message: "Invalid Captcha!"
+        })
+      }
+
+    }
+  })
+})
+
 module.exports = router
 
 function last_id_delete_token(lastId, cb) {
@@ -312,7 +397,7 @@ function last_id_delete_token(lastId, cb) {
     if (error) {
       cb(error)
     } else {
-      connection.query('DELETE FROM members WHERE id=?', lastId, function (error, result) {
+      connection.query('DELETE FROM tokens WHERE id=?', lastId, function (error, result) {
         connection.release()
         if (error) {
           cb(error)

@@ -1,0 +1,32 @@
+doctype html
+html(lang='en')
+    head
+        meta(charset="UTF-8")
+        title MJ SUPREME
+    style.
+        @import url('https://fonts.googleapis.com/css?family=Montserrat');
+    body
+        div(style=`font-family: 'Montserrat', sans-serif; font-size: 12px; text-align: center; color: #8c8c8c; margin: 0px; background-color: #ececec; padding: 80px;`)
+            table(style='font-size: 12px; text-align: justify; color: #8c8c8c; margin: auto; width: 100%; max-width: 680px;', border='0', cellspacing='0', cellpadding='0', align='center')
+                tbody
+                    tr(style='line-height: 0px; background-color: #fff; width: 100%; padding: 0px; margin: 0 auto;')
+                        td(style='text-align: center;padding: 20px 0;')
+                            img(style='max-width: 254px;', src=`${host}/img/logo.png`, alt='MJ SUPREME', hspace='5')
+
+                    tr(style='background-color: #f6f6f6;')
+                        td(style='text-align: left; padding: 30px; line-height: 30px; color: #3d3e5a;')
+                            h3(style='font-size: 21px; font-weight: normal; margin-top: 0; margin-bottom: 25px;') Contacting Subject: #{subject}
+                            p(style='font-size: 16px; text-align: justify; margin: 0px; font-weight: normal;') Email: 
+                                span
+                                    a(style='color: #3d3e5a; text-decoration: none; font-weight: 700; cursor: pointer;', href='mailto:'+email) &nbsp;#{email}
+                            p(style='font-size: 16px; text-align: justify; margin: 0px; font-weight: normal;') Contact No#: 
+                                span(style="color: #3d3e5a; text-decoration: none; font-weight: 700;") &nbsp;#{cont_number}
+                            p(style='font-size: 16px; text-align: justify; margin: 0px; margin-bottom: 25px; font-weight: normal;') Message: 
+                                br
+                                | #{message}
+
+                            p(style='font-size: 16px; text-align: justify; margin: 0px; margin-bottom: 0; font-weight: normal;')
+                                | Regards,
+                                br
+                                | #{full_name}
+                        
