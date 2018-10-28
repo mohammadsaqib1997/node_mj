@@ -1,4 +1,5 @@
 import vueRecaptcha from "vue-recaptcha";
+import configPr from '~/server/config.js'
 export default {
     components: {
         vueRecaptcha
@@ -12,6 +13,7 @@ export default {
     },
     data() {
         return {
+            captcha_key: configPr.dev ? '6Le-JHcUAAAAAOIYuhjACnKAY9tEFV6GrbQ9Yy6v': '6LdmTncUAAAAAMmVtXUckGQFzYqU3oJWL69q75RB',
             form: {
                 captcha: null,
             }

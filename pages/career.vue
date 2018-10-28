@@ -24,37 +24,40 @@
 
               .tab-body
                 .tab-content.active
-                  form.form(@submit.prevent="submitCareer")
-                    p.error(v-if="err !== ''") {{ err }}
-                    p.success(v-if="suc !== ''") {{ suc }}
-                    b-field(grouped)
-                      b-field(label="Full Name" :type="(validation.hasError('form.full_name')) ? 'is-danger':''" :message="validation.firstError('form.full_name')" expanded)
-                        b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="form.full_name")
-                      b-field(label="Email" :type="(validation.hasError('form.email')) ? 'is-danger':''" :message="validation.firstError('form.email')" expanded)
-                        b-input(type="email" placeholder="Your Email" v-model="form.email")
-                      
-                    b-field(grouped)
-                      b-field(label="Contact No." :type="(validation.hasError('form.cont_number')) ? 'is-danger':''" :message="validation.firstError('form.cont_number')" expanded)
-                        b-input(type="text" placeholder="Enter Contact Number" v-model="form.cont_number" v-mask="'92-###-###-####'")
-                      b-field(label="Subject" :type="(validation.hasError('form.subject')) ? 'is-danger':''" :message="validation.firstError('form.subject')" expanded)
-                        b-input(type="text" placeholder="Subject" v-model="form.subject")
+                  template(v-if="!submitted")
+                    form.form(@submit.prevent="submitCareer")
+                      p.error(v-if="err !== ''") {{ err }}
+                      b-field(grouped)
+                        b-field(label="Full Name" :type="(validation.hasError('form.full_name')) ? 'is-danger':''" :message="validation.firstError('form.full_name')" expanded)
+                          b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="form.full_name")
+                        b-field(label="Email" :type="(validation.hasError('form.email')) ? 'is-danger':''" :message="validation.firstError('form.email')" expanded)
+                          b-input(type="email" placeholder="Your Email" v-model="form.email")
+                        
+                      b-field(grouped)
+                        b-field(label="Contact No." :type="(validation.hasError('form.cont_number')) ? 'is-danger':''" :message="validation.firstError('form.cont_number')" expanded)
+                          b-input(type="text" placeholder="Enter Contact Number" v-model="form.cont_number" v-mask="'92-###-###-####'")
+                        b-field(label="Upload CV" :type="(validation.hasError('form.file')) ? 'is-danger':''" :message="validation.firstError('form.file')")
+                          b-upload(@input="fileChange")
+                            a.button.upld-btn
+                              b-icon(icon="upload")
+                              span {{ file_name !== null ? file_name: 'Click To Upload CV' }}
 
-                    b-field.captcha-cont(:type="(validation.hasError('form.captcha')) ? 'is-danger':''" :message="validation.firstError('form.captcha')")
-                      vueRecaptcha(ref="vue-captcha-ref" sitekey="6Le-JHcUAAAAAOIYuhjACnKAY9tEFV6GrbQ9Yy6v" @verify="captchaTr" @expired="captchaExpTr")
+                      b-field.captcha-cont(:type="(validation.hasError('form.captcha')) ? 'is-danger':''" :message="validation.firstError('form.captcha')")
+                        vueRecaptcha(ref="vue-captcha-ref" :sitekey="captcha_key" @verify="captchaTr" @expired="captchaExpTr")
 
-                    .btn-cont
-                      button.button.btn-des-1(type="submit") Submit
+                      .btn-cont
+                        button.button.btn-des-1(type="submit") Submit
 
-                    b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
+                      b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 
-                  //- .confirmation-con
-                  //-   //- .txt-content
-                  //-   //-   | Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                  //-   //-   | Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
-                  //-   //-   | when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                  //-   .img-heading
-                  //-     img(src="~/assets/img/checked.png")
-                  //-     h1 Your Application Successfully Submitted.
+                  .confirmation-con(v-else)
+                    //- .txt-content
+                    //-   | Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                    //-   | Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+                    //-   | when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    .img-heading
+                      img(src="~/assets/img/checked.png")
+                      h1 Your Application Successfully Submitted.
                 
 
               //- .tab-footer
@@ -74,13 +77,15 @@ export default {
   },
   data() {
     return {
-      suc: "",
       err: "",
       loading: false,
+      submitted: false,
+      file_name: null,
       form: {
         full_name: "",
         email: "",
-        cont_number: ""
+        cont_number: "",
+        file: null
       }
     };
   },
@@ -110,21 +115,105 @@ export default {
           "Invalid Contact Number(e.g 92-000-000-0000)"
         );
     },
+    "form.file": function(value) {
+      return Validator.value(value).required();
+    },
     "form.captcha": function(value) {
       return Validator.value(value).required();
     }
   },
   methods: {
+    mimetype_check(file) {
+      return (
+        file.type === "image/png" ||
+        file.type === "image/jpeg" ||
+        file.type === "application/pdf" ||
+        file.type === "application/msword" ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.type === "application/rtf" ||
+        file.type === "text/plain" ||
+        file.type === "image/photoshop" ||
+        file.type === "image/x-photoshop" ||
+        file.type === "image/psd" ||
+        file.type === "application/photoshop" ||
+        file.type === "application/psd" ||
+        file.type === "zz-application/zz-winassoc-psd"
+      );
+    },
+    fileChange(event) {
+      this.form.file = null;
+      this.file_name = null;
+      if (this.mimetype_check(event[0])) {
+        if (event[0].size <= 5000000) {
+          this.form.file = event[0];
+          this.file_name = event[0].name;
+        } else {
+          this.$toast.open({
+            duration: 3000,
+            message: "Maximum Upload File Size Is 5MB!",
+            position: "is-bottom",
+            type: "is-danger"
+          });
+        }
+      } else {
+        this.$toast.open({
+          duration: 3000,
+          message:
+            "Invalid File Selected! Valid types: .pdf, .doc, .docx, .rtf, .txt, .jpeg, .png, .jpg, .psd",
+          position: "is-bottom",
+          type: "is-danger"
+        });
+      }
+    },
     submitCareer() {
-      console.log(this.form);
+      const self = this;
+      self.err = "";
+      self.$validate().then(async function(success) {
+        if (success) {
+          self.loading = true;
+          let form_data = new FormData();
+          form_data.append("full_name", self.form.full_name);
+          form_data.append("email", self.form.email);
+          form_data.append("cont_number", self.form.cont_number);
+          form_data.append("captcha", self.form.captcha);
+          form_data.append("cv", self.form.file, self.form.file.name);
+          let config = {
+            headers: {
+              "content-type": "multipart/form-data"
+            }
+          };
+          await self.$axios
+            .post("/api/email/career", form_data, config)
+            .then(res => {
+              if (res.data.status === true) {
+                self.resetForm();
+                self.submitted = true;
+                self.animateDiv('#formCareerCon')
+              } else {
+                self.err = res.data.message;
+                if (res.data.err_code === "111") {
+                  self.captchaExpTr();
+                }
+              }
+            })
+            .catch(err => {
+              console.log(err);
+              self.err = "Server Request Error!";
+            });
+          self.loading = false;
+        }
+      });
     },
     resetForm() {
       this.form = {
         captcha: null,
         full_name: "",
         email: "",
-        cont_number: ""
+        cont_number: "",
+        file: null
       };
+      this.file_name = null;
       this.captchaExpTr();
       this.validation.reset();
     },
@@ -140,6 +229,24 @@ export default {
   color: #393e50;
   .txt-wrp {
     margin-top: 2rem;
+  }
+  .form {
+    .error {
+      font-size: 22px;
+      font-weight: 400;
+    }
+    .upld-btn {
+      border-style: dashed;
+      height: auto;
+      padding: 14px 35px 14px 20px;
+      width: 300px;
+      color: #3b3f58;
+      // max-width: 300px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      display: inline-block;
+      white-space: nowrap;
+    }
   }
   .status_items {
     margin-top: 2rem;

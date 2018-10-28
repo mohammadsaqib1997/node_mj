@@ -5,6 +5,24 @@ const config = require('../config')
 const trans_email = require('../e-conf.js')
 const moment = require('moment')
 const Request = require('request')
+const fs = require('fs');
+const multer = require('multer')
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, __dirname + '/../uploads/cvs')
+  },
+  filename: function (req, file, cb) {
+    let file_id = Date.now()
+    let newFile = file_id + typeGet(file.mimetype)
+    req.body.file_id = file_id
+    req.body.file_name = newFile
+    cb(null, newFile)
+  }
+})
+const upload = multer({
+  storage
+})
+const captcha_secret = config.dev ? '6Le-JHcUAAAAAMWQGZRZ8_-WnUcvNyGOT8-2U-CE' : '6LdmTncUAAAAAOPZduWVaGRJ3HcxPrxhN78lEWYN'
 
 const db = require('../db.js')
 
@@ -309,7 +327,7 @@ router.post('/forgot-password', function (req, res) {
 router.post('/contact', function (req, res) {
   Request.post('https://www.google.com/recaptcha/api/siteverify', {
     form: {
-      secret: '6Le-JHcUAAAAAMWQGZRZ8_-WnUcvNyGOT8-2U-CE',
+      secret: captcha_secret,
       response: req.body.captcha
     }
   }, function (err, httpRes, body) {
@@ -390,6 +408,91 @@ router.post('/contact', function (req, res) {
   })
 })
 
+router.post('/career', upload.single('cv'), function (req, res) {
+  Request.post('https://www.google.com/recaptcha/api/siteverify', {
+    form: {
+      secret: captcha_secret,
+      response: req.body.captcha
+    }
+  }, function (err, httpRes, body) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let resBody = JSON.parse(body)
+      if (resBody.success === true) {
+        db.getConnection(function (error, connection) {
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            connection.query(
+              `INSERT INTO career SET ?`, {
+                full_name: req.body.full_name,
+                email: req.body.email,
+                cont_number: req.body.cont_number,
+                attachment: req.body.file_name
+              },
+              function (error, result) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.render("career", {
+                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                    full_name: req.body.full_name,
+                    email: req.body.email,
+                    cont_number: req.body.cont_number,
+                    file: req.body.file_name
+                  }, function (errPug, html) {
+                    if (errPug) {
+                      res.json({
+                        status: false,
+                        message: errPug.message
+                      })
+                    } else {
+                      trans_email.sendMail({
+                        from: `"${req.body.full_name}" <${req.body.email}>`,
+                        to: 'info@mj-supreme.com',
+                        subject: `Career Form`,
+                        html: html,
+                        attachments: [{
+                          filename: req.body.file_name,
+                          content: fs.createReadStream(__dirname + '/../uploads/cvs/' + req.body.file_name)
+                        }]
+                      }, function (err, info) {
+                        if (err) {
+                          res.json({
+                            status: false,
+                            message: err.message
+                          })
+                        } else {
+                          res.json({
+                            status: true
+                          })
+                        }
+                      })
+                    }
+                  })
+                }
+              })
+          }
+        })
+      } else {
+        res.json({
+          status: false,
+          err_code: '111',
+          message: "Invalid Captcha!"
+        })
+      }
+    }
+  })
+})
+
 module.exports = router
 
 function last_id_delete_token(lastId, cb) {
@@ -407,4 +510,38 @@ function last_id_delete_token(lastId, cb) {
       })
     }
   })
+}
+
+function typeGet(mimetype) {
+  let type = ""
+  if (mimetype === "image/png") {
+    type = ".png"
+  }
+  if (mimetype === "image/jpeg") {
+    type = ".jpg"
+  }
+  if (mimetype === "application/pdf") {
+    type = ".pdf"
+  }
+  if (mimetype === "application/msword") {
+    type = ".doc"
+  }
+  if (mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    type = ".docx"
+  }
+  if (mimetype === "application/rtf") {
+    type = ".rtf"
+  }
+  if (mimetype === "text/plain") {
+    type = ".txt"
+  }
+  if (mimetype === "image/photoshop" ||
+    mimetype === "image/x-photoshop" ||
+    mimetype === "image/psd" ||
+    mimetype === "application/photoshop" ||
+    mimetype === "application/psd" ||
+    mimetype === "zz-application/zz-winassoc-psd") {
+    type = ".psd"
+  }
+  return type
 }

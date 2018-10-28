@@ -38,7 +38,7 @@
                 b-input(type="textarea" placeholder="Type your message here ..." v-model="form.message")
 
               b-field.captcha-cont(:type="(validation.hasError('form.captcha')) ? 'is-danger':''" :message="validation.firstError('form.captcha')")
-                vueRecaptcha(ref="vue-captcha-ref" sitekey="6Le-JHcUAAAAAOIYuhjACnKAY9tEFV6GrbQ9Yy6v" @verify="captchaTr" @expired="captchaExpTr")
+                vueRecaptcha(ref="vue-captcha-ref" :sitekey="captcha_key" @verify="captchaTr" @expired="captchaExpTr")
 
               .btn-cont
                 button.button.btn-des-1(type="submit") Submit

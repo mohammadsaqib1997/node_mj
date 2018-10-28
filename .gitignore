@@ -29,6 +29,8 @@ server/uploads/reports/*.csv
 server/uploads/receipts/*
 server/e-conf.js
 !server/uploads/receipts/readme.md
+server/uploads/cvs/*
+!server/uploads/cvs/readme.md
 
 static/docs
 static/gallery
