@@ -16,7 +16,7 @@ router.get('/check/:token', function (req, res) {
         connection.query(
           `SELECT id, type, member_id, created_at
             FROM tokens
-            WHERE token=? AND status<1`,
+            WHERE binary token=? AND status<1`,
           req.params.token,
           function (error, result) {
             if (error) {
@@ -140,7 +140,7 @@ router.post('/change-pass', function (req, res) {
         connection.query(
           `SELECT id, member_id, created_at
             FROM tokens
-            WHERE token=? AND status<1 AND type=1`,
+            WHERE binary token=? AND status<1 AND type=1`,
           req.body.token,
           function (error, result) {
             if (error) {
@@ -241,6 +241,63 @@ router.post('/change-pass', function (req, res) {
     res.json({
       status: false,
       message: "Invalid Parameters!"
+    })
+  }
+})
+
+router.get('/unsubscribe/:token', function (req, res) {
+  if (req.params.token !== "") {
+    db.getConnection(function (error, connection) {
+      if (error) {
+        res.status(500).json({
+          error
+        })
+      } else {
+        connection.query(
+          `SELECT COUNT(*) as \`rows\`
+            FROM subscribers
+            WHERE binary unsubscribe_id=?`,
+          req.params.token,
+          function (error, result) {
+            if (error) {
+              connection.release()
+              res.status(500).json({
+                error
+              })
+            } else {
+              if (result['0'].rows > 0) {
+                connection.query(
+                  `DELETE FROM subscribers WHERE binary unsubscribe_id=?`,
+                  req.params.token,
+                  function (error, result) {
+                    connection.release()
+                    if (error) {
+                      res.status(500).json({
+                        error
+                      })
+                    } else {
+                      res.json({
+                        status: true
+                      })
+                    }
+                  }
+                )
+              } else {
+                connection.release()
+                res.json({
+                  status: false,
+                  message: "Invalid Token!"
+                })
+              }
+            }
+          }
+        )
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Request!"
     })
   }
 })

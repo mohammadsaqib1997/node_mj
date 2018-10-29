@@ -52,6 +52,7 @@ const visible = [
     'partners-and-associates',
     'winners-of-the-month',
     'verify-token-token',
+    'unsubscribe-token',
     'terms-and-condition'
 ]
 

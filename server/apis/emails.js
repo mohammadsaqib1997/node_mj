@@ -6,6 +6,7 @@ const trans_email = require('../e-conf.js')
 const moment = require('moment')
 const Request = require('request')
 const fs = require('fs');
+const shortId = require('shortid')
 const multer = require('multer')
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -25,6 +26,90 @@ const upload = multer({
 const captcha_secret = config.dev ? '6Le-JHcUAAAAAMWQGZRZ8_-WnUcvNyGOT8-2U-CE' : '6LdmTncUAAAAAOPZduWVaGRJ3HcxPrxhN78lEWYN'
 
 const db = require('../db.js')
+
+router.post('/subs_email', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      connection.query('SELECT email FROM `subscribers` where binary `email`=?', [req.body.email], function (error, results, fields) {
+        connection.release();
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            count: results.length
+          })
+        }
+      });
+    }
+  })
+})
+
+router.post('/subscribe', function (req, res) {
+  if (req.body.email && req.body.email !== '') {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        const token = shortId.generate()
+        connection.query(
+          `INSERT INTO subscribers SET ?`, {
+            email: req.body.email,
+            unsubscribe_id: token
+          },
+          function (error, result) {
+            connection.release();
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.render('subscribe', {
+                host: require('./../config').dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                token: token
+              }, function (errPug, html) {
+                if (errPug) {
+                  res.status(500).json({
+                    errPug
+                  })
+                } else {
+                  trans_email.sendMail({
+                    from: '"MJ Supreme" <info@mj-supreme.com>',
+                    to: req.body.email,
+                    subject: 'Thank You For Subscribing!',
+                    html: html
+                  }, function (err, info) {
+                    if (err) {
+                      res.status(500).json({
+                        err
+                      })
+                    } else {
+                      res.json({
+                        status: true
+                      })
+                    }
+                  })
+                }
+              })
+            }
+          }
+        );
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Parameters!"
+    })
+  }
+})
 
 router.post('/verify', function (req, res) {
   if (req.decoded.data.type === 0) {

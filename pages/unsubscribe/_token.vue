@@ -8,19 +8,6 @@
       </div>
       <div class="section">
         <h1 :class="{title: true, 'has-text-success':status===1, 'has-text-danger':status===2}">{{ prc_title }}</h1>
-        <form v-if="type === 1" class="form" @submit.prevent="updatePass">
-          <b-field :type="(validation.hasError('f_data.new_pass')) ? 'is-danger':''" :message="validation.firstError('f_data.new_pass')">
-            <b-input type="password" placeholder="Enter New Password" v-model="f_data.new_pass" autocomplete="off"></b-input>
-          </b-field>
-          <b-field :type="(validation.hasError('f_data.pass')) ? 'is-danger':''" :message="validation.firstError('f_data.pass')">
-            <b-input type="password" placeholder="Re-Type Password" v-model="f_data.pass" autocomplete="off"></b-input>
-          </b-field>
-          <b-field>
-            <p class="control has-text-centered">
-              <button class="button btn-des-1">Change</button>
-            </p>
-          </b-field>
-        </form>
         <nuxt-link v-if="(status===1 || status===2) && loading == false && type === 0" to="/" class="button">Go To Home</nuxt-link>
         <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
       </div>
@@ -43,48 +30,32 @@ export default {
     let token = self.$route.params.token;
     if (typeof token !== "undefined") {
       await self.$axios
-        .get("/api/verify-token/check/" + token)
+        .get("/api/verify-token/unsubscribe/" + token)
         .then(res => {
           if (res.data.status === true) {
-            if (res.data.type === 0) {
-              self.prc_title = "Your email is successfully verified.";
-              self.status = 1;
-              self.type = 0;
-              self.loading = false;
-              setTimeout(function() {
-                self.$router.push("/");
-              }, 5000);
-            } else if (res.data.type === 1) {
-              self.prc_title = "New Password";
-              self.type = 1;
-              self.loading = false;
-            }
+            self.prc_title = "Your email is successfully unsubscribed.";
+            self.status = 1;
+            self.loading = false;
           } else {
             self.prc_title = res.data.message;
             self.status = 2;
             self.loading = false;
-            setTimeout(function() {
-              self.$router.push("/");
-            }, 5000);
           }
         })
         .catch(err => {
           console.log(err);
-          self.prc_title = "Request Error!";
+          self.prc_title = "Server Request Error!";
           self.status = 2;
           self.loading = false;
-          setTimeout(function() {
-            self.$router.push("/");
-          }, 5000);
         });
     } else {
       self.prc_title = "Invalid Token!";
       self.status = 2;
       self.loading = false;
-      setTimeout(function() {
-        self.$router.push("/");
-      }, 5000);
     }
+    setTimeout(function() {
+      self.$router.push("/");
+    }, 5000);
   },
   data() {
     return {
