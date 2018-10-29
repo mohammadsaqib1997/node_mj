@@ -81,9 +81,6 @@ export default {
   computed: {
     modalActive: function() {
       return this.$store.state.edMemModal.modalActive;
-    },
-    filter_val: function() {
-      return _.find(this.tbl_list_filters, { value: this.load_params.filter }).title;
     }
   },
   watch: {

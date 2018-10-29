@@ -6,7 +6,7 @@
       </div>
       <div class="body">
         <div class="section">
-          <tblTopFilter :act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="update_params('limit', $event)" @change_s_txt="update_params('search', $event)"></tblTopFilter>
+          <tblTopFilter :f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="update_params('limit', $event)" @change_s_txt="update_params('search', $event)"></tblTopFilter>
           <tableComp :arr="l_data" :loading="loading" :total_record="num_rows" :per_page="parseInt(load_params.limit)"
             :page_set="load_params.page" @page_change="update_params('page', $event)">
             <template slot="thead">
@@ -66,7 +66,12 @@ export default {
   data() {
     return {
       md_act: false,
-      clm_sel_id: null
+      clm_sel_id: null,
+      tbl_list_filters: [
+        { title: "Filter", value: "" },
+        { title: "Auto Rewards", value: "0" },
+        { title: "Self Rewards", value: "1" }
+      ]
     };
   },
   methods: {

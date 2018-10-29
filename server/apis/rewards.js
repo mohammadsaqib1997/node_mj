@@ -8,7 +8,8 @@ router.get("/list_req", function (req, res) {
     if (req.decoded.data.type > 0) {
         let offset = 0,
             limit = 10,
-            search = ""
+            search = "",
+            filter_qry = ""
         if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
             limit = req.query.limit
         }
@@ -19,6 +20,14 @@ router.get("/list_req", function (req, res) {
 
         if (req.query.search) {
             search = req.query.search
+        }
+
+        if (/^(0|1)$/.test(req.query.filter)) {
+            if (req.query.filter == 0) {
+                filter_qry = `AND clm_rwds.type=0`
+            } else if (req.query.filter == 1) {
+                filter_qry = `AND clm_rwds.type=1`
+            }
         }
 
         db.getConnection(function (err, connection) {
@@ -33,6 +42,7 @@ router.get("/list_req", function (req, res) {
                     LEFT JOIN members as m
                     ON clm_rwds.member_id = m.id
                     WHERE clm_rwds.status=0
+                    ${(filter_qry !== '') ? filter_qry: ''}
                     ${(search !== '') ? 'AND (m.user_asn_id LIKE ? OR m.email LIKE ?)' : ''}
                     `,
                     ['%' + search + '%', '%' + search + '%'],
@@ -58,6 +68,7 @@ router.get("/list_req", function (req, res) {
                                     LEFT JOIN members as m
                                     ON clm_rwds.member_id=m.id
                                     WHERE clm_rwds.status=0
+                                    ${(filter_qry !== '') ? filter_qry: ''}
                                     ${(search !== '') ? 'AND (m.user_asn_id LIKE ? OR m.email LIKE ?)' : ''}
                                     ORDER BY clm_rwds.id DESC
                                     LIMIT ${limit}
@@ -103,7 +114,8 @@ router.get("/list_comp", function (req, res) {
     if (req.decoded.data.type > 0) {
         let offset = 0,
             limit = 10,
-            search = ""
+            search = "",
+            filter_qry = ""
         if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
             limit = req.query.limit
         }
@@ -114,6 +126,14 @@ router.get("/list_comp", function (req, res) {
 
         if (req.query.search) {
             search = req.query.search
+        }
+
+        if (/^(0|1)$/.test(req.query.filter)) {
+            if (req.query.filter == 0) {
+                filter_qry = `AND clm_rwds.type=0`
+            } else if (req.query.filter == 1) {
+                filter_qry = `AND clm_rwds.type=1`
+            }
         }
 
         db.getConnection(function (err, connection) {
@@ -128,6 +148,7 @@ router.get("/list_comp", function (req, res) {
                     LEFT JOIN members as m
                     ON clm_rwds.member_id = m.id
                     WHERE clm_rwds.status=1
+                    ${(filter_qry !== '') ? filter_qry: ''}
                     ${(search !== '') ? 'AND (m.user_asn_id LIKE ? OR m.email LIKE ?)' : ''}
                     `,
                     ['%' + search + '%', '%' + search + '%'],
@@ -153,6 +174,7 @@ router.get("/list_comp", function (req, res) {
                                     LEFT JOIN members as m
                                     ON clm_rwds.member_id=m.id
                                     WHERE clm_rwds.status=1
+                                    ${(filter_qry !== '') ? filter_qry: ''}
                                     ${(search !== '') ? 'AND (m.user_asn_id LIKE ? OR m.email LIKE ?)' : ''}
                                     ORDER BY clm_rwds.id DESC
                                     LIMIT ${limit}

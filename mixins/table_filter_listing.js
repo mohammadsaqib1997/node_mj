@@ -4,6 +4,11 @@ export default {
     async mounted() {
         this.loadData()
     },
+    computed: {
+        filter_val: function() {
+          return _.find(this.tbl_list_filters, { value: this.load_params.filter }).title;
+        }
+      },
     data() {
         return {
             loading: false,

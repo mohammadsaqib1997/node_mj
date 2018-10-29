@@ -47,10 +47,13 @@ export default {
         .then(res => {
           if (res.data.status === true) {
             if (res.data.type === 0) {
-              self.prc_title = "Your email is successfully varified.";
+              self.prc_title = "Your email is successfully verified.";
               self.status = 1;
               self.type = 0;
               self.loading = false;
+              setTimeout(function() {
+                self.$router.push("/");
+              }, 5000);
             } else if (res.data.type === 1) {
               self.prc_title = "New Password";
               self.type = 1;
@@ -123,6 +126,9 @@ export default {
                 self.status = 1;
                 self.type = 0;
                 self.loading = false;
+                setTimeout(function() {
+                  self.$router.push("/");
+                }, 5000);
               } else {
                 self.prc_title = res.data.message;
                 self.status = 2;
