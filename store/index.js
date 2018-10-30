@@ -1,4 +1,5 @@
 import moment from 'moment'
+import _ from 'lodash'
 
 export const state = () => ({
   pageLoading: true,
@@ -92,13 +93,15 @@ export const actions = {
     })
   },
 
-  checkUserEmail({
+  async checkUserEmail({
     state,
     commit
   }) {
-    const userData = state.user.data
+    let user = _.cloneDeep(state.user)
+    const userData = user.data
     if (userData.type === 0) {
       if (userData.email === null) {
+        user.data['is_verify_email'] = 0
         commit('showMsgs/resetData')
         commit('showMsgs/setMsgData', {
           title: "Add Your Email!",
@@ -106,7 +109,8 @@ export const actions = {
         })
         commit('showMsgs/setMsgAct', true)
       } else {
-        this.$axios.get("/api/startup/email-info").then(res => {
+        user.data['is_verify_email'] = 0
+        await this.$axios.get("/api/startup/email-info").then(res => {
           if (res.data.status && (res.data.email_v_sts === 0 || res.data.email_v_sts === 1)) {
             if (res.data.email_v_sts === 0 && res.data.last_email === false) {
               commit('showMsgs/resetData')
@@ -120,11 +124,15 @@ export const actions = {
               })
               commit('showMsgs/setMsgAct', true)
             }
+            if (res.data.email_v_sts === 1) {
+              user.data['is_verify_email'] = 1
+            }
           }
         }).catch(err => {
           console.log(err)
         })
       }
+      commit('setUser', user)
     }
   },
 

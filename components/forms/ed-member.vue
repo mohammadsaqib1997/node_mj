@@ -366,6 +366,10 @@ export default {
             active_sts: self.f_data.status
           };
 
+          if (self.f_data.email !== self.fet_m_data.email) {
+            mem_data["email_v_sts"] = 0;
+          }
+
           if (self.is_paid_user === true && self.fet_m_data.is_paid_m === 0) {
             mem_data["user_asn_id"] = self.f_data.user_asn_id;
             mem_data["is_paid_m"] = 1;

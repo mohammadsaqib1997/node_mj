@@ -231,6 +231,7 @@ export default {
               if (res.data.status !== false) {
                 msg = "Successfully Profile Updated.";
                 await self.$store.dispatch("profile/loadProfile");
+                await self.$store.dispatch("checkUserEmail");
                 self.$emit("close_modal");
               } else {
                 is_err = true;

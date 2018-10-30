@@ -309,13 +309,16 @@ router.post("/update", function (req, res) {
                     let throw_error = null
                     await new Promise(resolve => {
                         connection.query(
-                            `SELECT is_paid_m FROM members WHERE id=?`,
+                            `SELECT is_paid_m, email FROM members WHERE id=?`,
                             req.decoded.data.user_id,
                             function (error, result) {
                                 if (error) {
                                     throw_error = error
                                     return resolve()
                                 } else {
+                                    if(result[0].email !== req.body.data.email) {
+                                        params["email_v_sts"] = 0
+                                    }
                                     if (result[0].is_paid_m === 0) {
                                         params["ref_user_asn_id"] = req.body.data.ref_code
                                     }/*  else {
