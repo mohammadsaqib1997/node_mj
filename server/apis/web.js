@@ -161,7 +161,7 @@ router.get('/get_list_winners_auto', function (req, res) {
         LEFT JOIN u_images as u_img
         ON m.id=u_img.user_id AND u_img.user_type=0
         WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
-        ORDER BY clm.approved_at
+        ORDER BY clm.approved_at DESC
         LIMIT ${limit}
         OFFSET ${offset}
         `,
@@ -235,7 +235,7 @@ router.get('/get_list_winners_self', function (req, res) {
         LEFT JOIN u_images as u_img
         ON m.id=u_img.user_id AND u_img.user_type=0
         WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
-        ORDER BY clm.approved_at
+        ORDER BY clm.approved_at DESC
         LIMIT ${limit}
         OFFSET ${offset}
         `,
@@ -283,7 +283,7 @@ router.get('/get_winners', function (req, res) {
           LEFT JOIN u_images as u_img
           ON m.id=u_img.user_id AND u_img.user_type=0
           WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
-          ORDER BY clm.approved_at
+          ORDER BY clm.approved_at DESC
           LIMIT 4
           `,
           function (error, results, fields) {
@@ -314,7 +314,7 @@ router.get('/get_winners', function (req, res) {
           LEFT JOIN u_images as u_img
           ON m.id=u_img.user_id AND u_img.user_type=0
           WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
-          ORDER BY clm.approved_at
+          ORDER BY clm.approved_at DESC
           LIMIT 4
           `,
           function (error, results, fields) {
