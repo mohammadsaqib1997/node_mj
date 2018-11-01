@@ -12,12 +12,12 @@ router.get('/email-info', function (req, res) {
                     error
                 })
             } else {
-                let last_3_days = moment().subtract(3, 'd').startOf('d').format('YYYY-MM-DD HH-mm-ss')
+                let last_1_day = moment().subtract(1, 'd').startOf('d').format('YYYY-MM-DD HH-mm-ss')
                 connection.query(
                     `SELECT m.email_v_sts, t.created_at
                     FROM members as m
                     LEFT JOIN tokens as t
-                    ON m.id=t.member_id AND t.created_at>'${last_3_days}'
+                    ON m.id=t.member_id AND t.created_at>'${last_1_day}'
                     WHERE m.id=${req.decoded.data.user_id}`,
                     function (error, result) {
                         connection.release()

@@ -1,49 +1,48 @@
 <template lang="pug">
   .section
-      form#form.form(v-on:submit.prevent="update")
+    form#form.form(v-on:submit.prevent='update')
+      b-field(label='ID')
+        b-input(type='text', placeholder='992233557', readonly='readonly', v-bind:value='user_asn_id')
 
-        b-field(label="ID")
-          b-input(type="text" placeholder="992233557" readonly v-bind:value="user_asn_id")
+      b-field(label='Full Name', :type="(validation.hasError('f_data.full_name')) ? 'is-danger':''", :message="validation.firstError('f_data.full_name')")
+        b-input(type='text', placeholder='(example: Shabir Ahmed)', v-model='f_data.full_name')
 
-        b-field(label="Full Name" :type="(validation.hasError('f_data.full_name')) ? 'is-danger':''" :message="validation.firstError('f_data.full_name')")
-          b-input(type="text" placeholder="(example: Shabir Ahmed)" v-model="f_data.full_name")
+      b-field(label='Email', :type="(validation.hasError('f_data.email')) ? 'is-danger':''", :message="validation.firstError('f_data.email')")
+        b-input(type='email', placeholder='user@domain.com', v-model='f_data.email', :loading="validation.isValidating('f_data.email')")
 
-        b-field(label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
-          b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
+      //- b-field(label='Change Password', :type="(validation.hasError('f_data.password')) ? 'is-danger':''", :message="validation.firstError('f_data.password')")
+      //-   b-input(type='password', password-reveal='password-reveal', placeholder='******', v-model='f_data.password')
 
-        b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
-          b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
+      b-field(label='CNIC', :type="(validation.hasError('f_data.cnic_num')) ? 'is-danger':''", :message="validation.firstError('f_data.cnic_num')")
+        b-input(type='tel', placeholder='xxxxx-xxxxxxx-x', v-model='f_data.cnic_num', v-mask="'#####-#######-#'")
 
-        b-field(label="CNIC" :type="(validation.hasError('f_data.cnic_num')) ? 'is-danger':''" :message="validation.firstError('f_data.cnic_num')")
-          b-input(type="tel" placeholder="xxxxx-xxxxxxx-x" v-model="f_data.cnic_num" v-mask="'#####-#######-#'")
+      b-field(label='DOB', :type="(validation.hasError('f_data.dob')) ? 'is-danger':''", :message="validation.firstError('f_data.dob')")
+        b-datepicker(placeholder='DD/MM/YYYY', v-model='f_data.dob', expanded='expanded')
 
-        b-field(label="DOB" :type="(validation.hasError('f_data.dob')) ? 'is-danger':''" :message="validation.firstError('f_data.dob')")
-          b-datepicker(placeholder="DD/MM/YYYY" v-model="f_data.dob" expanded)
+      b-field(label='Contact Number', :type="(validation.hasError('f_data.cont_num')) ? 'is-danger':''", :message="validation.firstError('f_data.cont_num')")
+        b-input(type='tel', placeholder='92-xxx-xxx-xxxx', v-model='f_data.cont_num', v-mask="'92-###-###-####'")
 
-        b-field(label="Contact Number" :type="(validation.hasError('f_data.cont_num')) ? 'is-danger':''" :message="validation.firstError('f_data.cont_num')")
-          b-input(type="tel" placeholder="92-xxx-xxx-xxxx" v-model="f_data.cont_num" v-mask="'92-###-###-####'")
+      b-field(label='Address', :type="(validation.hasError('f_data.address')) ? 'is-danger':''", :message="validation.firstError('f_data.address')")
+        b-input(type='text', placeholder='House No. #, Street Name, Area, City, Province, Country', v-model='f_data.address')
 
-        b-field(label="Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
-          b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")
+      b-field(label='City', :type="(validation.hasError('f_data.city')) ? 'is-danger':''", :message="validation.firstError('f_data.city')")
+        b-autocomplete(placeholder='Enter City Name', ref='autocomplete', v-model='ac_city', :data='filteredCityArray', @select='option => f_data.city = option', :keep-first='true', :open-on-focus='true')
+          template(slot='empty') No results for {{ac_city}}
 
-        b-field(label="City" :type="(validation.hasError('f_data.city')) ? 'is-danger':''" :message="validation.firstError('f_data.city')")
-          b-autocomplete(placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray" @select="option => f_data.city = option" :keep-first="true" :open-on-focus="true")
-            template(slot="empty") No results for {{ac_city}}
-          
-        b-field(label="Referral ID" :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
-          b-input(v-if="user_asn_id === ''" type="text" placeholder="000000000" v-model="f_data.ref_code" v-mask="'#########'" :loading="validation.isValidating('f_data.ref_code')")
-          b-input(v-else type="text" placeholder="000000000" readonly v-bind:value="f_data.ref_code")
+      b-field(label='Referral ID', :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''", :message="validation.firstError('f_data.ref_code')")
+        b-input(v-if="user_asn_id === ''", type='text', placeholder='000000000', v-model='f_data.ref_code', v-mask="'#########'", :loading="validation.isValidating('f_data.ref_code')")
+        b-input(v-else='v-else', type='text', placeholder='000000000', readonly='readonly', v-bind:value='f_data.ref_code')
 
-        b-field.cus-des-1(label="Status")
-          b-input(type="text" placeholder="Approved/Suspended" readonly v-bind:value="(status == 0) ? 'Suspended':'Approved'")
-
-        .d-flex
-          button.button.btn-des-1(type="submit")
-            b-icon(icon="edit" style="margin-top: 2px;")
-            | &nbsp;&nbsp;&nbsp;&nbsp;Update Profile
-          button.button.btn-des-1.dark(type="button" v-on:click.prevent="$emit('close_modal')") Cancel
-
-        b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
+      b-field.cus-des-1(label='Status')
+        b-input(type='text', placeholder='Approved/Suspended', readonly='readonly', v-bind:value="(status == 0) ? 'Suspended':'Approved'")
+        
+      .d-flex
+        button.button.btn-des-1(type='submit')
+          b-icon(icon='edit', style='margin-top: 2px;')
+          | &nbsp;&nbsp;&nbsp;&nbsp;Update Profile
+        button.button.btn-des-1.dark(type='button', v-on:click.prevent="$emit('close_modal')") Cancel
+      b-loading(:is-full-page='false', :active='form.loading', :can-cancel='false')
+    pinVerMD(:md_act="pin_ver_md_act" @closed="pin_ver_md_act=false" @verified="secure=true;update()")
 </template>
 
 <script>
@@ -53,29 +52,41 @@ import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 import mxn_cityAC from "~/mixins/city-ac.js";
+import pinVerMD from "~/components/modals/pincode-verify.vue";
 export default {
   mixins: [mxn_cityAC],
+  components: {
+    pinVerMD
+  },
   computed: {
     profile: function() {
       return this.$store.state.profile.profile;
+    },
+    is_pin_active: function() {
+      return this.$store.state.pincode.is_pin_active;
+    },
+    is_last_pin: function() {
+      return this.$store.state.pincode.is_last_pin;
     }
   },
   async mounted() {
     this.form.loading = true;
     await this.$store.dispatch("profile/loadProfile");
+    await this.$store.dispatch("pincode/loadPin");
     this.setData(this.profile);
     this.form.loading = false;
   },
   data() {
     return {
+      pin_ver_md_act: false,
       prd_list: [],
-      fet_m_data: null,
       user_asn_id: "",
       status: "",
+      secure: false,
       f_data: {
         full_name: "",
         email: "",
-        password: "",
+        // password: "",
         cnic_num: "",
         dob: null,
         cont_num: "",
@@ -128,12 +139,12 @@ export default {
         }
       }
     },
-    "f_data.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
-    },
+    // "f_data.password": function(value) {
+    //   return Validator.value(value)
+    //     .required()
+    //     .minLength(6)
+    //     .maxLength(35);
+    // },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
         .required()
@@ -200,7 +211,7 @@ export default {
       this.f_data = {
         full_name: data.full_name,
         email: data.email,
-        password: data.password,
+        // password: data.password,
         cnic_num: data.cnic_num,
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
@@ -219,6 +230,17 @@ export default {
 
           let new_data = _.cloneDeep(self.f_data);
 
+          if (
+            new_data.email !== self.profile.email ||
+            new_data.cont_num !== self.profile.contact_num
+          ) {
+            if (self.secure !== true && (self.is_pin_active === true || self.is_last_pin === true)) {
+              self.form.loading = false;
+              self.pin_ver_md_act = true;
+              return;
+            }
+          }
+
           new_data["dob"] = new_data["dob"]
             ? moment(new_data.dob).format("YYYY-MM-DD")
             : null;
@@ -229,6 +251,7 @@ export default {
             })
             .then(async res => {
               if (res.data.status !== false) {
+                self.secure = false;
                 msg = "Successfully Profile Updated.";
                 await self.$store.dispatch("profile/loadProfile");
                 await self.$store.dispatch("checkUserEmail");

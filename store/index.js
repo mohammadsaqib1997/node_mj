@@ -67,7 +67,7 @@ export const actions = {
                     token: res.data.token,
                     data: res.data.user
                   });
-                  if (res.data.user.is_paid && res.data.user.is_paid === 1) {
+                  if (res.data.user.type === 0) {
                     dispatch("checkUserEmail");
                   }
                 } else {
@@ -156,6 +156,7 @@ export const actions = {
     commit
   }) {
     localStorage.removeItem("user")
+    commit('pincode/resetData')
     commit('showMsgs/resetData')
     commit('initAuthSet', false)
     commit('setUser', null)

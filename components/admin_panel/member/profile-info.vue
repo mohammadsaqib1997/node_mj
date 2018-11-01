@@ -71,18 +71,10 @@
         nuxt-link.button.btn-des-1(to="/fund-manager/finance-details")
           img(src="~/assets/img/btn-coin.png")
           | &nbsp;&nbsp;&nbsp;&nbsp;View Finances
-        button.button.btn-des-1(@click.prevent="pincode_md_act=true")
-          b-icon(icon="shield-alt")
-          | &nbsp;&nbsp;&nbsp;&nbsp;Add Secondary PinCode
-    pinCodeMD(:md_act="pincode_md_act" @closed="pincode_md_act=false")
 </template>
 
 <script>
-import pinCodeMD from "~/components/modals/add-pincode.vue";
 export default {
-  components: {
-    pinCodeMD
-  },
   computed: {
     profile: function() {
       return this.$store.state.profile.profile;

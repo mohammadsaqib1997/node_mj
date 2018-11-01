@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const fs = require('fs')
+const jwt = require('jsonwebtoken')
+const config = require('../config')
+const trans_email = require('../e-conf.js')
 
 const multer = require('multer')
 const storage = multer.diskStorage({
@@ -13,9 +16,12 @@ const storage = multer.diskStorage({
         cb(null, newFile)
     }
 })
-const upload = multer({ storage })
+const upload = multer({
+    storage
+})
 
 const db = require('../db.js')
+const db_utils = require('../func/db-util.js')
 
 router.get("/name", function (req, res) {
     if (req.decoded.data.user_id) {
@@ -29,28 +35,39 @@ router.get("/name", function (req, res) {
         }
         db.getConnection(function (err, connection) {
             if (err) {
-                res.status(500).json({ err })
+                res.status(500).json({
+                    err
+                })
             } else {
                 connection.query(query, req.decoded.data.user_id, function (error, results, fields) {
                     connection.release();
 
                     if (error) {
-                        res.status(500).json({ error })
+                        res.status(500).json({
+                            error
+                        })
                     } else {
-                        res.json({ name: results[0].full_name })
+                        res.json({
+                            name: results[0].full_name
+                        })
                     }
                 })
             }
         })
     } else {
-        res.json({ status: false, message: "No User Found!" })
+        res.json({
+            status: false,
+            message: "No User Found!"
+        })
     }
 })
 
 router.get("/file/:id", function (req, res) {
     db.getConnection(function (err, connection) {
         if (err) {
-            res.status(500).json({ error })
+            res.status(500).json({
+                error
+            })
         } else {
             let opt = {
                 sql: `SELECT * FROM u_images WHERE user_id=? AND user_type=?`
@@ -59,7 +76,9 @@ router.get("/file/:id", function (req, res) {
                 connection.release();
 
                 if (error) {
-                    res.status(500).json({ error })
+                    res.status(500).json({
+                        error
+                    })
                 } else {
                     let not_found = true
                     if (results.length > 0) {
@@ -71,7 +90,9 @@ router.get("/file/:id", function (req, res) {
                     }
 
                     if (not_found) {
-                        res.status(404).json({ message: 'Not found!' })
+                        res.status(404).json({
+                            message: 'Not found!'
+                        })
                     }
 
                 }
@@ -86,30 +107,39 @@ router.get("/", function (req, res) {
     if (req.decoded.data.user_id) {
         db.getConnection(function (err, connection) {
             if (err) {
-                res.status(500).json({ error })
+                res.status(500).json({
+                    error
+                })
             } else {
                 let query = ''
                 if (req.decoded.data.type === 0) {
-                    query = "SELECT user_asn_id, email, password, full_name, contact_num, cnic_num, dob, address, city, ref_user_asn_id, active_sts FROM members WHERE id=?"
+                    query = "SELECT user_asn_id, email, full_name, contact_num, cnic_num, dob, address, city, ref_user_asn_id, active_sts FROM members WHERE id=?"
                 } else if (req.decoded.data.type === 1) {
-                    query = "SELECT email, password, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
+                    query = "SELECT email, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
                 } else {
-                    query = "SELECT email, password, full_name, contact_num, cnic_num, address FROM admins WHERE id=?"
+                    query = "SELECT email, full_name, contact_num, cnic_num, address FROM admins WHERE id=?"
                 }
                 connection.query(query, req.decoded.data.user_id, function (error, results, fields) {
                     connection.release();
 
                     if (error) {
-                        res.status(500).json({ error })
+                        res.status(500).json({
+                            error
+                        })
                     } else {
-                        res.json({ data: results[0] })
+                        res.json({
+                            data: results[0]
+                        })
                     }
 
                 });
             }
         })
     } else {
-        res.json({ status: false, message: "No User Found!" })
+        res.json({
+            status: false,
+            message: "No User Found!"
+        })
     }
 })
 
@@ -117,7 +147,9 @@ router.get("/get_comp_prg", function (req, res) {
     if (req.decoded.data.user_id && req.decoded.data.type === 0) {
         db.getConnection(function (err, connection) {
             if (err) {
-                res.status(500).json({ err })
+                res.status(500).json({
+                    err
+                })
             } else {
                 connection.query(
                     `SELECT m.full_name, m.dob, m.cnic_num, m.email, m.contact_num, m.address, m.user_asn_id, m_bk.bank_name, m_bk.branch_code, m_bk.account_title, m_bk.account_number
@@ -129,7 +161,9 @@ router.get("/get_comp_prg", function (req, res) {
                     function (err, result) {
                         connection.release()
                         if (err) {
-                            res.status(500).json({ err })
+                            res.status(500).json({
+                                err
+                            })
                         } else {
                             if (result.length > 0) {
                                 let com_fields = 0
@@ -153,7 +187,10 @@ router.get("/get_comp_prg", function (req, res) {
             }
         })
     } else {
-        res.json({ status: false, message: "No User Data!" })
+        res.json({
+            status: false,
+            message: "No User Data!"
+        })
     }
 })
 
@@ -161,7 +198,9 @@ router.get("/may_i_wallet_req", function (req, res) {
     if (req.decoded.data.user_id && req.decoded.data.type === 0) {
         db.getConnection(function (err, connection) {
             if (err) {
-                res.status(500).json({ err })
+                res.status(500).json({
+                    err
+                })
             } else {
                 let query = `SELECT m.*, m_bk.bank_name, m_bk.branch_code, m_bk.account_title, m_bk.account_number
                 FROM members as m
@@ -172,7 +211,9 @@ router.get("/may_i_wallet_req", function (req, res) {
                     connection.release();
 
                     if (error) {
-                        res.status(500).json({ error })
+                        res.status(500).json({
+                            error
+                        })
                     } else {
                         let profile_comp = []
                         // member detail
@@ -236,9 +277,14 @@ router.get("/may_i_wallet_req", function (req, res) {
 
                         // here is response
                         if (profile_comp.length > 0) {
-                            res.json({ status: false, errors: profile_comp })
+                            res.json({
+                                status: false,
+                                errors: profile_comp
+                            })
                         } else {
-                            res.json({ status: true })
+                            res.json({
+                                status: true
+                            })
                         }
 
                     }
@@ -246,7 +292,10 @@ router.get("/may_i_wallet_req", function (req, res) {
             }
         })
     } else {
-        res.json({ status: false, message: "No User Data!" })
+        res.json({
+            status: false,
+            message: "No User Data!"
+        })
     }
 })
 
@@ -254,7 +303,9 @@ router.get("/get_prd_detail", function (req, res) {
     if (req.decoded.data.user_id && req.decoded.data.type === 0) {
         db.getConnection(function (err, connection) {
             if (err) {
-                res.status(500).json({ err })
+                res.status(500).json({
+                    err
+                })
             } else {
                 connection.query(
                     `SELECT p_d.product_id, p_d.buyer_type, p_d.buyer_pay_type, p_d.buyer_qty_prd, iv_m.package_act_date
@@ -266,7 +317,9 @@ router.get("/get_prd_detail", function (req, res) {
                     function (err, result) {
                         connection.release()
                         if (err) {
-                            res.status(500).json({ err })
+                            res.status(500).json({
+                                err
+                            })
                         } else {
                             if (result.length > 0) {
                                 res.json({
@@ -283,7 +336,10 @@ router.get("/get_prd_detail", function (req, res) {
             }
         })
     } else {
-        res.json({ status: false, message: "No User Data!" })
+        res.json({
+            status: false,
+            message: "No User Data!"
+        })
     }
 })
 
@@ -291,20 +347,24 @@ router.post("/update", function (req, res) {
     if (req.decoded.data.user_id) {
         db.getConnection(async function (err, connection) {
             if (err) {
-                res.status(500).json({ error })
+                res.status(500).json({
+                    error
+                })
             } else {
-                let query = '', params = {
-                    "address": req.body.data.address,
-                    "cnic_num": req.body.data.cnic_num,
-                    "contact_num": req.body.data.cont_num,
-                    "email": req.body.data.email,
-                    "full_name": req.body.data.full_name,
-                    "password": req.body.data.password
-                }
+                let query = '',
+                    params = {
+                        "address": req.body.data.address,
+                        "cnic_num": req.body.data.cnic_num,
+                        "contact_num": req.body.data.cont_num,
+                        "email": req.body.data.email,
+                        "full_name": req.body.data.full_name,
+                        "password": req.body.data.password
+                    }
                 if (req.decoded.data.type === 0) {
                     query = "UPDATE members SET ? WHERE id=?"
                     params["dob"] = req.body.data.dob
                     params["city"] = req.body.data.city
+                    delete params['password']
 
                     let throw_error = null
                     await new Promise(resolve => {
@@ -316,20 +376,23 @@ router.post("/update", function (req, res) {
                                     throw_error = error
                                     return resolve()
                                 } else {
-                                    if(result[0].email !== req.body.data.email) {
+                                    if (result[0].email !== req.body.data.email) {
                                         params["email_v_sts"] = 0
                                     }
                                     if (result[0].is_paid_m === 0) {
                                         params["ref_user_asn_id"] = req.body.data.ref_code
-                                    }/*  else {
-                                        delete params['email']
-                                    } */
+                                    }
+                                    /*  else {
+                                                                            delete params['email']
+                                                                        } */
                                     return resolve()
                                 }
                             })
                     })
                     if (throw_error) {
-                        return res.status(500).json({ throw_error })
+                        return res.status(500).json({
+                            throw_error
+                        })
                     }
 
                 } else if (req.decoded.data.type === 1) {
@@ -342,37 +405,52 @@ router.post("/update", function (req, res) {
                     connection.release();
 
                     if (error) {
-                        res.status(500).json({ error })
+                        res.status(500).json({
+                            error
+                        })
                     } else {
-                        res.json({ status: true })
+                        res.json({
+                            status: true
+                        })
                     }
 
                 });
             }
         })
     } else {
-        res.json({ status: false, message: "No User Found!" })
+        res.json({
+            status: false,
+            message: "No User Found!"
+        })
     }
 })
 
 router.post("/image_upload", upload.single('profile'), function (req, res) {
     db.getConnection(function (err, connection) {
         if (err) {
-            res.status(500).json({ error })
+            res.status(500).json({
+                err
+            })
         } else {
             connection.query('SELECT * FROM u_images WHERE user_id=? AND user_type=?', [req.decoded.data.user_id, req.decoded.data.type], function (error, results, fields) {
                 if (error) {
                     connection.release();
-                    res.status(500).json({ error })
+                    res.status(500).json({
+                        error
+                    })
                 } else {
-                    let up_opt = { sql: `INSERT INTO u_images SET ?` }
+                    let up_opt = {
+                        sql: `INSERT INTO u_images SET ?`
+                    }
                     let params = [{
                         user_id: req.decoded.data.user_id,
                         user_type: req.decoded.data.type,
                         file_name: req.body.file_name,
                     }]
                     if (results.length > 0) {
-                        up_opt = { sql: `UPDATE u_images SET ? WHERE id=?` }
+                        up_opt = {
+                            sql: `UPDATE u_images SET ? WHERE id=?`
+                        }
                         params = [{
                             file_name: req.body.file_name,
                         }, results[0].id]
@@ -385,9 +463,13 @@ router.post("/image_upload", upload.single('profile'), function (req, res) {
                     connection.query(up_opt, params, function (error, results, fields) {
                         connection.release();
                         if (error) {
-                            res.status(500).json({ error })
+                            res.status(500).json({
+                                error
+                            })
                         } else {
-                            res.json({ status: true })
+                            res.json({
+                                status: true
+                            })
                         }
                     })
 
@@ -395,6 +477,392 @@ router.post("/image_upload", upload.single('profile'), function (req, res) {
             })
         }
     })
+})
+
+router.get('/is_pin', function (req, res) {
+    if (req.decoded.data.type === 0) {
+        let user_id = req.decoded.data.user_id
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({
+                    err
+                })
+            } else {
+                connection.query(
+                    `SELECT pin, active_sts, last_pin
+                    FROM pincodes
+                    WHERE member_id=?`,
+                    user_id,
+                    function (error, results) {
+                        connection.release()
+                        if (error) {
+                            res.status(500).json({
+                                error
+                            })
+                        } else {
+                            let is_pin = false,
+                                is_pin_act = false,
+                                last_pin = false
+                            if (results.length > 0) {
+                                is_pin = true
+                                if (results[0].active_sts === 1) {
+                                    is_pin_act = true
+                                }
+                                if (results[0].last_pin && results[0].last_pin !== null) {
+                                    last_pin = true
+                                }
+                            }
+                            res.json({
+                                is_pin,
+                                is_pin_act,
+                                last_pin
+                            })
+                        }
+                    })
+            }
+        })
+    } else {
+        res.json({
+            status: false,
+            message: "Invalid User Type!"
+        })
+    }
+})
+
+router.post('/verify_pin', function (req, res) {
+    if (req.decoded.data.type === 0) {
+        let user_id = req.decoded.data.user_id
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({
+                    err
+                })
+            } else {
+                connection.query(
+                    `SELECT active_sts
+                    FROM pincodes
+                    WHERE member_id=? AND BINARY pin=?`,
+                    [user_id, req.body.pin],
+                    function (error, results) {
+                        connection.release()
+                        if (error) {
+                            res.status(500).json({
+                                error
+                            })
+                        } else {
+                            if (results.length > 0) {
+                                if (results[0].active_sts === 1) {
+                                    res.json({
+                                        status: true
+                                    })
+                                } else {
+                                    res.json({
+                                        status: false,
+                                        message: 'Your pincode is not verify. Verify your pin code using an email!'
+                                    })
+                                }
+
+                            } else {
+                                res.json({
+                                    status: false,
+                                    message: 'Invalid PinCode!'
+                                })
+                            }
+                        }
+                    })
+            }
+        })
+    } else {
+        res.json({
+            status: false,
+            message: "Invalid User Type!"
+        })
+    }
+})
+
+router.post('/add_pincode', function (req, res) {
+    if (req.decoded.data.type === 0) {
+        let user_id = req.decoded.data.user_id
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({
+                    err
+                })
+            } else {
+                connection.query(
+                    `SELECT m.email, pin.pin, m.full_name 
+                    FROM members as m
+                    LEFT JOIN pincodes as pin
+                    ON m.id = pin.member_id
+                    WHERE m.id=? AND BINARY m.password=?`,
+                    [user_id, req.body.password],
+                    function (error, results) {
+                        if (error) {
+                            connection.release()
+                            res.status(500).json({
+                                error
+                            })
+                        } else {
+                            if (results.length > 0) {
+                                if (results[0].pin !== null) {
+                                    connection.release()
+                                    res.json({
+                                        status: false,
+                                        message: "You have already add pin code!"
+                                    })
+                                } else {
+                                    if (results[0].email && results[0].email !== null && results[0].email !== '') {
+                                        let token = null,
+                                            full_name = results[0].full_name,
+                                            send_email = results[0].email
+
+                                        db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
+                                            connection.query(
+                                                `INSERT INTO pincodes SET ?`, {
+                                                    member_id: user_id,
+                                                    pin: req.body.pin
+                                                },
+                                                function (error, results) {
+                                                    if (error) {
+                                                        err_cb(error)
+                                                        resolve()
+                                                    } else {
+                                                        token = jwt.sign({
+                                                            data: {
+                                                                user_id,
+                                                                new_pin: req.body.pin,
+                                                                type: 2
+                                                            }
+                                                        }, config.secret, {
+                                                            expiresIn: "1 day"
+                                                        })
+                                                        connection.query(
+                                                            `INSERT INTO tokens SET ?`, {
+                                                                type: 2,
+                                                                member_id: user_id,
+                                                                token: token
+                                                            },
+                                                            function (error, results) {
+                                                                if (error) {
+                                                                    err_cb(error)
+                                                                }
+                                                                resolve()
+                                                            })
+                                                    }
+                                                })
+                                        }, function (error) { // this is finalize response handler
+                                            if (error) {
+                                                res.status(500).json({
+                                                    error
+                                                })
+                                            } else {
+                                                //sending an email in here
+                                                if (token !== null) {
+                                                    res.render("verify-token", {
+                                                        host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                                                        name: full_name,
+                                                        token: token
+                                                    }, function (errPug, html) {
+                                                        if (errPug) {
+                                                            res.json({
+                                                                status: false,
+                                                                message: "Error render in pug file!"
+                                                            })
+                                                        } else {
+                                                            trans_email.sendMail({
+                                                                from: '"MJ Supreme" <info@mj-supreme.com>',
+                                                                to: send_email,
+                                                                subject: 'Verification Token',
+                                                                html: html
+                                                            }, function (err, info) {
+                                                                if (err) {
+                                                                    res.json({
+                                                                        status: false,
+                                                                        message: "Error in sending an email!"
+                                                                    })
+                                                                } else {
+                                                                    res.json({
+                                                                        status: true
+                                                                    })
+                                                                }
+                                                            })
+                                                        }
+                                                    })
+                                                } else {
+                                                    res.json({
+                                                        status: false,
+                                                        message: "Token generated error!"
+                                                    })
+                                                }
+
+                                            }
+                                        })
+                                    } else {
+                                        connection.release()
+                                        res.json({
+                                            status: false,
+                                            message: "Please first enter your email!"
+                                        })
+                                    }
+                                }
+
+                            } else {
+                                connection.release()
+                                res.json({
+                                    status: false,
+                                    message: "Invalid Password!"
+                                })
+                            }
+                        }
+                    }
+                )
+            }
+        })
+    } else {
+        res.json({
+            status: false,
+            message: "Invalid User Type!"
+        })
+    }
+
+})
+
+router.post('/update_pincode', function (req, res) {
+    if (req.decoded.data.type === 0) {
+        let user_id = req.decoded.data.user_id
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({
+                    err
+                })
+            } else {
+                connection.query(
+                    `SELECT pin.id, pin.pin, m.email, m.full_name  
+                    FROM members as m
+                    LEFT JOIN pincodes as pin
+                    ON m.id = pin.member_id
+                    WHERE m.id=? AND BINARY m.password=?`,
+                    [user_id, req.body.password],
+                    function (error, results) {
+                        if (error) {
+                            connection.release()
+                            res.status(500).json({
+                                error
+                            })
+                        } else {
+                            if (results.length > 0) {
+                                if (results[0].pin == req.body.old_pin) {
+                                    let token = null,
+                                        full_name = results[0].full_name,
+                                        send_email = results[0].email
+                                    db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
+                                        connection.query(
+                                            `UPDATE pincodes SET ? WHERE id=?`, [{
+                                                pin: req.body.pin,
+                                                last_pin: results[0].pin,
+                                                active_sts: 0
+                                            }, results[0].id],
+                                            function (error, results) {
+                                                if (error) {
+                                                    err_cb(error)
+                                                    resolve()
+                                                } else {
+                                                    token = jwt.sign({
+                                                        data: {
+                                                            user_id,
+                                                            new_pin: req.body.pin,
+                                                            type: 2
+                                                        }
+                                                    }, config.secret, {
+                                                        expiresIn: "1 day"
+                                                    })
+                                                    connection.query(
+                                                        `INSERT INTO tokens SET ?`, {
+                                                            type: 2,
+                                                            member_id: user_id,
+                                                            token: token
+                                                        },
+                                                        function (error, results) {
+                                                            if (error) {
+                                                                err_cb(error)
+                                                            }
+                                                            resolve()
+                                                        })
+                                                }
+                                            })
+                                    }, function (error) { // this is finalize response handler
+                                        if (error) {
+                                            res.status(500).json({
+                                                error
+                                            })
+                                        } else {
+                                            //sending an email in here
+                                            if (token !== null) {
+                                                res.render("verify-token", {
+                                                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                                                    name: full_name,
+                                                    token: token
+                                                }, function (errPug, html) {
+                                                    if (errPug) {
+                                                        res.json({
+                                                            status: false,
+                                                            message: "Error render in pug file!"
+                                                        })
+                                                    } else {
+                                                        trans_email.sendMail({
+                                                            from: '"MJ Supreme" <info@mj-supreme.com>',
+                                                            to: send_email,
+                                                            subject: 'Verification Token',
+                                                            html: html
+                                                        }, function (err, info) {
+                                                            if (err) {
+                                                                res.json({
+                                                                    status: false,
+                                                                    message: "Error in sending an email!"
+                                                                })
+                                                            } else {
+                                                                res.json({
+                                                                    status: true
+                                                                })
+                                                            }
+                                                        })
+                                                    }
+                                                })
+                                            } else {
+                                                res.json({
+                                                    status: false,
+                                                    message: "Token generated error!"
+                                                })
+                                            }
+                                        }
+                                    })
+                                } else {
+                                    connection.release()
+                                    res.json({
+                                        status: false,
+                                        message: "Invalid old pin code!"
+                                    })
+                                }
+
+                            } else {
+                                connection.release()
+                                res.json({
+                                    status: false,
+                                    message: "Invalid Password!"
+                                })
+                            }
+                        }
+                    }
+                )
+            }
+        })
+    } else {
+        res.json({
+            status: false,
+            message: "Invalid User Type!"
+        })
+    }
+
 })
 
 module.exports = router

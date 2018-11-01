@@ -150,7 +150,7 @@ router.post('/verify', function (req, res) {
                         }
                       },
                       config.secret, {
-                        expiresIn: "3 days"
+                        expiresIn: "1 day"
                       }
                     )
                     connection.query(

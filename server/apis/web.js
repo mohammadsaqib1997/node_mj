@@ -267,10 +267,7 @@ router.get('/get_winners', function (req, res) {
         data = {
           auto_rewards: [],
           self_rewards: []
-        },
-        date = moment(),
-        startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
-        endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+        }
 
       await new Promise(resolve => {
         connection.query(
@@ -282,7 +279,7 @@ router.get('/get_winners', function (req, res) {
           ON m.id=i_var.member_id
           LEFT JOIN u_images as u_img
           ON m.id=u_img.user_id AND u_img.user_type=0
-          WHERE clm.type=0 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+          WHERE clm.type=0 AND clm.status=1
           ORDER BY clm.approved_at DESC
           LIMIT 4
           `,
@@ -313,7 +310,7 @@ router.get('/get_winners', function (req, res) {
           ON m.id=i_var.member_id
           LEFT JOIN u_images as u_img
           ON m.id=u_img.user_id AND u_img.user_type=0
-          WHERE clm.type=1 AND clm.status=1 AND (clm.approved_at >= '${startM}' AND clm.approved_at <= '${endM}')
+          WHERE clm.type=1 AND clm.status=1
           ORDER BY clm.approved_at DESC
           LIMIT 4
           `,

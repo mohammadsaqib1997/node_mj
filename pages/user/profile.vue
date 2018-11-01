@@ -4,7 +4,10 @@
       .header.columns.is-gapless.is-multiline
         .column
           h1 Profile
-        .column.is-2-desktop.is-12-tablet.has-text-right
+        .column.has-text-right
+          button.button.pincode-btn(v-if="$store.state.user.data.type === 0" @click.prevent="pincode_md_act=true")
+            b-icon(icon="shield-alt")
+            | &nbsp;&nbsp;&nbsp;&nbsp;{{ is_pin === true ? 'Change': 'Add' }} PinCode
           button.button.edit-btn(@click.prevent="modalActive = true")
               b-icon(icon="edit")
               | &nbsp;&nbsp;&nbsp;&nbsp;Edit
@@ -27,6 +30,7 @@
         #ed-prof-con.modal-card-body
           profileEdMem(v-if="$store.state.user.data.type === 0" @close_modal="modalActive=false")
           profileEdAdm(v-else @close_modal="modalActive=false")
+    pinCodeMD(:md_act="pincode_md_act" @closed="pincode_md_act=false")
 </template>
 
 <script>
@@ -34,13 +38,20 @@ import profileEdMem from "~/components/forms/ed-profile.vue";
 import profileEdAdm from "~/components/admin_panel/admin/ed-profile.vue";
 import profileInfoMem from "~/components/admin_panel/member/profile-info.vue";
 import profileInfoAdm from "~/components/admin_panel/admin/profile-info.vue";
+import pinCodeMD from "~/components/modals/add-pincode.vue";
 export default {
   layout: "admin_layout",
   components: {
     profileEdMem,
     profileEdAdm,
     profileInfoMem,
-    profileInfoAdm
+    profileInfoAdm,
+    pinCodeMD
+  },
+  computed: {
+    is_pin: function () {
+      return this.$store.state.pincode.is_pincode
+    }
   },
   async mounted() {
     const self = this;
@@ -57,13 +68,18 @@ export default {
       .catch(err => {
         self.profile_img_url = null;
       });
+
+    if (this.$store.state.user.data.type === 0) {
+      await this.$store.dispatch("pincode/loadPin");
+    }
     this.loading = false;
   },
   data() {
     return {
       loading: false,
       modalActive: false,
-      profile_img_url: null
+      profile_img_url: null,
+      pincode_md_act: false
     };
   },
   methods: {
@@ -136,52 +152,63 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
-  .profile /deep/
-  
-    .profile-img
-      margin-right: 5rem
-      max-width: 20rem
-      &>img
-        width: 100%
-    .add-img-con
-      display: flex
-      align-items: center
-      &>span
-        text-transform: uppercase
-        font-size: 14px
-        text-decoration: underline
-        line-height: 2rem
-        color: #838383
-        padding: 0 5px
-        cursor: pointer
-
-
-    .edit-btn
-      color: #666666
-      border: 2px solid transparent
-      box-shadow: none !important
-      font-weight: 500
-      text-transform: uppercase
-      height: auto
-      border-radius: 0
-      &:focus, &:hover
-        border: 2px solid #d9bd68
-      .icon
-        color: #d9bd68
-
-    .btn-des-1
-      &>img
-        width: 20px
-
-    .profile-info-con h2
-      font-weight: bold
-      line-height: 3rem
-      font-size: 1.2rem
-      color: #3d3e5a
-
-    label
-      font-weight: 300
-      line-height: 3rem
-      font-size: 1.2rem
+<style scoped lang="scss">
+.profile /deep/ {
+  .profile-img {
+    margin-right: 5rem;
+    max-width: 20rem;
+    & > img {
+      width: 100%;
+    }
+  }
+  .add-img-con {
+    display: flex;
+    align-items: center;
+    & > span {
+      text-transform: uppercase;
+      font-size: 14px;
+      text-decoration: underline;
+      line-height: 2rem;
+      color: #838383;
+      padding: 0 5px;
+      cursor: pointer;
+    }
+  }
+  .edit-btn,
+  .pincode-btn {
+    color: #666666;
+    border: 2px solid transparent;
+    box-shadow: none !important;
+    font-weight: 500;
+    text-transform: uppercase;
+    height: auto;
+    border-radius: 0;
+    &:last-child {
+      margin-left: 10px;
+    }
+    &:focus,
+    &:hover {
+      border: 2px solid #d9bd68;
+    }
+    .icon {
+      color: #d9bd68;
+    }
+  }
+  .btn-des-1 {
+    & > img {
+      width: 20px;
+    }
+  }
+  .profile-info-con h2 {
+    font-weight: bold;
+    line-height: 3rem;
+    font-size: 1.2rem;
+    color: #3d3e5a;
+  }
+  label {
+    font-weight: 300;
+    line-height: 3rem;
+    font-size: 1.2rem;
+  }
+}
 </style>

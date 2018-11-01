@@ -25,9 +25,10 @@ export const actions = {
         commit("setName", (result.name ? result.name : 'DEFAULT'))
     },
     async loadProfile({ commit, rootState, dispatch }) {
-        await dispatch('loadName')
+        // await dispatch('loadName')
         let result = await this.$axios.$get('/api/profile/')
         commit("setProfile", (result.data ? result.data : {}))
+        commit("setName", (result.data ? result.data.full_name : ''))
     },
     async mayWalletReq({ commit }) {
         await this.$axios

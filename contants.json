@@ -61,8 +61,12 @@
         "1": "expenses finance entry"
     },
     "tokens": {
-        "type" : {
-            "0": "verify token generated"
+        "type": {
+            "0": "verify token generated",
+            "1": "Forgot password",
+            "2": "add|update pincode genereate token",
+            "3": "member table data change token",
+            "4": "member bank detail change token"
         },
         "status": {
             "0": "token is not verify",
