@@ -21,7 +21,7 @@
             </p>
           </b-field>
         </form>
-        <nuxt-link v-if="(status===1 || status===2) && loading == false && type === 0" to="/" class="button">Go To Home</nuxt-link>
+        <nuxt-link v-if="(status===1 || status===2) && loading == false && type === 0" to="/" @click="finishAct" class="button">Go To Home</nuxt-link>
         <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
       </div>
     </div>
@@ -51,7 +51,7 @@ export default {
               self.status = 1;
               self.type = 0;
               self.loading = false;
-              setTimeout(function() {
+              self.timeOutInterval = setTimeout(function() {
                 self.$router.push("/");
               }, 5000);
             } else if (res.data.type === 1) {
@@ -63,7 +63,7 @@ export default {
               self.status = 1;
               self.type = 0;
               self.loading = false;
-              setTimeout(function() {
+              self.timeOutInterval = setTimeout(function() {
                 self.$router.push("/");
               }, 5000);
             } else {
@@ -71,7 +71,7 @@ export default {
               self.status = 1;
               self.type = 0;
               self.loading = false;
-              setTimeout(function() {
+              self.timeOutInterval = setTimeout(function() {
                 self.$router.push("/");
               }, 5000);
             }
@@ -79,7 +79,7 @@ export default {
             self.prc_title = res.data.message;
             self.status = 2;
             self.loading = false;
-            setTimeout(function() {
+            self.timeOutInterval = setTimeout(function() {
               self.$router.push("/");
             }, 5000);
           }
@@ -89,7 +89,7 @@ export default {
           self.prc_title = "Request Error!";
           self.status = 2;
           self.loading = false;
-          setTimeout(function() {
+          self.timeOutInterval = setTimeout(function() {
             self.$router.push("/");
           }, 5000);
         });
@@ -97,13 +97,14 @@ export default {
       self.prc_title = "Invalid Token!";
       self.status = 2;
       self.loading = false;
-      setTimeout(function() {
+      self.timeOutInterval = setTimeout(function() {
         self.$router.push("/");
       }, 5000);
     }
   },
   data() {
     return {
+      timeOutInterval: null,
       prc_title: "Verifying Token...",
       status: 0,
       type: 0,
@@ -170,6 +171,11 @@ export default {
             });
         }
       });
+    },
+    finishAct() {
+      if (this.timeOutInterval !== null) {
+        clearTimeout(this.timeOutInterval);
+      }
     }
   }
 };

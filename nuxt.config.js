@@ -44,6 +44,14 @@ module.exports = {
     {
       src: '~/plugins/axios.js',
       ssr: false
+    },
+    {
+      src: '~/plugins/socketio.js',
+      ssr: false
+    },
+    {
+      src: '~/plugins/localstorage.js',
+      ssr: false
     }
   ],
   modules: [

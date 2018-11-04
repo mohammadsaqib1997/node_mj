@@ -19,7 +19,6 @@ import footerComp from "~/components/FooterComp.vue";
 import loginForm from "~/components/forms/login.vue";
 import forgotPassForm from "~/components/forms/forgot_password.vue";
 
-import io from "socket.io-client";
 export default {
   head: {
     script: [
@@ -31,22 +30,6 @@ export default {
         async: true
       }
     ]
-  },
-  async mounted() {
-    const self = this;
-    self.socket = io();
-    self.socket.on("token", data => {
-      if (data.hasOwnProperty("token")) {
-        self.$store.commit("jwtTokenSet", data.token);
-      } else {
-        console.error(data.error.message);
-      }
-    });
-  },
-  destroyed() {
-    this.$store.commit("jwtTokenSet", null);
-    this.socket ? this.socket.disconnect() : "";
-
   },
   components: {
     topHeader,

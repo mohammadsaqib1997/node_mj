@@ -2,8 +2,7 @@
     .copyrights
         .columns
             .column
-                p Copyright © {{ year }} MJ-Supreme. Designed by 
-                  a(href="http://focusme360.com" target="_blank") FocusMedia360
+                p Copyright © {{ year }} MJ-Supreme.
             .column
             .column
                 ul.bottom-link

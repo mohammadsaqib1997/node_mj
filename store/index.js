@@ -1,5 +1,6 @@
 import moment from 'moment'
 import _ from 'lodash'
+import config from '~/server/config'
 
 export const state = () => ({
   pageLoading: true,
@@ -63,16 +64,21 @@ export const actions = {
                 }
               ).then(res => {
                 if (res.data.status) {
-                  commit("setUser", {
+                  dispatch('login', {
                     token: res.data.token,
                     data: res.data.user
-                  });
-                  if (res.data.user.type === 0) {
-                    dispatch("checkUserEmail");
-                  }
+                  })
+                  // commit("setUser", {
+                  //   token: res.data.token,
+                  //   data: res.data.user
+                  // });
+                  // if (res.data.user.type === 0) {
+                  //   dispatch("checkUserEmail");
+                  // }
                 } else {
-                  localStorage.removeItem("user")
-                  commit('setUser', null)
+                  // localStorage.removeItem("user")
+                  // commit('setUser', null)
+                  dispatch('logout')
                 }
               })
               commit("initAuthSet", true)
@@ -147,14 +153,18 @@ export const actions = {
       })
     );
     commit('setUser', payload)
-    if (payload.data.is_paid && payload.data.is_paid === 1) {
+    // dispatch('socket_io/user_login_emit', payload.token)
+    if (payload.data.type === 0) {
       dispatch("checkUserEmail");
     }
   },
 
   logout({
-    commit
+    commit,
+    state,
+    dispatch
   }) {
+    // dispatch('socket_io/user_logout_emit', state.user.token)
     localStorage.removeItem("user")
     commit('pincode/resetData')
     commit('showMsgs/resetData')
@@ -164,4 +174,4 @@ export const actions = {
   }
 }
 
-//export const strict = false
+export const strict = config.dev ? false : true

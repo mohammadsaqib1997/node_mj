@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const moment = require('moment')
+const jwt = require('jsonwebtoken')
+const config = require('../config')
+const _ = require('lodash')
 
 const db = require('../db.js')
 const db_utils = require('../func/db-util.js')
@@ -127,6 +130,68 @@ router.get('/check/:token', function (req, res) {
                         status: true,
                         type: 2
                       })
+                    }
+                  })
+
+                } else if (result[0].type === 3 && result_date > last_1_day) {
+                  let token_id = result[0].id;
+                  let mem_id = result[0].member_id
+                  let token_decode_err = null
+
+                  db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
+                    connection.query(
+                      `UPDATE tokens SET ? WHERE id=${token_id}`, {
+                        status: 1
+                      },
+                      function (error, result) {
+                        if (error) {
+                          err_cb(error)
+                          resolve()
+                        } else {
+                          jwt.verify(req.params.token, config.secret, function (err, decoded) {
+                            if (err) {
+                              token_decode_err = err
+                              resolve()
+                            } else {
+                              let update_data = {
+                                email_v_sts: 1
+                              }
+
+                              update_data = _.merge(update_data, decoded.data.form_data)
+
+                              connection.query(
+                                `UPDATE members SET ? WHERE id=${mem_id}`,
+                                update_data,
+                                function (error, result) {
+                                  if (error) {
+                                    err_cb(error)
+                                    resolve()
+                                  }
+                                  resolve()
+                                }
+                              )
+                            }
+                          })
+                        }
+                      }
+                    )
+                  }, function (error) { // this is finalize response handler
+                    if (error) {
+                      res.status(500).json({
+                        error
+                      })
+                    } else {
+                      if (token_decode_err) {
+                        res.json({
+                          status: false,
+                          type: "Token Error: " + token_decode_err.message
+                        })
+                      } else {
+                        res.json({
+                          status: true,
+                          type: 3
+                        })
+                      }
                     }
                   })
 

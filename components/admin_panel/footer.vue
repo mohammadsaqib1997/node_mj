@@ -1,7 +1,6 @@
 <template lang="pug">
     .footer
-        h1 Copyright © 2018 MJ-Supreme. Designed by 
-            a(href="http://focusme360.com" target="_blank") FocusMedia360
+        h1 Copyright © 2018 MJ-Supreme.
 </template>
 
 <script>

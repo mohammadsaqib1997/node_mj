@@ -5,12 +5,15 @@
         .column
           h1 Profile
         .column.has-text-right
+          button.button.edit-btn(@click.prevent="")
+            b-icon(icon="key")
+            | &nbsp;&nbsp;&nbsp;&nbsp;Change Password
           button.button.pincode-btn(v-if="$store.state.user.data.type === 0" @click.prevent="pincode_md_act=true")
             b-icon(icon="shield-alt")
             | &nbsp;&nbsp;&nbsp;&nbsp;{{ is_pin === true ? 'Change': 'Add' }} PinCode
           button.button.edit-btn(@click.prevent="modalActive = true")
               b-icon(icon="edit")
-              | &nbsp;&nbsp;&nbsp;&nbsp;Edit
+              | &nbsp;&nbsp;&nbsp;&nbsp;Edit Profile
       .body
         .section
           .columns.is-gapless
@@ -183,8 +186,8 @@ export default {
     text-transform: uppercase;
     height: auto;
     border-radius: 0;
-    &:last-child {
-      margin-left: 10px;
+    &:not(:last-child) {
+      margin-right: 10px;
     }
     &:focus,
     &:hover {

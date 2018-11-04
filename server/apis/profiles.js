@@ -359,37 +359,54 @@ router.post("/update", function (req, res) {
                         "email": req.body.data.email,
                         "full_name": req.body.data.full_name,
                         "password": req.body.data.password
-                    }
+                    },
+                    secure_form = {},
+                    send_email = null
                 if (req.decoded.data.type === 0) {
                     query = "UPDATE members SET ? WHERE id=?"
                     params["dob"] = req.body.data.dob
                     params["city"] = req.body.data.city
                     delete params['password']
 
+                    // if any pincode and verified pin than this work
+                    if (req.body.data.secure === true) {
+                        delete params['contact_num']
+                        delete params['email']
+                    }
+
                     let throw_error = null
                     await new Promise(resolve => {
                         connection.query(
-                            `SELECT is_paid_m, email FROM members WHERE id=?`,
+                            `SELECT is_paid_m, email, contact_num FROM members WHERE id=?`,
                             req.decoded.data.user_id,
                             function (error, result) {
                                 if (error) {
                                     throw_error = error
                                     return resolve()
                                 } else {
-                                    if (result[0].email !== req.body.data.email) {
+                                    if (req.body.data.secure === true) {
+                                        if (req.body.data.cont_num !== result[0].contact_num) {
+                                            secure_form['contact_num'] = req.body.data.cont_num
+                                        }
+                                        if (req.body.data.email !== result[0].email) {
+                                            secure_form['email'] = req.body.data.email
+                                        }
+                                        if (result[0].email && result[0].email !== null && result[0].email !== '') {
+                                            send_email = result[0].email
+                                        }
+                                    }
+                                    if (req.body.data.secure !== true && result[0].email !== params['email']) {
                                         params["email_v_sts"] = 0
                                     }
                                     if (result[0].is_paid_m === 0) {
                                         params["ref_user_asn_id"] = req.body.data.ref_code
                                     }
-                                    /*  else {
-                                                                            delete params['email']
-                                                                        } */
                                     return resolve()
                                 }
                             })
                     })
                     if (throw_error) {
+                        connection.release();
                         return res.status(500).json({
                             throw_error
                         })
@@ -402,16 +419,75 @@ router.post("/update", function (req, res) {
                 }
 
                 connection.query(query, [params, req.decoded.data.user_id], function (error, results, fields) {
-                    connection.release();
-
                     if (error) {
+                        connection.release();
                         res.status(500).json({
                             error
                         })
                     } else {
-                        res.json({
-                            status: true
-                        })
+                        if (req.body.data.secure === true && send_email !== null) {
+
+                            let token = jwt.sign({
+                                data: {
+                                    user_id: req.decoded.data.user_id,
+                                    form_data: secure_form,
+                                    type: 3
+                                }
+                            }, config.secret, {
+                                expiresIn: "1 day"
+                            })
+                            connection.query(
+                                `INSERT INTO tokens SET ?`, {
+                                    type: 3,
+                                    member_id: req.decoded.data.user_id,
+                                    token: token
+                                },
+                                function (error, results) {
+                                    connection.release();
+                                    if (error) {
+                                        return res.status(500).json({
+                                            error
+                                        })
+                                    } else {
+                                        res.render("verify-token", {
+                                            host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                                            name: "Member",
+                                            token: token
+                                        }, function (errPug, html) {
+                                            if (errPug) {
+                                                res.json({
+                                                    status: false,
+                                                    message: "Error render in pug file!"
+                                                })
+                                            } else {
+                                                trans_email.sendMail({
+                                                    from: '"MJ Supreme" <info@mj-supreme.com>',
+                                                    to: send_email,
+                                                    subject: 'Verification Token',
+                                                    html: html
+                                                }, function (err, info) {
+                                                    if (err) {
+                                                        res.json({
+                                                            status: false,
+                                                            message: "Error in sending an email!"
+                                                        })
+                                                    } else {
+                                                        res.json({
+                                                            status: true
+                                                        })
+                                                    }
+                                                })
+                                            }
+                                        })
+                                    }
+                                })
+
+                        } else {
+                            connection.release();
+                            res.json({
+                                status: true
+                            })
+                        }
                     }
 
                 });

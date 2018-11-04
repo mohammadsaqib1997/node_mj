@@ -234,11 +234,18 @@ export default {
             new_data.email !== self.profile.email ||
             new_data.cont_num !== self.profile.contact_num
           ) {
-            if (self.secure !== true && (self.is_pin_active === true || self.is_last_pin === true)) {
+            if (
+              self.secure !== true &&
+              (self.is_pin_active === true || self.is_last_pin === true)
+            ) {
               self.form.loading = false;
               self.pin_ver_md_act = true;
               return;
             }
+          }
+
+          if (self.secure === true) {
+            new_data["secure"] = true;
           }
 
           new_data["dob"] = new_data["dob"]
