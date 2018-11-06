@@ -133,10 +133,12 @@ router.get('/check/:token', function (req, res) {
                     }
                   })
 
-                } else if (result[0].type === 3 && result_date > last_1_day) {
-                  let token_id = result[0].id;
-                  let mem_id = result[0].member_id
-                  let token_decode_err = null
+                } else if ((result[0].type === 3 || result[0].type === 4) && result_date > last_1_day) {
+                  let token_id = result[0].id,
+                    mem_id = result[0].member_id,
+                    token_decode_err = null,
+                    token_type = null
+
 
                   db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
                     connection.query(
@@ -156,6 +158,7 @@ router.get('/check/:token', function (req, res) {
                               let update_data = {
                                 email_v_sts: 1
                               }
+                              token_type = decoded.type
 
                               update_data = _.merge(update_data, decoded.data.form_data)
 
@@ -189,7 +192,7 @@ router.get('/check/:token', function (req, res) {
                       } else {
                         res.json({
                           status: true,
-                          type: 3
+                          type: token_type
                         })
                       }
                     }

@@ -5,7 +5,7 @@
         .column
           h1 Profile
         .column.has-text-right
-          button.button.edit-btn(@click.prevent="")
+          button.button.edit-btn(@click.prevent="password_md_act=true")
             b-icon(icon="key")
             | &nbsp;&nbsp;&nbsp;&nbsp;Change Password
           button.button.pincode-btn(v-if="$store.state.user.data.type === 0" @click.prevent="pincode_md_act=true")
@@ -34,6 +34,7 @@
           profileEdMem(v-if="$store.state.user.data.type === 0" @close_modal="modalActive=false")
           profileEdAdm(v-else @close_modal="modalActive=false")
     pinCodeMD(:md_act="pincode_md_act" @closed="pincode_md_act=false")
+    changePassMD(:md_act="password_md_act" @closed="password_md_act=false")
 </template>
 
 <script>
@@ -42,6 +43,7 @@ import profileEdAdm from "~/components/admin_panel/admin/ed-profile.vue";
 import profileInfoMem from "~/components/admin_panel/member/profile-info.vue";
 import profileInfoAdm from "~/components/admin_panel/admin/profile-info.vue";
 import pinCodeMD from "~/components/modals/add-pincode.vue";
+import changePassMD from "~/components/modals/change_password.vue";
 export default {
   layout: "admin_layout",
   components: {
@@ -49,11 +51,12 @@ export default {
     profileEdAdm,
     profileInfoMem,
     profileInfoAdm,
-    pinCodeMD
+    pinCodeMD,
+    changePassMD
   },
   computed: {
-    is_pin: function () {
-      return this.$store.state.pincode.is_pincode
+    is_pin: function() {
+      return this.$store.state.pincode.is_pincode;
     }
   },
   async mounted() {
@@ -82,7 +85,8 @@ export default {
       loading: false,
       modalActive: false,
       profile_img_url: null,
-      pincode_md_act: false
+      pincode_md_act: false,
+      password_md_act: false
     };
   },
   methods: {

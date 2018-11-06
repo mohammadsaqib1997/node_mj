@@ -21,7 +21,7 @@
             </p>
           </b-field>
         </form>
-        <nuxt-link v-if="(status===1 || status===2) && loading == false && type === 0" to="/" @click="finishAct" class="button">Go To Home</nuxt-link>
+        <nuxt-link v-if="(status===1 || status===2) && loading == false && type === 0" to="/" class="button">Go To Home</nuxt-link>
         <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
       </div>
     </div>
@@ -102,6 +102,11 @@ export default {
       }, 5000);
     }
   },
+  destroyed() {
+    if (this.timeOutInterval !== null) {
+      clearTimeout(this.timeOutInterval);
+    }
+  },
   data() {
     return {
       timeOutInterval: null,
@@ -171,11 +176,6 @@ export default {
             });
         }
       });
-    },
-    finishAct() {
-      if (this.timeOutInterval !== null) {
-        clearTimeout(this.timeOutInterval);
-      }
     }
   }
 };

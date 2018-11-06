@@ -941,6 +941,140 @@ router.post('/update_pincode', function (req, res) {
 
 })
 
+router.post('/update_password', function (req, res) {
+    if (req.decoded.data.user_id) {
+        db.getConnection(async function (err, connection) {
+            if (err) {
+                res.status(500).json({
+                    error
+                })
+            } else {
+                let table = 'members',
+                    params = {
+                        "password": req.body.pass
+                    },
+                    secure_form = {},
+                    send_email = null,
+                    throw_error = null,
+                    str_error = null
+
+                if (req.decoded.data.type === 1) {
+                    table = 'moderators'
+                } else if (req.decoded.data.type === 2) {
+                    table = 'admins'
+                }
+
+                await new Promise(resolve => {
+                    connection.query(
+                        `SELECT email FROM ${table} WHERE id=? AND BINARY password=?`,
+                        [req.decoded.data.user_id, req.body.cur_pass],
+                        async function (error, result) {
+                            if (error) {
+                                throw_error = error
+                                return resolve()
+                            } else {
+                                if (result.length > 0) {
+                                    if (req.body.secure === true) {
+                                        secure_form['password'] = req.body.pass
+                                        if (result[0].email && result[0].email !== null && result[0].email !== '') {
+                                            send_email = result[0].email
+
+                                            await new Promise(resolve2 => {
+                                                let token = jwt.sign({
+                                                    data: {
+                                                        user_id: req.decoded.data.user_id,
+                                                        form_data: secure_form,
+                                                        type: 4
+                                                    }
+                                                }, config.secret, {
+                                                    expiresIn: "1 day"
+                                                })
+                                                connection.query(
+                                                    `INSERT INTO tokens SET ?`, {
+                                                        type: 4,
+                                                        member_id: req.decoded.data.user_id,
+                                                        token: token
+                                                    },
+                                                    function (error, results) {
+                                                        if (error) {
+                                                            throw_error = error
+                                                            return resolve2()
+                                                        } else {
+                                                            res.render("verify-token", {
+                                                                host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                                                                name: "Member",
+                                                                token: token
+                                                            }, function (errPug, html) {
+                                                                if (errPug) {
+                                                                    str_error = "Error render in pug file!"
+                                                                    return resolve2()
+                                                                } else {
+                                                                    trans_email.sendMail({
+                                                                        from: '"MJ Supreme" <info@mj-supreme.com>',
+                                                                        to: send_email,
+                                                                        subject: 'Verification Token',
+                                                                        html: html
+                                                                    }, function (err, info) {
+                                                                        if (err) {
+                                                                            throw_error = err
+                                                                        }
+                                                                        return resolve2()
+                                                                    })
+                                                                }
+                                                            })
+                                                        }
+                                                    })
+                                            })
+                                        }
+                                        return resolve()
+                                    } else {
+                                        connection.query(
+                                            `UPDATE ${table} SET ? WHERE id=?`,
+                                            [params, req.decoded.data.user_id],
+                                            function (error, result) {
+                                                if (error) {
+                                                    throw_error = error
+                                                }
+                                                return resolve()
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    str_error = "Current password is not match!"
+                                    return resolve()
+                                }
+                            }
+                        })
+                })
+
+                if (throw_error) {
+                    connection.release();
+                    return res.status(500).json({
+                        throw_error
+                    })
+                }
+
+                if (str_error) {
+                    connection.release();
+                    return res.json({
+                        status: false,
+                        message: str_error
+                    })
+                }
+
+                res.json({
+                    status: true
+                })
+            }
+        })
+    } else {
+        res.json({
+            status: false,
+            message: "No User Found!"
+        })
+    }
+})
+
 module.exports = router
 
 function typeGet(mimetype) {

@@ -4,28 +4,6 @@
       nuxt
 </template>
 
-<script>
-import io from "socket.io-client";
-export default {
-  async mounted() {
-    const self = this;
-    self.socket = io();
-    self.socket.on("token", data => {
-      if (data.hasOwnProperty("token")) {
-        self.$store.commit("jwtTokenSet", data.token);
-      } else {
-        console.error(data.error.message);
-      }
-    });
-  },
-  destroyed() {
-    this.$store.commit("jwtTokenSet", null);
-    this.socket ? this.socket.disconnect() : "";
-  }
-};
-</script>
-
-
 <style lang="scss" scoped>
 .simple {
   background-color: #fbfbfb;
