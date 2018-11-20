@@ -8,8 +8,8 @@
         b-field(label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')")
           b-input(type="email" placeholder="user@domain.com" v-model='f_data.email' :loading="validation.isValidating('f_data.email')")
 
-        b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
-          b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
+        //- b-field(label="Change Password" :type="(validation.hasError('f_data.password')) ? 'is-danger':''" :message="validation.firstError('f_data.password')")
+        //-   b-input(type="password" password-reveal placeholder="******" v-model="f_data.password")
 
         b-field(label="CNIC" :type="(validation.hasError('f_data.cnic_num')) ? 'is-danger':''" :message="validation.firstError('f_data.cnic_num')")
           b-input(type="tel" placeholder="xxxxx-xxxxxxx-x" v-model="f_data.cnic_num" v-mask="'#####-#######-#'")
@@ -57,7 +57,7 @@ export default {
       f_data: {
         full_name: "",
         email: "",
-        password: "",
+        // password: "",
         cnic_num: "",
         dob: null,
         cont_num: "",
@@ -108,12 +108,12 @@ export default {
         }
       }
     },
-    "f_data.password": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(6)
-        .maxLength(35);
-    },
+    // "f_data.password": function(value) {
+    //   return Validator.value(value)
+    //     .required()
+    //     .minLength(6)
+    //     .maxLength(35);
+    // },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
         .required()
@@ -144,7 +144,7 @@ export default {
       this.f_data = {
         full_name: data.full_name,
         email: data.email,
-        password: data.password,
+        // password: data.password,
         cnic_num: data.cnic_num,
         cont_num: data.contact_num,
         address: data.address

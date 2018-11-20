@@ -18,7 +18,7 @@ router.get('/check/:token', function (req, res) {
       } else {
 
         connection.query(
-          `SELECT id, type, member_id, created_at
+          `SELECT id, type, member_id, token_data, created_at
             FROM tokens
             WHERE binary token=? AND status<1`,
           req.params.token,
@@ -195,6 +195,65 @@ router.get('/check/:token', function (req, res) {
                           type: token_type
                         })
                       }
+                    }
+                  })
+
+                } else if (result[0].type === 5 && result_date > last_1_day) {
+                  let token_id = result[0].id,
+                    mem_id = result[0].member_id,
+                    token_data = JSON.parse(result[0].token_data)
+
+                  db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
+                    connection.query(
+                      `UPDATE tokens SET ? WHERE id=${token_id}`, {
+                        status: 1
+                      },
+                      function (error, result) {
+                        if (error) {
+                          err_cb(error)
+                          resolve()
+                        } else {
+                          connection.query(
+                            `SELECT u_bk.id
+                            FROM \`user_bank_details\` as u_bk
+                            WHERE u_bk.member_id=${mem_id}`,
+                            function (error, result) {
+                              if (error) {
+                                err_cb(error)
+                                resolve()
+                              } else {
+                                let bk_query = ''
+                                let params = []
+                                if (result.length > 0) {
+                                  bk_query = 'UPDATE user_bank_details SET ? WHERE member_id=?'
+                                  params = [token_data, mem_id]
+                                } else {
+                                  bk_query = 'INSERT INTO user_bank_details SET ?'
+                                  token_data['member_id'] = mem_id
+                                  params = [token_data]
+                                }
+                                connection.query(bk_query, params, function (error, results, fields) {
+                                  if (error) {
+                                    err_cb(error)
+                                  }
+                                  resolve()
+                                })
+                              }
+                            }
+                          )
+                        }
+                      }
+                    )
+                  }, function (error) { // this is finalize response handler
+                    if (error) {
+                      res.status(500).json({
+                        error
+                      })
+                    } else {
+                      res.json({
+                        status: true,
+                        type: 5
+                      })
                     }
                   })
 

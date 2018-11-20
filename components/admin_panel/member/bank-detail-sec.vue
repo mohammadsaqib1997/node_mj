@@ -37,7 +37,7 @@
                     label Address
                 .column
                     h2 {{ bank_det_data.address }}
-                       
+                        
         button.button.btn-des-1(@click.prevent="modalActive=true;setData();")
             template(v-if="is_empty(bank_det_data)")
                 b-icon(icon="university")
@@ -50,6 +50,7 @@
             img(src="~/assets/img/btn-coin.png")
             | &nbsp;&nbsp;&nbsp;&nbsp;View Finances
 
+        pinVerMD(:md_act="pin_ver_md_act" @closed="pin_ver_md_act=false" @verified="secure=true;update()")
         b-modal.modal-des-1(:active="modalActive" :has-modal-card="true" :canCancel="false")
             .modal-card
                 .modal-card-body
@@ -90,6 +91,7 @@
 import _ from "lodash";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
+import pinVerMD from "~/components/modals/pincode-verify.vue";
 export default {
   props: {
     has_header: {
@@ -97,9 +99,21 @@ export default {
       default: false
     }
   },
+  components: {
+    pinVerMD
+  },
+  computed: {
+    is_pin_active: function() {
+      return this.$store.state.pincode.is_pin_active;
+    },
+    is_last_pin: function() {
+      return this.$store.state.pincode.is_last_pin;
+    }
+  },
   async mounted() {
     this.loading = true;
     await this.bank_det_load();
+    await this.$store.dispatch("pincode/loadPin");
     this.loading = false;
   },
   validators: {
@@ -136,6 +150,8 @@ export default {
   },
   data() {
     return {
+      pin_ver_md_act: false,
+      secure: false,
       modalActive: false,
       bank_det_data: {},
       f_data: {
@@ -162,33 +178,58 @@ export default {
       const self = this;
       self.$validate().then(async suc => {
         if (suc) {
-          self.form.loading = true;
-          let is_err = false;
-          let msg = "";
-          await self.$axios
-            .post("/api/bank-detail/update", {
-              data: self.f_data
-            })
-            .then(async res => {
-              msg =
-                "Successfully Bank Details " +
-                (_.isEmpty(self.bank_det_data) ? "Added." : "Updated.");
-              await self.bank_det_load();
-              await self.$store.dispatch("profile/mayWalletReq");
-            })
-            .catch(err => {
-              is_err = true;
-              msg = "Server Error!";
-              console.log(err);
+          if (!_.isEqual(self.f_data, self.bank_det_data)) {
+            self.form.loading = true;
+            let is_err = false;
+            let msg = "";
+            let send_data = _.cloneDeep(self.f_data);
+
+            if (
+              self.secure !== true &&
+              (self.is_pin_active === true || self.is_last_pin === true)
+            ) {
+              self.form.loading = false;
+              self.pin_ver_md_act = true;
+              return;
+            }
+
+            if (self.secure === true) {
+              send_data["secure"] = true;
+            }
+
+            await self.$axios
+              .post("/api/bank-detail/update", {
+                data: send_data
+              })
+              .then(async res => {
+                if (res.data.status === true) {
+                  msg =
+                    "Successfully Bank Details " +
+                    (_.isEmpty(self.bank_det_data) ? "Added." : "Updated.");
+                  await self.bank_det_load();
+                  await self.$store.dispatch("profile/mayWalletReq");
+                  self.secure = false;
+                  self.modalActive = false;
+                } else {
+                  is_err = true;
+                  msg = res.data.message;
+                }
+              })
+              .catch(err => {
+                is_err = true;
+                msg = "Server Error!";
+                console.log(err);
+              });
+            self.form.loading = false;
+            self.$toast.open({
+              duration: 3000,
+              message: msg,
+              position: "is-bottom",
+              type: is_err ? "is-danger" : "is-success"
             });
-          self.form.loading = false;
-          self.modalActive = false;
-          self.$toast.open({
-            duration: 3000,
-            message: msg,
-            position: "is-bottom",
-            type: is_err ? "is-danger" : "is-success"
-          });
+          } else {
+            self.modalActive = false;
+          }
         }
       });
     },
@@ -197,7 +238,6 @@ export default {
       if (!self.is_empty(self.bank_det_data)) {
         self.f_data = {
           bank_name: self.bank_det_data.bank_name,
-          branch: self.bank_det_data.branch,
           branch_code: self.bank_det_data.branch_code,
           account_title: self.bank_det_data.account_title,
           account_number: self.bank_det_data.account_number,
@@ -218,6 +258,7 @@ export default {
   margin-bottom: 1rem;
 }
 .modal-des-1 {
+  z-index: 39 !important;
   /deep/ {
     .section {
       padding: 3rem;
