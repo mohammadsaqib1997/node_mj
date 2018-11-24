@@ -1,0 +1,12 @@
+git clone first repo: https://github.com/mohammadsaqib1997/node_mj
+
+cmd: npm install
+copy files: 
+    ./server/e-conf.js
+
+install gm in server docs
+    https://gist.github.com/abernardobr/e4292953fc84f9456cfa
+
+
+
+

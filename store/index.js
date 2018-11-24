@@ -1,6 +1,6 @@
 import moment from 'moment'
 import _ from 'lodash'
-import config from '~/server/config'
+import config from '~/client_config.js'
 
 export const state = () => ({
   pageLoading: true,

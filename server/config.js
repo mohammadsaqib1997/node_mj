@@ -3,9 +3,9 @@ module.exports = {
     db: {
         live: {
             host: 'localhost',
-            user: 'mjsupreme_dev',
-            password: 'yG~.v+2DH8Ts',
-            database: 'mjsupreme_dev_db'
+            user: 'mjsupr5_mj_usr',
+            password: '9;jlk^cWH-k^',
+            database: 'mjsupr5_mj_db'
         },
         local: {
             host: 'localhost',

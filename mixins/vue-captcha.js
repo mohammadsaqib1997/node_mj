@@ -1,5 +1,5 @@
 import vueRecaptcha from "vue-recaptcha";
-import configPr from '~/server/config.js'
+import configPr from '~/client_config.js'
 export default {
     components: {
         vueRecaptcha
