@@ -14,6 +14,9 @@
                             span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
 
                     .navbar-end
+                        .navbar-item.tot-reg-mem-con
+                            span Members Registered -
+                            span.act &nbsp;{{ tot_mem }}
                         .navbar-item
                             ul.social_icons
                                 li.sc_icon
@@ -45,10 +48,27 @@ export default {
       this.$store.dispatch("logout");
       this.$router.push("/");
     }
+  },
+  mounted() {
+    const self = this;
+    self.$nextTick(async function() {
+      await self.$axios
+        .get("/api/web/tot-mem-count")
+        .then(res => {
+          self.tot_mem = res.data.mems;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    });
+  },
+  data() {
+    return {
+      tot_mem: 0
+    };
   }
 };
 </script>
 
-<style lang="sass" scoped src="~/assets/sass/web_top_header.sass">
-    
+<style lang="scss" scoped src="~/assets/sass/web_top_header.scss">
 </style>

@@ -21,6 +21,32 @@ router.get("/pk", function (req, res) {
   })
 })
 
+router.get('/tot-mem-count', (req, res) => {
+  db.getConnection(function (error, connection) {
+    if (error) {
+      return res.status(500).json({
+        error
+      });
+    } else {
+
+      connection.query(
+        `SELECT COUNT(*) as tot FROM \`members\` WHERE is_paid_m=1`,
+        function (error, result) {
+          connection.release()
+          if (error) {
+            return res.status(500).json({
+              error
+            });
+          } else {
+            return res.json({
+              mems: result[0].tot
+            });
+          }
+        })
+    }
+  })
+})
+
 router.post('/tokenLogin', (req, res) => {
   const token = req.body.token || req.query.token
   if (token) {

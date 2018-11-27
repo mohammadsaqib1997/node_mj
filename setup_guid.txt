@@ -3,10 +3,28 @@ git clone first repo: https://github.com/mohammadsaqib1997/node_mj
 cmd: npm install
 copy files: 
     ./server/e-conf.js
+    ./server/uploads/profile
+    ./server/uploads/receipts
+    ./server/uploads/partners_logo
+    ./server/uploads/cvs
+    ./static/gallery
+    ./static/docs
+
 
 install gm in server docs
     https://gist.github.com/abernardobr/e4292953fc84f9456cfa
 
+
+<~---Development to Production---~>
+values change in files:
+    > ./client_config.js
+        > dev:false
+    
+    > ./server/config.js
+        > dev:false
+
+    > ./layouts/default.vue
+        > in script head key is uncomment
 
 
 

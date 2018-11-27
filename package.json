@@ -28,7 +28,7 @@
     "nodemailer": "^4.6.8",
     "numeral": "^2.0.6",
     "nuxt": "^2.1.0",
-    "nuxt-buefy": "0.0.4",
+    "nuxt-buefy": "^0.3.2",
     "pug": "^2.0.3",
     "request": "^2.88.0",
     "sass-loader": "^7.0.2",

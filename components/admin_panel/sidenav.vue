@@ -94,13 +94,6 @@ export default {
               show: [1, 2]
             },
             {
-              name: "expenses",
-              active: false,
-              url: "/fund-manager/expenses",
-              title: "Expenses",
-              show: [1, 2]
-            },
-            {
               name: "finance-details",
               active: false,
               url: "/fund-manager/finance-details",
@@ -292,6 +285,31 @@ export default {
           url: "/notifications",
           title: "Notifications",
           show: [0, 1, 2]
+        },
+        {
+          name: "account",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-clipboard-list"></i>',
+          url: false,
+          title: "Account",
+          show: [2],
+          children: [
+            {
+              name: "expenses",
+              active: false,
+              url: "/account/expenses",
+              title: "Expenses",
+              show: [2]
+            },
+            {
+              name: "vouchers",
+              active: false,
+              url: "/account/vouchers",
+              title: "Vouchers",
+              show: [2]
+            }
+          ]
         }
       ]
     };

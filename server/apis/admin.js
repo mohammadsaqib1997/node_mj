@@ -3,6 +3,7 @@ const router = express.Router()
 const moment = require("moment")
 
 const db = require('../db.js')
+const db_utils = require('../func/db-util.js')
 
 router.get('/wallet', function (req, res) {
   db.getConnection(function (err, connection) {
@@ -275,7 +276,7 @@ router.get('/total_cm', function (req, res) {
   })
 })
 
-router.get('/total_expenses', function (req, res) {
+router.get('/total_expenses_and_vouchers', function (req, res) {
   if (req.decoded.data.type > 0) {
     db.getConnection(async function (err, connection) {
       if (err) {
@@ -288,16 +289,31 @@ router.get('/total_expenses', function (req, res) {
           FROM transactions_comp
           WHERE type=1`,
           function (error, results) {
-            connection.release()
             if (error) {
+              connection.release()
               res.status(500).json({
                 error
               })
             } else {
               let tot_expense = results[0].tot_expense !== null ? results[0].tot_expense : 0
-              res.json({
-                tot_expense
-              })
+              connection.query(
+                `SELECT SUM(debit) - SUM(credit) as tot_voucher
+                FROM transactions_comp
+                WHERE type=2`,
+                function (error, results) {
+                  connection.release()
+                  if (error) {
+                    res.status(500).json({
+                      error
+                    })
+                  } else {
+                    let tot_voucher = results[0].tot_voucher !== null ? results[0].tot_voucher : 0
+                    res.json({
+                      tot_expense,
+                      tot_voucher
+                    })
+                  }
+                })
             }
           })
       }
@@ -421,7 +437,7 @@ router.get('/trans_list', function (req, res) {
 })
 
 router.get('/expense_list', function (req, res) {
-  if (req.decoded.data.type > 0) {
+  if (req.decoded.data.type === 2) {
     db.getConnection(async function (err, connection) {
       if (err) {
         res.status(500).json({
@@ -509,83 +525,213 @@ router.get('/expense_list', function (req, res) {
 })
 
 router.post('/add_expanse', function (req, res) {
-  if (req.decoded.data.type > 0) {
+  if (req.decoded.data.type === 2) {
     db.getConnection(function (error, connection) {
       if (error) {
         res.status(500).json({
           error
         })
       } else {
-        connection.beginTransaction(async function (err) {
-          if (err) {
-            connection.release()
+
+        db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
+
+          connection.query(
+            `INSERT INTO \`transactions_comp\` SET ?`, {
+              remarks: req.body.remarks,
+              debit: parseInt(req.body.debit),
+              credit: parseInt(req.body.credit),
+              type: 1
+            },
+            function (error, results) {
+              if (error) {
+                err_cb(error)
+                resolve()
+              } else {
+                connection.query(
+                  `SELECT wallet FROM company_var WHERE id=1`,
+                  function (error, results) {
+                    if (error) {
+                      err_cb(error)
+                      resolve()
+                    } else {
+                      let company_params = {
+                        wallet: parseInt(results[0].wallet) + (parseInt(req.body.debit) - parseInt(req.body.credit)),
+                      }
+
+                      connection.query('UPDATE company_var SET ? WHERE id=1', company_params, function (error, results) {
+                        if (error) {
+                          err_cb(error)
+                        }
+                        resolve();
+                      })
+                    }
+                  })
+              }
+            })
+
+        }, function (error) { // this is finalize response handler
+          if (error) {
             res.status(500).json({
-              err
+              error
             })
           } else {
-            let throw_error = null
+            res.json({
+              status: true
+            })
+          }
+        })
 
-            await new Promise(resolve => {
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: 'Not Permission Yet!'
+    })
+  }
+})
+
+router.get('/voucher_list', function (req, res) {
+  if (req.decoded.data.type === 2) {
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        let offset = 0,
+          limit = 10,
+          search = ""
+
+        if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+          limit = req.query.limit
+        }
+
+        if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+          offset = (parseInt(req.query.page) - 1) * limit
+        }
+
+        if (req.query.search) {
+          search = req.query.search
+        }
+
+        connection.query(
+          `SELECT SUM(debit) - SUM(credit) as tot_balance
+          FROM transactions_comp
+          WHERE type=2`,
+          function (error, result) {
+            if (error) {
+              connection.release()
+              res.status(500).json({
+                error
+              })
+            } else {
+              let tot_balance = result[0].tot_balance
               connection.query(
-                `INSERT INTO \`transactions_comp\` SET ?`, {
-                  remarks: req.body.remarks,
-                  debit: parseInt(req.body.debit),
-                  credit: parseInt(req.body.credit),
-                  type: 1
-                },
-                function (error, results) {
+                `SELECT COUNT(*) as tot_rows 
+                FROM transactions_comp
+                WHERE type=2
+                ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}`,
+                ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                function (error, result) {
                   if (error) {
-                    throw_error = error
-                    return resolve()
+                    connection.release()
+                    res.status(500).json({
+                      error
+                    })
                   } else {
-                    connection.query(
-                      `SELECT wallet FROM company_var WHERE id=1`,
-                      function (error, results) {
-                        if (error) {
-                          throw_error = error
-                          return resolve()
-                        } else {
-                          let company_params = {
-                            wallet: parseInt(results[0].wallet) + (parseInt(req.body.debit) - parseInt(req.body.credit)),
-                          }
+                    let tot_rows = result[0].tot_rows
 
-                          connection.query('UPDATE company_var SET ? WHERE id=1', company_params, function (error, results) {
-                            if (error) {
-                              throw_error = error
-                            }
-                            return resolve();
+                    connection.query(
+                      `SELECT * 
+                      FROM transactions_comp
+                      WHERE type=2
+                      ${(search !== '') ? 'AND (id LIKE ? OR remarks LIKE ? OR debit LIKE ? OR credit LIKE ? OR created_at LIKE ?)' : ''}
+                      ORDER BY id DESC
+                      LIMIT ${limit}
+                      OFFSET ${offset}`,
+                      ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                      function (error, results) {
+                        connection.release()
+                        if (error) {
+                          res.status(500).json({
+                            error
+                          })
+                        } else {
+                          res.json({
+                            data: results,
+                            tot_rows,
+                            tot_balance
                           })
                         }
                       })
                   }
                 })
+            }
+          })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: 'Not Permission Yet!'
+    })
+  }
+})
+
+router.post('/add_voucher', function (req, res) {
+  if (req.decoded.data.type === 2) {
+    db.getConnection(function (error, connection) {
+      if (error) {
+        res.status(500).json({
+          error
+        })
+      } else {
+        db_utils.connectTrans(connection, function (resolve, err_cb) { // this is in query promise handler
+
+          connection.query(
+            `INSERT INTO \`transactions_comp\` SET ?`, {
+              remarks: req.body.remarks,
+              debit: parseInt(req.body.debit),
+              credit: parseInt(req.body.credit),
+              type: 2
+            },
+            function (error, results) {
+              if (error) {
+                err_cb(error)
+                resolve()
+              } else {
+                connection.query(
+                  `SELECT wallet FROM company_var WHERE id=1`,
+                  function (error, results) {
+                    if (error) {
+                      err_cb(error)
+                      resolve()
+                    } else {
+                      let company_params = {
+                        wallet: parseInt(results[0].wallet) + (parseInt(req.body.debit) - parseInt(req.body.credit)),
+                      }
+
+                      connection.query('UPDATE company_var SET ? WHERE id=1', company_params, function (error, results) {
+                        if (error) {
+                          err_cb(error)
+                        }
+                        resolve();
+                      })
+                    }
+                  })
+              }
             })
 
-            if (throw_error) {
-              return connection.rollback(function () {
-                connection.release()
-                res.status(500).json({
-                  throw_error
-                })
-              });
-            } else {
-              connection.commit(function (err) {
-                if (err) {
-                  return connection.rollback(function () {
-                    connection.release()
-                    res.status(500).json({
-                      err
-                    })
-                  });
-                } else {
-                  connection.release()
-                  res.json({
-                    status: true
-                  })
-                }
-              })
-            }
-
+        }, function (error) { // this is finalize response handler
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            res.json({
+              status: true
+            })
           }
         })
       }

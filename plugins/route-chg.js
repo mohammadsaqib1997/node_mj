@@ -11,7 +11,6 @@ const authRoutes = [
     { name: "fund-manager-commission-unpaid", type_allowed: [1, 2] },
     { name: "fund-manager-finance-details", type_allowed: [0, 1, 2] },
     { name: "fund-manager-invoices", type_allowed: [0] },
-    { name: "fund-manager-expenses", type_allowed: [1, 2] },
     { name: "members-area-total-members", type_allowed: [1, 2] },
     { name: "members-area-add-new-member", type_allowed: [0, 1, 2] },
     { name: "members-area-members-profile", type_allowed: [1, 2] },
@@ -25,6 +24,8 @@ const authRoutes = [
     { name: "product", type_allowed: [0] },
     { name: "rewards-rewards-request", type_allowed: [1, 2] },
     { name: "rewards-rewards-completed", type_allowed: [1, 2] },
+    { name: "account-expenses", type_allowed: [2] },
+    { name: "account-vouchers", type_allowed: [2] }
 ]
 
 const un_paid_routes = [
