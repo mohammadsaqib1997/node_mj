@@ -9,14 +9,23 @@
           <form class="form" @submit.prevent="addExpanse">
             <h3>Add Expenses</h3>
             <b-field grouped>
-              <b-field :type="(validation.hasError('f_data.remarks')) ? 'is-danger':''" :message="validation.firstError('f_data.remarks')"
-                expanded>
+              <b-field
+                :type="(validation.hasError('f_data.remarks')) ? 'is-danger':''"
+                :message="validation.firstError('f_data.remarks')"
+                expanded
+              >
                 <b-input placeholder="Expense Remarks" v-model="f_data.remarks"></b-input>
               </b-field>
-              <b-field :type="(validation.hasError('f_data.debit')) ? 'is-danger':''" :message="validation.firstError('f_data.debit')">
+              <b-field
+                :type="(validation.hasError('f_data.debit')) ? 'is-danger':''"
+                :message="validation.firstError('f_data.debit')"
+              >
                 <b-input type="tel" placeholder="Debit" v-mask="'#######'" v-model="f_data.debit"></b-input>
               </b-field>
-              <b-field :type="(validation.hasError('f_data.credit')) ? 'is-danger':''" :message="validation.firstError('f_data.credit')">
+              <b-field
+                :type="(validation.hasError('f_data.credit')) ? 'is-danger':''"
+                :message="validation.firstError('f_data.credit')"
+              >
                 <b-input type="tel" placeholder="Credit" v-mask="'#######'" v-model="f_data.credit"></b-input>
               </b-field>
               <b-field>
@@ -27,17 +36,30 @@
             </b-field>
           </form>
           <hr>
+          <expFinanceComp title="Expense" :type="1" @loading="loading=$event"></expFinanceComp>
+          <hr>
 
-          <tblTopFilter :act_view="String(load_params.limit)" :s_txt="load_params.search" @change_act_view="update_params('limit', parseInt($event))"
-            @change_s_txt="update_params('search', $event)"></tblTopFilter>
+          <tblTopFilter
+            :act_view="String(load_params.limit)"
+            :s_txt="load_params.search"
+            @change_act_view="update_params('limit', parseInt($event))"
+            @change_s_txt="update_params('search', $event)"
+          ></tblTopFilter>
           <b-field class="total-count">
             <p class="control has-text-right">
               <span>Total Expenses:</span>
               <span class="count">{{ tot_balance }}/-</span>
             </p>
           </b-field>
-          <tableComp :arr="l_data" :loading="loading" :striped="true" :total_record="num_rows" :per_page="parseInt(load_params.limit)"
-            :page_set="load_params.page" @page_change="update_params('page', $event)">
+          <tableComp
+            :arr="l_data"
+            :loading="loading"
+            :striped="true"
+            :total_record="num_rows"
+            :per_page="parseInt(load_params.limit)"
+            :page_set="load_params.page"
+            @page_change="update_params('page', $event)"
+          >
             <template slot="thead">
               <tr>
                 <th>ID</th>
@@ -57,19 +79,17 @@
               </tr>
             </template>
           </tableComp>
-
         </div>
       </div>
     </div>
   </div>
-</template>
->
 </template>
 
 <script>
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
+import expFinanceComp from "~/components/admin_panel/admin/exp-finance.vue";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
@@ -78,7 +98,8 @@ export default {
   mixins: [mxn_tableFilterListing],
   components: {
     tableComp,
-    tblTopFilter
+    tblTopFilter,
+    expFinanceComp
   },
   computed: {},
   directives: {

@@ -20,6 +20,7 @@ import loginForm from "~/components/forms/login.vue";
 import forgotPassForm from "~/components/forms/forgot_password.vue";
 
 export default {
+  //comment-in-dev-start
   head: {
     script: [
       {
@@ -31,6 +32,7 @@ export default {
       }
     ]
   },
+  //comment-in-dev-end
   components: {
     topHeader,
     navbarComp,

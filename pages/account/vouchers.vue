@@ -36,6 +36,8 @@
             </b-field>
           </form>
           <hr>
+          <expFinanceComp title="Voucher" :type="2" @loading="loading=$event"></expFinanceComp>
+          <hr>
 
           <tblTopFilter
             :act_view="String(load_params.limit)"
@@ -87,6 +89,7 @@
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
+import expFinanceComp from "~/components/admin_panel/admin/exp-finance.vue";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
@@ -95,7 +98,8 @@ export default {
   mixins: [mxn_tableFilterListing],
   components: {
     tableComp,
-    tblTopFilter
+    tblTopFilter,
+    expFinanceComp
   },
   computed: {},
   directives: {
