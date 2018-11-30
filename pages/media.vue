@@ -143,9 +143,9 @@ export default {
           title: "MR JAVAID CEO MSG"
         },
         {
-          thmb: "https://img.youtube.com/vi/vYPXaJieZCM/maxresdefault.jpg",
-          src: "https://www.youtube.com/embed/vYPXaJieZCM?rel=0&amp;showinfo=0",
-          title: "MR SHAMS SENIOR MEMBER"
+          thmb: "https://img.youtube.com/vi/HUxV4W7Wlr4/maxresdefault.jpg",
+          src: "https://www.youtube.com/embed/HUxV4W7Wlr4?rel=0&amp;showinfo=0",
+          title: "MUHAMMAD AAMIR COUNTRY MANAGER"
         }
       ],
       prs_act_slide: 0,

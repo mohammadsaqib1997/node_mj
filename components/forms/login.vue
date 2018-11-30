@@ -49,6 +49,13 @@ export default {
   methods: {
     async submit(sendRoute) {
       const self = this;
+      self.$toast.open({
+        duration: 3000,
+        message: "Website is under maintenance. We will be back shortly.",
+        position: "is-bottom",
+        type: "is-info"
+      });
+      return;
       self.form.loading = false;
       self.form.err = "";
       self.form.suc = "";

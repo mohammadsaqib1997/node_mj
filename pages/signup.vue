@@ -106,6 +106,13 @@ export default {
     },
     next_step: async function() {
       const self = this;
+      self.$toast.open({
+        duration: 3000,
+        message: "Website is under maintenance. We will be back shortly.",
+        position: "is-bottom",
+        type: "is-info"
+      });
+      return;
       if (self.cur_step === 1) {
         await self.$refs.userDetForm.validate().then(result => {
           if (result) {
