@@ -72,7 +72,7 @@ router.post("/update", function (req, res) {
                     let params = []
                     let save_data = _.cloneDeep(req.body.data)
                     delete save_data['secure']
-                    if (results[0].id !== null) {
+                    if (results.length > 0 && results[0].id !== null) {
                       bk_query = 'UPDATE user_bank_details SET ? WHERE member_id=?'
                       params = [save_data, req.decoded.data.user_id]
                     } else {
