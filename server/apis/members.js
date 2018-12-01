@@ -22,11 +22,16 @@ router.get("/", function (req, res) {
     search = req.query.search
   }
 
-  if (/^[0-9]$|^(unpaid|paid)$/.test(req.query.filter)) {
-    filter_qry = `
-      ${search !== "" ? 'AND':''}
-      ${(/^[0-9]$/.test(req.query.filter)) ? 'u_var.level': 'm.is_paid_m'}='${(/^[0-9]$/.test(req.query.filter)) ? req.query.filter : (req.query.filter == 'paid' ? 1:0)}'
-    `
+  if (/^[0-9]$|^(unpaid|paid)$|^suspend$/.test(req.query.filter)) {
+    filter_qry = `${search !== "" ? 'AND':''}`;
+
+    if (/^[0-9]$/.test(req.query.filter)) {
+      filter_qry += ` u_var.level='${req.query.filter}'`
+    } else if (/^(unpaid|paid)$/.test(req.query.filter)) {
+      filter_qry += ` m.is_paid_m='${req.query.filter == 'paid' ? 1:0}'`
+    } else if (/^suspend$/.test(req.query.filter)) {
+      filter_qry += ` m.active_sts=0`
+    }
   }
 
 
@@ -42,10 +47,10 @@ router.get("/", function (req, res) {
         LEFT JOIN info_var_m as u_var
         ON m.id = u_var.member_id
         ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ?)' : ''}
+        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR m.city LIKE ?)' : ''}
         ${(filter_qry !== '') ? filter_qry:''}
         `,
-        ['%' + search + '%', '%' + search + '%', '%' + search + '%'],
+        ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
         function (error, results, fields) {
           if (error) {
             connection.release();
@@ -62,6 +67,7 @@ router.get("/", function (req, res) {
                   m.user_asn_id, 
                   m.email, 
                   m.full_name, 
+                  m.city, 
                   m.active_sts, 
                   m.is_paid_m, 
                   u_var.level,
@@ -72,13 +78,13 @@ router.get("/", function (req, res) {
                 LEFT JOIN info_var_m as u_var
                 ON m.id = u_var.member_id
                 ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ?)' : ''}
+                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR m.city LIKE ?)' : ''}
                 ${(filter_qry !== '') ? filter_qry:''}
                 GROUP BY m.id
                 ORDER BY m.id DESC
                 LIMIT ${limit}
                 OFFSET ${offset}`,
-                ['%' + search + '%', '%' + search + '%', '%' + search + '%'],
+                ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
                 function (error, results, fields) {
                   connection.release();
                   if (error) {

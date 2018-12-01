@@ -16,7 +16,7 @@ router.get('/member/:start/:end', function (req, res) {
             })
         } else {
             connection.query(
-                `SELECT m.created_at, m.user_asn_id, m.full_name, m.ref_user_asn_id, m.email, m.cnic_num, m.contact_num, m.dob, m.address, iv.level, iv.wallet
+                `SELECT m.created_at, m.user_asn_id, m.full_name, m.ref_user_asn_id, m.email, m.cnic_num, m.contact_num, m.dob, m.address, m.city, iv.level, iv.wallet
                 FROM members as m
                 LEFT JOIN info_var_m as iv
                 ON m.id = iv.member_id
@@ -66,6 +66,10 @@ router.get('/member/:start/:end', function (req, res) {
                                 {
                                     id: 'address',
                                     title: 'Address'
+                                },
+                                {
+                                    id: 'city',
+                                    title: 'City'
                                 },
                                 {
                                     id: 'level',

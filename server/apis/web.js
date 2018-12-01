@@ -144,15 +144,40 @@ router.get('/get_list_winners_auto', function (req, res) {
       let offset = 0,
         limit = 15,
         date = moment(),
-        startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
-        endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+        gen_sofm = date.clone().startOf('month').subtract(_.get(req.query, 'prev_mnth_inc', 0), 'M'),
+        startM = gen_sofm.format("YYYY-MM-DD HH-mm-ss"),
+        endM = gen_sofm.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
 
       if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
         offset = (parseInt(req.query.page) - 1) * limit
       }
 
       let throw_error = null
-      let tot_rows = 0
+      let cur_tot = 0
+      let prev_tot = 0
+
+      await new Promise(resolve => {
+        connection.query(
+          `SELECT COUNT(*) as tot_rows
+          FROM claim_rewards as clm
+          WHERE clm.type=0 AND clm.status=1 AND clm.approved_at < '${startM}'
+          `,
+          function (error, result) {
+            if (error) {
+              throw_error = error
+            } else {
+              prev_tot = result[0].tot_rows
+            }
+            resolve()
+          })
+      })
+
+      if (throw_error !== null) {
+        connection.release()
+        return res.status(500).json({
+          error: throw_error
+        })
+      }
 
       await new Promise(resolve => {
         connection.query(
@@ -164,7 +189,7 @@ router.get('/get_list_winners_auto', function (req, res) {
             if (error) {
               throw_error = error
             } else {
-              tot_rows = result[0].tot_rows
+              cur_tot = result[0].tot_rows
             }
             resolve()
           })
@@ -200,7 +225,9 @@ router.get('/get_list_winners_auto', function (req, res) {
           } else {
             res.json({
               result,
-              tot_rows
+              cur_tot,
+              prev_tot,
+              gen_my: gen_sofm.format('MMMM YYYY')
             })
           }
         })
@@ -218,15 +245,42 @@ router.get('/get_list_winners_self', function (req, res) {
       let offset = 0,
         limit = 15,
         date = moment(),
-        startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
-        endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+        // startM = date.clone().startOf('month').format("YYYY-MM-DD HH-mm-ss"),
+        // endM = date.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
+        gen_sofm = date.clone().startOf('month').subtract(_.get(req.query, 'prev_mnth_inc', 0), 'M'),
+        startM = gen_sofm.format("YYYY-MM-DD HH-mm-ss"),
+        endM = gen_sofm.clone().endOf('month').format("YYYY-MM-DD HH-mm-ss")
 
       if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
         offset = (parseInt(req.query.page) - 1) * limit
       }
 
       let throw_error = null
-      let tot_rows = 0
+      let cur_tot = 0
+      let prev_tot = 0
+
+      await new Promise(resolve => {
+        connection.query(
+          `SELECT COUNT(*) as tot_rows
+          FROM claim_rewards as clm
+          WHERE clm.type=1 AND clm.status=1 AND clm.approved_at < '${startM}'
+          `,
+          function (error, result) {
+            if (error) {
+              throw_error = error
+            } else {
+              prev_tot = result[0].tot_rows
+            }
+            resolve()
+          })
+      })
+
+      if (throw_error !== null) {
+        connection.release()
+        return res.status(500).json({
+          error: throw_error
+        })
+      }
 
       await new Promise(resolve => {
         connection.query(
@@ -238,7 +292,7 @@ router.get('/get_list_winners_self', function (req, res) {
             if (error) {
               throw_error = error
             } else {
-              tot_rows = result[0].tot_rows
+              cur_tot = result[0].tot_rows
             }
             resolve()
           })
@@ -274,7 +328,9 @@ router.get('/get_list_winners_self', function (req, res) {
           } else {
             res.json({
               result,
-              tot_rows
+              cur_tot,
+              prev_tot,
+              gen_my: gen_sofm.format('MMMM YYYY')
             })
           }
         })

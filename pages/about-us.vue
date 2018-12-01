@@ -93,10 +93,10 @@ export default {
       ],
       prs_slides: [
         {
-          thmb: "https://img.youtube.com/vi/hGk1JojkEr4/maxresdefault.jpg",
-          src: "https://www.youtube.com/embed/hGk1JojkEr4?rel=0&amp;showinfo=0",
-          title: "MR AMIR BUSINESS PRESENTATION",
-          date: "04 Aug 2018"
+          thmb: "https://img.youtube.com/vi/HUxV4W7Wlr4/maxresdefault.jpg",
+          src: "https://www.youtube.com/embed/HUxV4W7Wlr4?rel=0&amp;showinfo=0",
+          title: "MUHAMMAD AAMIR COUNTRY MANAGER",
+          date: "18 Nov 2018"
         },
         {
           thmb: "https://img.youtube.com/vi/P8MHgr6QGAk/maxresdefault.jpg",

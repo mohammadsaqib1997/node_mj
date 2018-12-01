@@ -14,6 +14,7 @@
                 th ID
                 th Email
                 th Name
+                th City
                 th Status
                 th Paid Status
                 th Receipt
@@ -26,6 +27,7 @@
                 td {{ row.user_asn_id }}
                 td {{ row.email }}
                 td {{ row.full_name }}
+                td {{ row.city }}
                 td {{ (row.active_sts === 1) ? 'Approved':'Suspended' }}
                 td
                   template(v-if="row.is_paid_m == 1") Paid
@@ -100,6 +102,7 @@ export default {
       select_edit: null,
       tbl_list_filters: [
         { title: "Filter", value: '' },
+        { title: "Suspended", value: 'suspend' },
         { title: "UnPaid", value: 'unpaid' },
         { title: "Paid", value: 'paid' },
         { title: "Level 0", value: 0 },
