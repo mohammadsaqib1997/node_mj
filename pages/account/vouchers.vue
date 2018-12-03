@@ -144,18 +144,18 @@ export default {
     async loadData() {
       const self = this;
       self.loading = true;
-      await self.$axios
-        .get("/api/admin/voucher_list", {
-          params: self.load_params
-        })
-        .then(res => {
-          self.l_data = res.data.data;
-          self.num_rows = res.data.tot_rows;
-          self.tot_balance = res.data.tot_balance;
-        })
-        .catch(err => {
-          console.log(err);
-        });
+      // await self.$axios
+      //   .get("/api/admin/voucher_list", {
+      //     params: self.load_params
+      //   })
+      //   .then(res => {
+      //     self.l_data = res.data.data;
+      //     self.num_rows = res.data.tot_rows;
+      //     self.tot_balance = res.data.tot_balance;
+      //   })
+      //   .catch(err => {
+      //     console.log(err);
+      //   });
       self.loading = false;
     },
     addVoucher() {
@@ -163,33 +163,33 @@ export default {
       self.$validate().then(function(success) {
         if (success) {
           self.loading = true;
-          self.$axios
-            .post("/api/admin/add_voucher", {
-              remarks: self.f_data.remarks,
-              debit: self.f_data.debit,
-              credit: self.f_data.credit
-            })
-            .then(async res => {
-              self.reset();
-              await self.loadData();
-              self.loading = false;
-              self.$toast.open({
-                duration: 3000,
-                message: "Successfully Add Voucher.",
-                position: "is-bottom",
-                type: "is-success"
-              });
-            })
-            .catch(err => {
-              console.log(err);
-              self.loading = false;
-              self.$toast.open({
-                duration: 3000,
-                message: "DB Error.",
-                position: "is-bottom",
-                type: "is-danger"
-              });
-            });
+          // self.$axios
+          //   .post("/api/admin/add_voucher", {
+          //     remarks: self.f_data.remarks,
+          //     debit: self.f_data.debit,
+          //     credit: self.f_data.credit
+          //   })
+          //   .then(async res => {
+          //     self.reset();
+          //     await self.loadData();
+          //     self.loading = false;
+          //     self.$toast.open({
+          //       duration: 3000,
+          //       message: "Successfully Add Voucher.",
+          //       position: "is-bottom",
+          //       type: "is-success"
+          //     });
+          //   })
+          //   .catch(err => {
+          //     console.log(err);
+          //     self.loading = false;
+          //     self.$toast.open({
+          //       duration: 3000,
+          //       message: "DB Error.",
+          //       position: "is-bottom",
+          //       type: "is-danger"
+          //     });
+          //   });
         } else {
           self.loading = false;
         }

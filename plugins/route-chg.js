@@ -24,7 +24,6 @@ const authRoutes = [
     { name: "product", type_allowed: [0] },
     { name: "rewards-rewards-request", type_allowed: [1, 2] },
     { name: "rewards-rewards-completed", type_allowed: [1, 2] },
-    { name: "account-expenses", type_allowed: [2] },
     { name: "account-vouchers", type_allowed: [2] }
 ]
 

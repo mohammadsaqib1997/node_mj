@@ -296,13 +296,6 @@ export default {
           show: [2],
           children: [
             {
-              name: "expenses",
-              active: false,
-              url: "/account/expenses",
-              title: "Expenses",
-              show: [2]
-            },
-            {
               name: "vouchers",
               active: false,
               url: "/account/vouchers",

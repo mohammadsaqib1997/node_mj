@@ -29,7 +29,7 @@
             </div>
             <h5>Wallet</h5>
           </div>
-          <div class="amount-item">
+          <!-- <div class="amount-item">
             <div class="amount-wrapper"><b>Rs.</b>
               <h1>{{ tot_expenses }}/-</h1>
             </div>
@@ -40,7 +40,7 @@
               <h1>{{ tot_vouchers }}/-</h1>
             </div>
             <h5>Vouchers</h5>
-          </div>
+          </div> -->
         </div>
 
 
@@ -113,15 +113,15 @@ export default {
       .catch(err => {
         console.log(err);
       });
-    await self.$axios
-      .get("/api/admin/total_expenses_and_vouchers")
-      .then(res => {
-        self.tot_expenses = res.data.tot_expense;
-        self.tot_vouchers = res.data.tot_voucher;
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    // await self.$axios
+    //   .get("/api/admin/total_expenses_and_vouchers")
+    //   .then(res => {
+    //     self.tot_expenses = res.data.tot_expense;
+    //     self.tot_vouchers = res.data.tot_voucher;
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //   });
     self.loading = false;
   },
   data() {
