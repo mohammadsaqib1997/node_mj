@@ -208,12 +208,12 @@ export default {
     }
   },
   methods: {
-    changeImg(files) {
+    changeImg(file) {
       const self = this;
       let is_err = false;
       let msg = "";
-      if (files[0].type === "image/png" || files[0].type === "image/jpeg") {
-        if (files[0].size > 5000000) {
+      if (file.type === "image/png" || file.type === "image/jpeg") {
+        if (file.size > 5000000) {
           is_err = true;
           msg = "Maximum file upload size 5mb.";
         }
@@ -223,8 +223,8 @@ export default {
       }
 
       if (!is_err) {
-        if (files && files[0]) {
-          self.f_data.logo = files[0];
+        if (file) {
+          self.f_data.logo = file;
         }
       } else {
         self.profile_img_url = null;

@@ -4,7 +4,7 @@
       .columns
         .column.is-4
           h1.title-1 Sign Up
-          p.txt-wrp Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+          p.txt-wrp Still not a member? Join us now and get access to all the benefits. As a member you'll have the opportunity to earn the rewards from our auto system or campaign system. Other than that, you can get discounts on hundreds of outlets in different cities. Harvest your earnings and shape your future!
           ul.status_items
             li.item(:class="{complete: cur_step > 0}")
               b Step 1:&nbsp;

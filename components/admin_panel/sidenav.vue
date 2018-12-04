@@ -301,6 +301,13 @@ export default {
               url: "/account/vouchers",
               title: "Vouchers",
               show: [2]
+            },
+            {
+              name: "financial-statement",
+              active: false,
+              url: "/account/financial-statement",
+              title: "Financial Statement",
+              show: [2]
             }
           ]
         }

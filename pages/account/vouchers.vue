@@ -1,8 +1,15 @@
 <template>
   <div class="wrapper">
     <div class="box main-box">
-      <div class="header">
-        <h1>Vouchers</h1>
+      <div class="header columns is-gapless is-multiline">
+        <div class="column">
+          <h1>Vouchers</h1>
+        </div>
+        <div class="column has-text-right">
+          <button class="button btn-des-2" @click.prevent="subs_md_act=true">
+            <b-icon icon="list-alt"></b-icon>&nbsp;&nbsp;&nbsp;&nbsp;Add Subsidiary
+          </button>
+        </div>
       </div>
       <div class="body">
         <div class="section">
@@ -82,6 +89,7 @@
         </div>
       </div>
     </div>
+    <addSubsMD :md_act="subs_md_act" @closed="subs_md_act=false"></addSubsMD>
   </div>
 </template>
 
@@ -90,6 +98,7 @@ import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import expFinanceComp from "~/components/admin_panel/admin/exp-finance.vue";
+import addSubsMD from "~/components/modals/add_subsidiary.vue";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
@@ -99,7 +108,8 @@ export default {
   components: {
     tableComp,
     tblTopFilter,
-    expFinanceComp
+    expFinanceComp,
+    addSubsMD
   },
   computed: {},
   directives: {
@@ -108,6 +118,7 @@ export default {
   data() {
     return {
       tot_balance: "",
+      subs_md_act: false,
       f_data: {
         remarks: "",
         debit: "",
@@ -210,6 +221,26 @@ export default {
 <style lang="scss" scoped>
 .wrapper {
   /deep/ {
+    .btn-des-2 {
+      color: #666666;
+      border: 2px solid transparent;
+      box-shadow: none !important;
+      font-weight: 500;
+      text-transform: uppercase;
+      height: auto;
+      border-radius: 0;
+      &:not(:last-child) {
+        margin-right: 10px;
+      }
+      &:focus,
+      &:hover {
+        border: 2px solid #d9bd68;
+      }
+      .icon {
+        color: #d9bd68;
+      }
+    }
+
     .section > hr {
       background-color: #d9bd68;
     }

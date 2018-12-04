@@ -7,61 +7,120 @@
       <div class="body">
         <div class="section">
           <form class="form" @submit.prevent="update">
-
-            <b-field label="Full Name" :type="(validation.hasError('f_data.full_name')) ? 'is-danger':''" :message="validation.firstError('f_data.full_name')">
+            <b-field
+              label="Full Name"
+              :type="(validation.hasError('f_data.full_name')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.full_name')"
+            >
               <b-input type="text" placeholder="(example: Shabir Ahmed)" v-model="f_data.full_name"></b-input>
             </b-field>
 
-            <b-field label="Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')">
-              <b-input type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address"></b-input>
+            <b-field
+              label="Address"
+              :type="(validation.hasError('f_data.address')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.address')"
+            >
+              <b-input
+                type="text"
+                placeholder="House No. #, Street Name, Area, City, Province, Country"
+                v-model="f_data.address"
+              ></b-input>
             </b-field>
 
-            <b-field label="Contact" :type="(validation.hasError('f_data.cont_num')) ? 'is-danger':''" :message="validation.firstError('f_data.cont_num')">
-              <b-input type="tel" placeholder="92-xxx-xxx-xxxx" v-model="f_data.cont_num" v-mask="'92-###-###-####'"></b-input>
+            <b-field
+              label="Contact"
+              :type="(validation.hasError('f_data.cont_num')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.cont_num')"
+            >
+              <b-input
+                type="tel"
+                placeholder="92-xxx-xxx-xxxx"
+                v-model="f_data.cont_num"
+                v-mask="'92-###-###-####'"
+              ></b-input>
             </b-field>
 
-            <b-field label="Email" :type="(validation.hasError('f_data.email')) ? 'is-danger':''" :message="validation.firstError('f_data.email')">
-              <b-input type="email" placeholder="user@domain.com" v-model="f_data.email" :loading="validation.isValidating('f_data.email')"></b-input>
+            <b-field
+              label="Email"
+              :type="(validation.hasError('f_data.email')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.email')"
+            >
+              <b-input
+                type="email"
+                placeholder="user@domain.com"
+                v-model="f_data.email"
+                :loading="validation.isValidating('f_data.email')"
+              ></b-input>
             </b-field>
 
-            <b-field label="City" :type="(validation.hasError('f_data.city')) ? 'is-danger':''" :message="validation.firstError('f_data.city')">
-              <b-autocomplete placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray"
-                @select="option => f_data.city = option" :keep-first="true" :open-on-focus="true"><template slot="empty">No
-                  results for {{ac_city}}</template></b-autocomplete>
+            <b-field
+              label="City"
+              :type="(validation.hasError('f_data.city')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.city')"
+            >
+              <b-autocomplete
+                placeholder="Enter City Name"
+                ref="autocomplete"
+                v-model="ac_city"
+                :data="filteredCityArray"
+                @select="option => f_data.city = option"
+                :keep-first="true"
+                :open-on-focus="true"
+              >
+                <template slot="empty">
+                  No
+                  results for {{ac_city}}
+                </template>
+              </b-autocomplete>
             </b-field>
 
-            <b-field label="Discount Percent" :type="(validation.hasError('f_data.discount')) ? 'is-danger':''"
-              :message="validation.firstError('f_data.discount')">
-              <b-input type="text" placeholder="(example: 20%)" v-model="f_data.discount" v-mask-percent></b-input>
+            <b-field
+              label="Discount Percent"
+              :type="(validation.hasError('f_data.discount')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.discount')"
+            >
+              <b-input
+                type="text"
+                placeholder="(example: 20%)"
+                v-model="f_data.discount"
+                v-mask-percent
+              ></b-input>
             </b-field>
 
             <div class="field">
               <label class="label">Logo</label>
               <div class="img-cont" v-if="loaded_img_url !== null">
-                <img :src="loaded_img_url" />
+                <img :src="loaded_img_url">
               </div>
               <b-upload v-model="sel_file" @input="changeImg($event)">
-                <a class="button btn-upload">
-                  {{ file_name !== '' ? file_name : 'UPLOAD' }}
-                </a>
+                <a class="button btn-upload">{{ file_name !== '' ? file_name : 'UPLOAD' }}</a>
               </b-upload>
-              <a class="button btn-upload" v-if="load_img !== null && sel_file.length < 1" @click.prevent="tglRemove">
-                {{ logo_remove === true ? 'Reset Logo': 'Remove Logo' }}
-              </a>
-              <a v-if="sel_file.length > 0" @click.prevent="clearSelect" class="clear-selection">Clear Selection</a>
-              <p v-if="logo_remove === true" class="control has-text-danger">Remove Logo required to update form.</p>
+              <a
+                class="button btn-upload"
+                v-if="load_img !== null && sel_file.length < 1"
+                @click.prevent="tglRemove"
+              >{{ logo_remove === true ? 'Reset Logo': 'Remove Logo' }}</a>
+              <a
+                v-if="sel_file.length > 0"
+                @click.prevent="clearSelect"
+                class="clear-selection"
+              >Clear Selection</a>
+              <p
+                v-if="logo_remove === true"
+                class="control has-text-danger"
+              >Remove Logo required to update form.</p>
             </div>
 
             <div class="d-flex">
               <button class="button btn-des-1" type="submit">
-                <b-icon icon="edit" style="margin-top: 2px;"></b-icon>
-                &nbsp;&nbsp;&nbsp;&nbsp;Update Partner
+                <b-icon icon="edit" style="margin-top: 2px;"></b-icon>&nbsp;&nbsp;&nbsp;&nbsp;Update Partner
               </button>
-              <button class="button btn-des-1 dark" type="button" @click.prevent="modalAct=false;">
-                Cancel
-              </button>
+              <button
+                class="button btn-des-1 dark"
+                type="button"
+                @click.prevent="modalAct=false;"
+              >Cancel</button>
             </div>
-
           </form>
 
           <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
@@ -223,12 +282,12 @@ export default {
       }
       self.loading = false;
     },
-    changeImg(files) {
+    changeImg(file) {
       const self = this;
       let is_err = false;
       let msg = "";
-      if (files[0].type === "image/png" || files[0].type === "image/jpeg") {
-        if (files[0].size > 5000000) {
+      if (file.type === "image/png" || file.type === "image/jpeg") {
+        if (file.size > 5000000) {
           is_err = true;
           msg = "Maximum file upload size 5mb.";
         }
@@ -238,15 +297,15 @@ export default {
       }
 
       if (!is_err) {
-        if (files && files[0]) {
+        if (file) {
           self.logo_remove = false;
-          self.f_data.logo = files[0];
-          self.file_name = files[0].name;
+          self.f_data.logo = file;
+          self.file_name = file.name;
           let reader = new FileReader();
           reader.onload = e => {
             self.loaded_img_url = e.target.result;
           };
-          reader.readAsDataURL(files[0]);
+          reader.readAsDataURL(file);
         }
       } else {
         self.sel_file = [];
@@ -316,7 +375,7 @@ export default {
             .post("/api/partner/update", form_data, config)
             .then(res => {
               self.modalAct = false;
-              self.$emit("updated", true)
+              self.$emit("updated", true);
               self.loading = false;
               self.$toast.open({
                 duration: 3000,

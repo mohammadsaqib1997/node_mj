@@ -5,15 +5,37 @@ const {
 
 const secret = require("./config").secret
 const app = require('express')()
-const server = require('http').Server(app)
-const port = process.env.PORT || 3000
+// const server = require('http').Server(app)
+const port_http = 3000
+const port_https = 443
 const path = require('path');
+const fs = require('fs')
+const http = require('http')
+const https = require('https')
+
+const credentials = {
+	key: fs.readFileSync(__dirname+'/./ssl/key.key'),
+	cert: fs.readFileSync(__dirname+'/./ssl/cert.crt'),
+	ca: fs.readFileSync(__dirname+'/./ssl/bundle.ca-bundle')
+};
+
+const httpsServer = https.createServer(credentials, app)
+const httpServer = http.createServer(app)
+
+// here enable ssl and proxy
+app.enable("trust proxy");
+app.use(function (req, res, next) {
+    if (req.secure) {
+        return next();
+    }
+    res.redirect('https://' + req.headers.host + req.url);
+});
 
 app.disable('x-powered-by')
 
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
-const io = require('socket.io')(server)
+const io = require('socket.io')(httpsServer)
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug')
@@ -41,7 +63,14 @@ if (config.dev) {
 }
 
 // Listen the server
-server.listen(port, () => console.log('Start Nuxt Project!'))
+// server.listen(port, () => console.log('Start Nuxt Project!'))
+httpServer.listen(port_http, () => {
+	console.log('HTTP Server running on port 3000');
+});
+
+httpsServer.listen(port_https, () => {
+	console.log('HTTPS Server running on port 443');
+});
 
 let client_connected = {}
 

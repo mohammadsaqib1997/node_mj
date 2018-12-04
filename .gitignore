@@ -31,6 +31,7 @@ server/e-conf.js
 !server/uploads/receipts/readme.md
 server/uploads/cvs/*
 !server/uploads/cvs/readme.md
+server/ssl
 
 static/docs
 static/gallery
