@@ -3,7 +3,9 @@ const router = express.Router()
 
 const db = require('../db.js')
 
-const secret = require("./../config").secret
+const config = require("./../config")
+const secret = config.secret
+const trans_email = require('../e-conf.js')
 const jwt = require('jsonwebtoken')
 const _ = require('lodash');
 const moment = require('moment');
@@ -444,8 +446,8 @@ router.get('/list_partner', (req, res) => {
       connection.query(
         `SELECT COUNT(*) as total_rows 
         FROM partners
-        ${(search !== '') ? 'WHERE': ''}
-        ${(search !== '') ? '(discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}`,
+        WHERE active=1
+        ${(search !== '') ? 'AND (discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}`,
         [
           '%' + search + '%',
           '%' + search + '%',
@@ -462,8 +464,8 @@ router.get('/list_partner', (req, res) => {
             connection.query(
               `SELECT full_name, email, discount, cont_num, city, address, logo
               FROM partners
-              ${(search !== '') ? 'WHERE': ''}
-              ${(search !== '') ? '(discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
+              WHERE active=1
+              ${(search !== '') ? 'AND (discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
               ORDER BY id ASC
               LIMIT ${limit}
               OFFSET ${offset}`,
@@ -819,10 +821,15 @@ router.post('/signup', (req, res) => {
           sendDBError(res, err)
         } else {
           let throw_error = null
+          let email_grab_data = {
+            template_data: {},
+            email: null,
+            token_id: null
+          }
 
           await new Promise(resolve => {
             req.body.member_data['active_sts'] = 1
-            connection.query('INSERT INTO `members` SET ?', req.body.member_data, function (error, results, fields) {
+            connection.query('INSERT INTO `members` SET ?', req.body.member_data, async function (error, results, fields) {
               if (error) {
                 throw_error = error
                 return resolve()
@@ -830,6 +837,41 @@ router.post('/signup', (req, res) => {
                 let mem_id = results.insertId
                 req.body.prd_data['member_id'] = mem_id
                 req.body.bank_data['member_id'] = mem_id
+
+                email_grab_data['email'] = req.body.member_data.email
+                email_grab_data['template_data']['name'] = req.body.member_data.full_name
+                email_grab_data['template_data']['token'] = jwt.sign({
+                    data: {
+                      email: req.body.member_data.email,
+                      user_id: mem_id,
+                      type: 0
+                    }
+                  },
+                  secret, {
+                    expiresIn: "1 day"
+                  }
+                )
+
+                await new Promise(tokenResolve => {
+                  connection.query(
+                    `INSERT INTO tokens SET ?`, {
+                      type: 0,
+                      member_id: mem_id,
+                      token: email_grab_data['template_data']['token']
+                    },
+                    function (error, result) {
+                      if (error) {
+                        throw_error = error
+                      } else {
+                        email_grab_data['token_id'] = result.insertId
+                      }
+                      tokenResolve()
+                    }
+                  )
+                })
+                if (throw_error) {
+                  return resolve()
+                }
 
                 connection.query(`INSERT INTO terms_accept SET member_id=${mem_id}, accept_sts=1`, function (error, results, fields) {
                   if (error) {
@@ -883,8 +925,40 @@ router.post('/signup', (req, res) => {
                 });
               } else {
                 connection.release()
-                res.json({
-                  status: true
+
+                res.render("verify-token", {
+                  host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
+                  name: email_grab_data['template_data']['name'],
+                  token: email_grab_data['template_data']['token']
+                }, function (errPug, html) {
+                  if (errPug) {
+                    last_id_delete_token(email_grab_data['token_id'], function (err) {
+                      res.json({
+                        status: false,
+                        message: err ? err.message : errPug.message
+                      })
+                    })
+                  } else {
+                    trans_email.sendMail({
+                      from: '"MJ Supreme" <info@mj-supreme.com>',
+                      to: email_grab_data['email'],
+                      subject: 'Verification Token',
+                      html: html
+                    }, function (err, info) {
+                      if (err) {
+                        last_id_delete_token(email_grab_data['token_id'], function (cb_err) {
+                          res.json({
+                            status: false,
+                            message: cb_err ? cb_err.message : err.message
+                          })
+                        })
+                      } else {
+                        res.json({
+                          status: true
+                        })
+                      }
+                    })
+                  }
                 })
               }
             })
@@ -901,6 +975,23 @@ function sendDBError(res, err) {
   res.status(500).json({
     success: false,
     message: "DB Error: " + err.message
+  })
+}
+
+function last_id_delete_token(lastId, cb) {
+  db.getConnection(function (error, connection) {
+    if (error) {
+      cb(error)
+    } else {
+      connection.query('DELETE FROM tokens WHERE id=?', lastId, function (error, result) {
+        connection.release()
+        if (error) {
+          cb(error)
+        } else {
+          cb()
+        }
+      })
+    }
   })
 }
 

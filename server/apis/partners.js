@@ -64,7 +64,7 @@ router.get('/list', function (req, res) {
                             let rows_count = results[0].total_rows
 
                             connection.query(
-                                `SELECT id, email, full_name, city, created_at FROM \`partners\`
+                                `SELECT id, email, full_name, city, created_at, active FROM \`partners\`
                                 ${(search !== '') ? 'WHERE': ''}
                                 ${(search !== '') ? '(id LIKE ? OR email LIKE ? OR full_name LIKE ? OR city LIKE ? OR created_at LIKE ?)' : ''}
                                 ORDER BY id DESC
@@ -248,6 +248,41 @@ router.post('/update', upload.single('logo'), function (req, res) {
                         })
                     }
                 })
+            }
+        })
+    } else {
+        res.json({
+            status: false,
+            message: "Permission Denied!"
+        })
+    }
+})
+
+router.post('/active_change', function (req, res) {
+    if (req.decoded.data.type === 2) {
+        const updated_id = req.body.update_id;
+        db.getConnection(function (err, connection) {
+            if (err) {
+                res.status(500).json({
+                    err
+                })
+            } else {
+                connection.query(
+                    'UPDATE partners SET ? WHERE id=?', [{
+                        active: req.body.sts
+                    }, updated_id],
+                    function (error, results, fields) {
+                        connection.release();
+                        if (error) {
+                            res.status(500).json({
+                                error
+                            })
+                        } else {
+                            res.json({
+                                status: true
+                            })
+                        }
+                    })
             }
         })
     } else {

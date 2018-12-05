@@ -450,7 +450,7 @@ router.post("/update", function (req, res) {
                     })
                   } else {
                     res.render("verify-token", {
-                      host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                      host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                       name: "Member",
                       token: token
                     }, function (errPug, html) {
@@ -735,7 +735,7 @@ router.post('/add_pincode', function (req, res) {
                         //sending an email in here
                         if (token !== null) {
                           res.render("verify-token", {
-                            host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                            host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                             name: full_name,
                             token: token
                           }, function (errPug, html) {
@@ -875,7 +875,7 @@ router.post('/update_pincode', function (req, res) {
                       //sending an email in here
                       if (token !== null) {
                         res.render("verify-token", {
-                          host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                          host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                           name: full_name,
                           token: token
                         }, function (errPug, html) {
@@ -1001,7 +1001,7 @@ router.post('/update_password', function (req, res) {
                               return resolve2()
                             } else {
                               res.render("verify-token", {
-                                host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                                host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                                 name: "Member",
                                 token: token
                               }, function (errPug, html) {

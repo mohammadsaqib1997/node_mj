@@ -62,12 +62,12 @@ module.exports = {
     }]
   ],
   axios: {
-    // baseURL: (config.dev) ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com'
+    // baseURL: (config.dev) ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com'
     proxy: true
   },
   proxy: {
     '/api/': {
-      target: (config.dev) ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+      target: (config.dev) ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
       changeOrigin: false,
       prependPath: false
     }

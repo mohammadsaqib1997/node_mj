@@ -105,7 +105,7 @@ router.post("/update", function (req, res) {
                             return resolve()
                           } else {
                             res.render("verify-token", {
-                              host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                              host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                               name: "Member",
                               token: token
                             }, function (errPug, html) {

@@ -72,7 +72,7 @@ router.post('/subscribe', function (req, res) {
               })
             } else {
               res.render('subscribe', {
-                host: require('./../config').dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                host: require('./../config').dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                 token: token
               }, function (errPug, html) {
                 if (errPug) {
@@ -193,7 +193,7 @@ router.post('/verify', function (req, res) {
                   connection.release()
                   if (send_email !== null) {
                     res.render("verify-token", {
-                      host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                      host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                       name: temp_data.name,
                       token: temp_data.token
                     }, function (errPug, html) {
@@ -361,7 +361,7 @@ router.post('/forgot-password', function (req, res) {
                 } else {
                   connection.release()
                   res.render("forgot-password", {
-                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                    host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                     name: temp_data.name,
                     token: temp_data.token
                   }, function (errPug, html) {
@@ -445,7 +445,7 @@ router.post('/contact', function (req, res) {
                   })
                 } else {
                   res.render("contact", {
-                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                    host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                     full_name: req.body.full_name,
                     email: req.body.email,
                     cont_number: req.body.cont_number,
@@ -528,7 +528,7 @@ router.post('/career', upload.single('cv'), function (req, res) {
                   })
                 } else {
                   res.render("career", {
-                    host: config.dev ? 'http://127.0.0.1:3000' : 'http://mj-supreme.com',
+                    host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
                     full_name: req.body.full_name,
                     email: req.body.email,
                     cont_number: req.body.cont_number,

@@ -12,11 +12,16 @@
             <label>Add Subsidiary</label>
             <b-field grouped>
               <b-field
+                class="cus-des-1"
                 :type="(validation.hasError('f_data.sel_control')) ? 'is-danger':''"
                 :message="validation.firstError('f_data.sel_control')"
                 expanded
               >
-                <b-select placeholder="Select Controller" @input="f_data.sel_control=$event">
+                <b-select
+                  placeholder="Select Controller"
+                  @input="f_data.sel_control=$event"
+                  expanded
+                >
                   <option value="1">Controller 1</option>
                   <option value="2">Controller 2</option>
                 </b-select>
@@ -34,20 +39,23 @@
                   autocomplete="off"
                 ></b-input>
               </b-field>
-            </b-field>
 
-            <div class="d-flex">
-              <button class="button btn-des-1" type="submit">
-                <b-icon icon="shield-alt"></b-icon>&nbsp;&nbsp;&nbsp;&nbsp;Add
-              </button>
-              <button
-                class="button btn-des-1 dark"
-                type="button"
-                @click.prevent="modalAct=false;"
-              >Close</button>
-            </div>
+              <b-field>
+                <p class="control">
+                  <button class="button btn-des-1" type="submit">Add</button>
+                </p>
+              </b-field>
+            </b-field>
           </form>
           <hr>
+          
+          <div class="d-flex">
+            <button
+              class="button btn-des-1 dark"
+              type="button"
+              @click.prevent="modalAct=false;"
+            >Close</button>
+          </div>
           <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
         </div>
       </div>
@@ -70,6 +78,7 @@ export default {
   },
   data() {
     return {
+      modalAct: true,
       loading: false,
       submitted: false,
       err: "",
