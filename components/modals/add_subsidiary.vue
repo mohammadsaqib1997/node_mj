@@ -6,10 +6,10 @@
       </div>
       <div class="body">
         <div class="section">
-          <form class="form" @submit.prevent>
+          <form class="form" @submit.prevent="updated === false ? add(): update()">
             <p v-if="err !== ''" class="error">{{ err }}</p>
 
-            <label>Add Subsidiary</label>
+            <label>{{ updated === false ? 'Add':'Update' }} Subsidiary</label>
             <b-field grouped>
               <b-field
                 class="cus-des-1"
@@ -17,13 +17,13 @@
                 :message="validation.firstError('f_data.sel_control')"
                 expanded
               >
-                <b-select
-                  placeholder="Select Controller"
-                  @input="f_data.sel_control=$event"
-                  expanded
-                >
-                  <option value="1">Controller 1</option>
-                  <option value="2">Controller 2</option>
+                <b-select v-model="f_data.sel_control" expanded>
+                  <option value>Select Controller</option>
+                  <option
+                    v-for="(data, ind) in list_controllers"
+                    :key="ind"
+                    :value="data.code"
+                  >{{ data.name }}</option>
                 </b-select>
               </b-field>
 
@@ -42,13 +42,58 @@
 
               <b-field>
                 <p class="control">
-                  <button class="button btn-des-1" type="submit">Add</button>
+                  <button
+                    class="button btn-des-1"
+                    type="submit"
+                  >{{ updated === false ? 'Add':'Update' }}</button>
                 </p>
               </b-field>
             </b-field>
           </form>
           <hr>
-          
+
+          <section class="section em-sec" v-if="list_data.length < 1">
+            <div class="content has-text-grey has-text-centered">
+              <p>
+                <span class="icon is-large">
+                  <i class="far fa-frown fa-3x"></i>
+                </span>
+              </p>
+              <p>Nothing here.</p>
+            </div>
+          </section>
+          <table class="table is-fullwidth is-bordered" v-else>
+            <thead>
+              <tr>
+                <th>Controller Name</th>
+                <th>Subsidiary Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(data, ind) in list_data" :key="ind">
+                <td>{{ data.p_name }}</td>
+                <td>{{ data.name }}</td>
+                <td>
+                  <b-field grouped>
+                    <p class="control">
+                      <button
+                        class="button is-small btn-sm-des-1 danger"
+                        @click="deleteSubs(data.id)"
+                      >Delete</button>
+                    </p>
+                    <p class="control">
+                      <button
+                        class="button is-small btn-sm-des-1"
+                        @click.prevent="updateLoadData(data.id)"
+                      >Edit</button>
+                    </p>
+                  </b-field>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <div class="d-flex">
             <button
               class="button btn-des-1 dark"
@@ -67,6 +112,7 @@
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 import mxn_modal from "~/mixins/modal.js";
+import _ from "lodash";
 export default {
   mixins: [mxn_modal],
   watch: {
@@ -78,9 +124,11 @@ export default {
   },
   data() {
     return {
-      modalAct: true,
       loading: false,
-      submitted: false,
+      updated: false,
+      updated_id: null,
+      list_data: [],
+      list_controllers: [],
       err: "",
       f_data: {
         sel_control: "",
@@ -89,72 +137,57 @@ export default {
     };
   },
   validators: {
-    // "f_data.old_pin": function(value) {
-    //   if (this.is_pin === true) {
-    //     return Validator.value(value)
-    //       .required()
-    //       .digit()
-    //       .length(6, "Enter 6 digit old pin code!");
-    //   }
-    // },
-    // "f_data.pin": function(value) {
-    //   const self = this;
-    //   return Validator.value(value)
-    //     .required()
-    //     .digit()
-    //     .length(6, "Enter 6 digit pin code!")
-    //     .custom(function() {
-    //       if (value === self.f_data.old_pin) {
-    //         return "Enter new pin code!";
-    //       }
-    //     });
-    // },
-    // "f_data.re_pin, f_data.pin": function(repeat, pin) {
-    //   if (this.is_pin === false) {
-    //     if (this.submitted || this.validation.isTouched("f_data.re_pin")) {
-    //       return Validator.value(repeat)
-    //         .required()
-    //         .match(pin);
-    //     }
-    //   }
-    // },
-    // "f_data.cur_pass": function(value) {
-    //   return Validator.value(value)
-    //     .required()
-    //     .minLength(6)
-    //     .maxLength(35);
-    // }
+    "f_data.sel_control": function(value) {
+      return Validator.value(value)
+        .required()
+        .maxLength(10);
+    },
+    "f_data.subs_name": function(value) {
+      return Validator.value(value)
+        .required()
+        .maxLength(100);
+    }
   },
   methods: {
     async loadData() {
       const self = this;
-      // self.loading = true;
-      // await self.$store.dispatch("pincode/loadPin");
-      // self.loading = false;
+      self.loading = true;
+      await self.$axios
+        .get("/api/c_subsidiary/list_controllers")
+        .then(res => {
+          self.list_controllers = res.data.result;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      await self.$axios
+        .get("/api/c_subsidiary/list")
+        .then(res => {
+          self.list_data = res.data.result;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      self.loading = false;
     },
-    addPin() {
+    add() {
       const self = this;
       self.err = "";
-      self.submitted = true;
       self.$validate().then(async function(success) {
         if (success) {
           self.loading = true;
           await self.$axios
-            .post("/api/profile/add_pincode", {
-              pin: self.f_data.pin,
-              password: self.f_data.cur_pass
-            })
+            .post("/api/c_subsidiary/add", self.f_data)
             .then(async res => {
               if (res.data.status === true) {
-                await self.$store.dispatch("pincode/loadPin");
                 self.resetData();
-                self.modalAct = false;
                 self.$toast.open({
-                  duration: 3000,
-                  message: "Successfully Add Your Pin Code!",
+                  duration: 1000,
+                  message: "Successfully Add Subsidiary!",
                   position: "is-bottom",
                   type: "is-success"
                 });
+                await self.loadData();
               } else {
                 self.err = res.data.message;
               }
@@ -167,29 +200,27 @@ export default {
         }
       });
     },
-    updatePin() {
+
+    update() {
       const self = this;
       self.err = "";
       self.$validate().then(async function(success) {
         if (success) {
           self.loading = true;
+          let update_data = _.cloneDeep(self.f_data);
+          update_data["update_id"] = self.updated_id;
           await self.$axios
-            .post("/api/profile/update_pincode", {
-              old_pin: self.f_data.old_pin,
-              pin: self.f_data.pin,
-              password: self.f_data.cur_pass
-            })
+            .post("/api/c_subsidiary/update", update_data)
             .then(async res => {
               if (res.data.status === true) {
-                await self.$store.dispatch("pincode/loadPin");
                 self.resetData();
-                self.modalAct = false;
                 self.$toast.open({
-                  duration: 3000,
-                  message: "Successfully Change Your Pin Code!",
+                  duration: 1000,
+                  message: "Successfully Update Subsidiary!",
                   position: "is-bottom",
                   type: "is-success"
                 });
+                await self.loadData();
               } else {
                 self.err = res.data.message;
               }
@@ -202,13 +233,51 @@ export default {
         }
       });
     },
+
+    updateLoadData(id) {
+      const self = this;
+      self.updated_id = id;
+      self.updated = true;
+      const sel_update_form = _.cloneDeep(_.find(self.list_data, { id }));
+
+      self.f_data = {
+        sel_control: sel_update_form.p_code,
+        subs_name: sel_update_form.name
+      };
+    },
+
+    async deleteSubs(id) {
+      const self = this;
+      self.loading = true;
+      await self.$axios
+        .post("/api/c_subsidiary/delete", { del_id: id })
+        .then(async res => {
+          if (res.data.status === true) {
+            self.resetData();
+            self.$toast.open({
+              duration: 1000,
+              message: "Successfully Delete Subsidiary!",
+              position: "is-bottom",
+              type: "is-success"
+            });
+            await self.loadData();
+          } else {
+            self.err = res.data.message;
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          self.err = "Server Error!";
+        });
+      self.loading = false;
+    },
+
     resetData() {
-      this.submitted = false;
+      this.updated_id = null;
+      this.updated = false;
       this.f_data = {
-        pin: "",
-        re_pin: "",
-        cur_pass: "",
-        old_pin: ""
+        sel_control: "",
+        subs_name: ""
       };
       this.validation.reset();
     }
@@ -248,9 +317,35 @@ export default {
     }
   }
 
-  .section {
-    min-height: 200px;
+  .btn-sm-des-1 {
+    padding: 4px 12px;
+    height: auto;
+    font-weight: 500;
+    font-size: 12px;
 
+    &:not(.active) {
+      color: #666666;
+      &:focus {
+        box-shadow: 0 0 0 0.12em #d9bd68 !important;
+        border-color: transparent;
+      }
+    }
+
+    &.danger {
+      color: #ffffff;
+      background-color: #ff9999;
+      border-color: #bd5e5e;
+      &:focus {
+        box-shadow: 0 0 0 0.12em #f17777 !important;
+        border-color: transparent;
+      }
+    }
+  }
+
+  & > .section {
+    min-height: 200px;
+  }
+  .section {
     .btns-cont {
       justify-content: center;
 

@@ -26,10 +26,20 @@ module.exports = {
       {
         rel: 'stylesheet',
         href: '/fontawesome/css/all.min.css'
+      },
+      {
+        rel: 'stylesheet',
+        href: '/vendors/slick/slick.css'
+      },
+      {
+        rel: 'stylesheet',
+        href: '/vendors/slick/slick-theme.css'
       }
     ],
     script: [{
       src: '/js/jquery-3.3.1.min.js'
+    }, {
+      src: '/vendors/slick/slick.min.js'
     }, ]
   },
   css: [

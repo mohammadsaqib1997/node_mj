@@ -15,37 +15,37 @@
         <div class="section">
           <form class="form" @submit.prevent="addVoucher">
             <h3>Add Voucher</h3>
+            <table class="table is-fullwidth is-bordered entry_table">
+              <thead>
+                <tr>
+                  <th width="5%">Row#</th>
+                  <th width="15%">Subsidiary</th>
+                  <th width="50%">Particular</th>
+                  <th width="15%">Debit</th>
+                  <th width="15%">Credit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <voucherRow ref="v_rows" v-for="n in 5" :ind="n" :key="n"></voucherRow>
+              </tbody>
+            </table>
             <b-field grouped>
               <b-field
-                :type="(validation.hasError('f_data.remarks')) ? 'is-danger':''"
-                :message="validation.firstError('f_data.remarks')"
-                expanded
+                :type="(validation.hasError('f_data.date')) ? 'is-danger':''"
+                :message="validation.firstError('f_data.date')"
               >
-                <b-input placeholder="Voucher Remarks" v-model="f_data.remarks"></b-input>
-              </b-field>
-              <b-field
-                :type="(validation.hasError('f_data.debit')) ? 'is-danger':''"
-                :message="validation.firstError('f_data.debit')"
-              >
-                <b-input type="tel" placeholder="Debit" v-mask="'#######'" v-model="f_data.debit"></b-input>
-              </b-field>
-              <b-field
-                :type="(validation.hasError('f_data.credit')) ? 'is-danger':''"
-                :message="validation.firstError('f_data.credit')"
-              >
-                <b-input type="tel" placeholder="Credit" v-mask="'#######'" v-model="f_data.credit"></b-input>
+                <b-datepicker placeholder="Voucher Date" v-model="f_data.date"></b-datepicker>
               </b-field>
               <b-field>
                 <p class="control">
-                  <button class="button btn-des-1" type="submit">Add</button>
+                  <button class="button btn-des-1" type="submit">Save</button>
                 </p>
               </b-field>
             </b-field>
           </form>
           <hr>
-          <expFinanceComp title="Voucher" :type="2" @loading="loading=$event"></expFinanceComp>
-          <hr>
-
+          <!-- <expFinanceComp title="Voucher" :type="2" @loading="loading=$event"></expFinanceComp> -->
+          <!-- <hr> -->
           <tblTopFilter
             :act_view="String(load_params.limit)"
             :s_txt="load_params.search"
@@ -99,6 +99,7 @@ import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
 import expFinanceComp from "~/components/admin_panel/admin/exp-finance.vue";
 import addSubsMD from "~/components/modals/add_subsidiary.vue";
+import voucherRow from "~/components/forms/voucher_row.vue";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
@@ -109,7 +110,8 @@ export default {
     tableComp,
     tblTopFilter,
     expFinanceComp,
-    addSubsMD
+    addSubsMD,
+    voucherRow
   },
   computed: {},
   directives: {
@@ -120,35 +122,13 @@ export default {
       tot_balance: "",
       subs_md_act: false,
       f_data: {
-        remarks: "",
-        debit: "",
-        credit: ""
+        date: null
       }
     };
   },
   validators: {
-    "f_data.remarks": function(value) {
-      return Validator.value(value)
-        .required()
-        .minLength(3)
-        .maxLength(250)
-        .custom(() => {
-          if (/[^a-zA-Z0-9\.\?\!\"\'\s- ]/.test(value)) {
-            return "Invalid character use.";
-          }
-        });
-    },
-    "f_data.debit": function(value) {
-      return Validator.value(value)
-        .required()
-        .digit()
-        .lessThanOrEqualTo(1000000, "Maximum amount add 1000000!");
-    },
-    "f_data.credit": function(value) {
-      return Validator.value(value)
-        .required()
-        .digit()
-        .lessThanOrEqualTo(1000000, "Maximum amount add 1000000!");
+    "f_data.date": function(value) {
+      return Validator.value(value).required();
     }
   },
   methods: {
@@ -171,46 +151,104 @@ export default {
     },
     addVoucher() {
       const self = this;
-      self.$validate().then(function(success) {
-        if (success) {
-          self.loading = true;
-          // self.$axios
-          //   .post("/api/admin/add_voucher", {
-          //     remarks: self.f_data.remarks,
-          //     debit: self.f_data.debit,
-          //     credit: self.f_data.credit
-          //   })
-          //   .then(async res => {
-          //     self.reset();
-          //     await self.loadData();
-          //     self.loading = false;
-          //     self.$toast.open({
-          //       duration: 3000,
-          //       message: "Successfully Add Voucher.",
-          //       position: "is-bottom",
-          //       type: "is-success"
-          //     });
-          //   })
-          //   .catch(err => {
-          //     console.log(err);
-          //     self.loading = false;
-          //     self.$toast.open({
-          //       duration: 3000,
-          //       message: "DB Error.",
-          //       position: "is-bottom",
-          //       type: "is-danger"
-          //     });
-          //   });
+      self.loading = true;
+      Promise.all(
+        self.$refs.v_rows.map(function(row_com) {
+          return row_com.validate();
+        })
+      ).then(async function(result) {
+        let self_form_chk = false;
+        await self.$validate().then(
+          function(success) {
+            self_form_chk = success;
+          }.bind(this)
+        );
+
+        let fill = result.filter(function(row_data) {
+          return (
+            typeof row_data !== "undefined" &&
+            !_.get(row_data, "empty", false) &&
+            !_.get(row_data, "required", false)
+          );
+        });
+        if (_.filter(result, "required").length > 0) {
+          self.loading = false;
+          return;
+        }
+        if (fill.length < 1) {
+          self.loading = false;
+          self.$toast.open({
+            duration: 1000,
+            message: "Minimum one entry.",
+            position: "is-bottom",
+            type: "is-danger"
+          });
         } else {
+          if (self_form_chk) {
+            await self.$axios
+              .post("/api/voucher/add", {
+                v_date: self.f_data.date,
+                rows: fill
+              })
+              .then(res => {
+                console.log(res.data);
+              })
+              .catch(err => {
+                console.log(err);
+              });
+            // self.$toast.open({
+            //   duration: 1000,
+            //   message: "success",
+            //   position: "is-bottom",
+            //   type: "is-success"
+            // });
+            // self.reset();
+            // self.$refs.v_rows.forEach(function(row_com) {
+            //   row_com.rowDataReset();
+            // });
+          }
           self.loading = false;
         }
       });
+
+      // self.$validate().then(function(success) {
+      //   if (success) {
+      //     self.loading = true;
+      //     // self.$axios
+      //     //   .post("/api/admin/add_voucher", {
+      //     //     remarks: self.f_data.remarks,
+      //     //     debit: self.f_data.debit,
+      //     //     credit: self.f_data.credit
+      //     //   })
+      //     //   .then(async res => {
+      //     //     self.reset();
+      //     //     await self.loadData();
+      //     //     self.loading = false;
+      //     //     self.$toast.open({
+      //     //       duration: 3000,
+      //     //       message: "Successfully Add Voucher.",
+      //     //       position: "is-bottom",
+      //     //       type: "is-success"
+      //     //     });
+      //     //   })
+      //     //   .catch(err => {
+      //     //     console.log(err);
+      //     //     self.loading = false;
+      //     //     self.$toast.open({
+      //     //       duration: 3000,
+      //     //       message: "DB Error.",
+      //     //       position: "is-bottom",
+      //     //       type: "is-danger"
+      //     //     });
+      //     //   });
+      //   } else {
+      //     self.loading = false;
+      //   }
+      // });
     },
     reset() {
       this.f_data = {
-        remarks: "",
-        debit: "",
-        credit: ""
+        date: null
       };
       this.validation.reset();
     }
@@ -238,6 +276,16 @@ export default {
       }
       .icon {
         color: #d9bd68;
+      }
+    }
+
+    .entry_table {
+      td {
+        padding: 4px;
+        &:first-child {
+          vertical-align: middle;
+          text-align: center;
+        }
       }
     }
 

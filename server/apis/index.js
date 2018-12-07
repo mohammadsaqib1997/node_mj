@@ -50,6 +50,8 @@ router.use("/partner", cors(corsOptions), require('./partners.js'))
 router.use("/startup", cors(corsOptions), require('./startup_check.js'))
 router.use("/gen_excel", cors(corsOptions), require('./gen_excels.js'))
 router.use("/email", cors(corsOptions), require('./emails.js'))
+router.use("/c_subsidiary", cors(corsOptions), require('./c_subsidiary.js'))
+router.use("/voucher", cors(corsOptions), require('./vouchers.js'))
 
 router.all("*", function (req, res) {
   res.status(403).json({ error: 'Invalid Request!' })

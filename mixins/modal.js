@@ -5,6 +5,11 @@ export default {
             default: false
         },
     },
+    mounted() {
+        if(this.md_act !== this.modalAct) {
+            this.modalAct = this.md_act;
+        }
+    },
     watch: {
         md_act: function (val) {
             if (val !== this.modalAct) {

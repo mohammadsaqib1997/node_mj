@@ -724,6 +724,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
 
             input.input,
             .cus-des-1 .select>select {
+
                 background-color: #f5f6f7;
                 -webkit-box-shadow: none;
                 -moz-box-shadow: none;
@@ -745,17 +746,18 @@ $primary-light: rgba(217, 189, 104, 0.25);
                     box-shadow: 0 0 2px 0 $primary;
                     background-color: #ffffff;
                 }
+            }
 
-                &.is-danger {
-                    border: 1px solid #ff3860 !important;
+            input.input.is-danger,
+            .cus-des-1 .select.is-danger>select {
+                border: 1px solid #ff3860 !important;
 
-                    &:focus,
-                    &:active {
-                        -webkit-box-shadow: 0 0 2px 0 #ff3860;
-                        -moz-box-shadow: 0 0 2px 0 #ff3860;
-                        box-shadow: 0 0 2px 0 #ff3860;
-                        background-color: #ffffff;
-                    }
+                &:focus,
+                &:active {
+                    -webkit-box-shadow: 0 0 2px 0 #ff3860;
+                    -moz-box-shadow: 0 0 2px 0 #ff3860;
+                    box-shadow: 0 0 2px 0 #ff3860;
+                    background-color: #ffffff;
                 }
             }
 

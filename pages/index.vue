@@ -1,13 +1,6 @@
 <template lang="pug">
   .wrapper
-    .section.sct-1
-      .container
-        .columns.is-gapless
-          .column.is-5
-            h1.title-1.lt Discount Card
-            p.cnt
-              | A marketing product in which we provide discounts in different outlets along with complete solution of house hold to the people of Pakistan.
-            nuxt-link.button.btn(to="/about-us") More Info
+    hmSlider
     .section.sct-2
       .container
         h1.title-1.center Products
@@ -57,15 +50,20 @@
           .column
             .img-cont
               img(src="~/assets/img/hm-op-img-1.png")
+    hmPgPromotion(:md_act="false")
 </template>
 
 <script>
 import upcomingProdSection from "~/components/upcoming-prod-section.vue"
 import winnerSec from "~/components/winner-sec.vue"
+import hmSlider from "~/components/hm_slider.vue"
+import hmPgPromotion from "~/components/modals/home_pg_promotion.vue"
 export default {
   components: {
     "upcoming-prod-section": upcomingProdSection,
-    winnerSec
+    winnerSec,
+    hmPgPromotion,
+    hmSlider
   },
   data() {
     return {
@@ -76,41 +74,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.sct-1 {
-  position: relative;
-  margin-bottom: 1rem;
-  box-shadow: 0 5px 3px -3px #999;
-  background-image: url("/img/hm-img-1.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  min-height: 32rem;
-  display: flex;
-
-  .container {
-    display: flex;
-    align-items: center;
-
-    .columns {
-      width: 100%;
-    }
-  }
-
-  p.cnt {
-    color: #c5c5c7;
-    padding: 3rem 5rem 3rem 0;
-    font-size: 18px;
-  }
-
-  .button.btn {
-    background-color: transparent;
-    border: 1px solid #d9bd68;
-    color: #d9bd68;
-    padding: 8px 2rem;
-    height: auto;
-  }
-}
-
 .sct-2 {
   background-color: #f6f6f6;
   padding-top: 2rem;
