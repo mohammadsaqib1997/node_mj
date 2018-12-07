@@ -95,10 +95,10 @@ const authRoutes = [{
         name: "rewards-rewards-completed",
         type_allowed: [1, 2]
     },
-    // {
-    //     name: "account-vouchers",
-    //     type_allowed: [2]
-    // }
+    {
+        name: "account-vouchers",
+        type_allowed: [2]
+    }
 ]
 
 const un_paid_routes = [{

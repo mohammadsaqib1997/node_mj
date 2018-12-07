@@ -1,6 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
+const moment = require('moment')
+const _ = require('lodash')
 const db = require('../db.js')
 const db_util = require('../func/db-util.js')
 
@@ -15,59 +17,128 @@ router.use(function (req, res, next) {
   }
 })
 
-router.post("/add", function (req, res) {
-    res.json({
-        status: true,
-        data: req.body
-    })
-//   db.getConnection(function (err, connection) {
-//     if (err) {
-//       res.status(500).json({
-//         error
-//       })
-//     } else {
-//       db_util.connectTrans(connection, function (resolve, err_cb) {
-//         connection.query(
-//           `SELECT id, v_id 
-//           FROM vouchers 
-//           WHERE parent_code='${req.body.sel_control}' 
-//           ORDER BY code DESC LIMIT 1`,
-//           function (error, result) {
-//             if (error) {
-//               err_cb(error)
-//               resolve()
-//             } else {
-//               let new_inc = result.length > 0 ? (parseInt(result[0].code) + 1).toString() : '1'
-//               new_inc = (new_inc.length < 4) ? ("0000" + new_inc).substr(-4, 4) : new_inc
+router.get('/list_voucher', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        error
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
 
-//               connection.query(
-//                 `INSERT INTO c_subsidiary SET ?`, {
-//                   code: new_inc,
-//                   name: req.body.subs_name,
-//                   type: 1,
-//                   parent_code: req.body.sel_control
-//                 },
-//                 function (error, result) {
-//                   if (error) {
-//                     err_cb(error)
-//                   }
-//                   resolve()
-//                 })
-//             }
-//           })
-//       }, function (error) {
-//         if (error) {
-//           res.status(500).json({
-//             error
-//           })
-//         } else {
-//           res.json({
-//             status: true
-//           })
-//         }
-//       })
-//     }
-//   })
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `SELECT COUNT(*) as tot_rows 
+        FROM vouchers
+        ${(search !== '') ? 'WHERE v_id LIKE ?' : ''}`,
+        ['%' + search + '%'],
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            let tot_rows = result[0].tot_rows
+
+            connection.query(
+              `SELECT id, v_id, v_date 
+              FROM vouchers
+              ${(search !== '') ? 'WHERE v_id LIKE ?' : ''}
+              ORDER BY v_id DESC
+              LIMIT ${limit}
+              OFFSET ${offset}`,
+              ['%' + search + '%'],
+              function (error, result) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: result,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
+  })
+})
+
+router.post("/add", function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        error
+      })
+    } else {
+      db_util.connectTrans(connection, function (resolve, err_cb) {
+        connection.query(
+          `INSERT INTO vouchers SET ?`, {
+            v_date: moment(req.body.v_date).format("YYYY-MM-DD HH-mm-ss")
+          },
+          function (error, result) {
+            if (error) {
+              err_cb(error)
+              resolve()
+            } else {
+              let v_ins_id = result.insertId
+              let gen_v_id = moment().format('YYYYMMDD')
+              gen_v_id = gen_v_id + ((v_ins_id.toString().length < 3) ? ("000" + v_ins_id).substr(-3, 3) : v_ins_id)
+
+              connection.query(
+                `UPDATE vouchers SET ? WHERE id=${v_ins_id}`, {
+                  v_id: gen_v_id
+                },
+                function (error, result) {
+                  if (error) {
+                    err_cb(error)
+                    resolve()
+                  } else {
+                    let mapRows = _.map(req.body.rows, o => {
+                      return [v_ins_id, o.subs_id, o.particular, o.debit, o.credit]
+                    })
+                    connection.query(
+                      `INSERT INTO v_entries (v_id, subs_id, particular, debit, credit) VALUES ?`, [mapRows],
+                      function (error, result) {
+                        if (error) {
+                          err_cb(error)
+                        }
+                        resolve()
+                      })
+                  }
+                })
+            }
+          })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
+        }
+      })
+    }
+  })
 })
 
 // router.post("/update", function (req, res) {

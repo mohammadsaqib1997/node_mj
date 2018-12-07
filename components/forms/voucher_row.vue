@@ -168,7 +168,12 @@ export default {
         function(success) {
           if (success) {
             if (!this.emptyCheck()) {
-              return this.f_data;
+              let data = _.cloneDeep(this.f_data);
+              data["credit"] = parseInt(data["credit"]);
+              data["debit"] = parseInt(data["debit"]);
+              data["subs_id"] = data["sel_subs_id"];
+              delete data["sel_subs_id"];
+              return data;
             } else {
               return { empty: true };
             }

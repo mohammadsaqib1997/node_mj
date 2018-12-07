@@ -52,12 +52,12 @@
             @change_act_view="update_params('limit', parseInt($event))"
             @change_s_txt="update_params('search', $event)"
           ></tblTopFilter>
-          <b-field class="total-count">
+          <!-- <b-field class="total-count">
             <p class="control has-text-right">
               <span>Total Balance:</span>
               <span class="count">{{ tot_balance }}/-</span>
             </p>
-          </b-field>
+          </b-field> -->
           <tableComp
             :arr="l_data"
             :loading="loading"
@@ -71,18 +71,16 @@
               <tr>
                 <th>ID</th>
                 <th>Date</th>
-                <th>Description</th>
-                <th>Debit</th>
-                <th>Credit</th>
+                <th>Voucher ID</th>
+                <th>Action</th>
               </tr>
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
                 <td>{{ row.id }}</td>
-                <td>{{ $store.getters.formatDate(row.created_at) }}</td>
-                <td>{{ row.remarks }}</td>
-                <td>{{ row.debit }}</td>
-                <td>{{ row.credit }}</td>
+                <td>{{ $store.getters.formatDate(row.v_date) }}</td>
+                <td>{{ row.v_id }}</td>
+                <td></td>
               </tr>
             </template>
           </tableComp>
@@ -135,18 +133,17 @@ export default {
     async loadData() {
       const self = this;
       self.loading = true;
-      // await self.$axios
-      //   .get("/api/admin/voucher_list", {
-      //     params: self.load_params
-      //   })
-      //   .then(res => {
-      //     self.l_data = res.data.data;
-      //     self.num_rows = res.data.tot_rows;
-      //     self.tot_balance = res.data.tot_balance;
-      //   })
-      //   .catch(err => {
-      //     console.log(err);
-      //   });
+      await self.$axios
+        .get("/api/voucher/list_voucher", {
+          params: self.load_params
+        })
+        .then(res => {
+          self.l_data = res.data.data;
+          self.num_rows = res.data.tot_rows;
+        })
+        .catch(err => {
+          console.log(err);
+        });
       self.loading = false;
     },
     addVoucher() {
@@ -191,66 +188,45 @@ export default {
                 rows: fill
               })
               .then(res => {
-                console.log(res.data);
+                if (res.data.status === true) {
+                  self.$toast.open({
+                    duration: 1000,
+                    message: "Successfully voucher inserted.",
+                    position: "is-bottom",
+                    type: "is-success"
+                  });
+                  self.reset();
+                } else {
+                  self.$toast.open({
+                    duration: 1000,
+                    message: res.data.message,
+                    position: "is-bottom",
+                    type: "is-danger"
+                  });
+                }
               })
               .catch(err => {
                 console.log(err);
+                self.$toast.open({
+                  duration: 1000,
+                  message: "Server Error.",
+                  position: "is-bottom",
+                  type: "is-danger"
+                });
               });
-            // self.$toast.open({
-            //   duration: 1000,
-            //   message: "success",
-            //   position: "is-bottom",
-            //   type: "is-success"
-            // });
-            // self.reset();
-            // self.$refs.v_rows.forEach(function(row_com) {
-            //   row_com.rowDataReset();
-            // });
           }
           self.loading = false;
         }
       });
-
-      // self.$validate().then(function(success) {
-      //   if (success) {
-      //     self.loading = true;
-      //     // self.$axios
-      //     //   .post("/api/admin/add_voucher", {
-      //     //     remarks: self.f_data.remarks,
-      //     //     debit: self.f_data.debit,
-      //     //     credit: self.f_data.credit
-      //     //   })
-      //     //   .then(async res => {
-      //     //     self.reset();
-      //     //     await self.loadData();
-      //     //     self.loading = false;
-      //     //     self.$toast.open({
-      //     //       duration: 3000,
-      //     //       message: "Successfully Add Voucher.",
-      //     //       position: "is-bottom",
-      //     //       type: "is-success"
-      //     //     });
-      //     //   })
-      //     //   .catch(err => {
-      //     //     console.log(err);
-      //     //     self.loading = false;
-      //     //     self.$toast.open({
-      //     //       duration: 3000,
-      //     //       message: "DB Error.",
-      //     //       position: "is-bottom",
-      //     //       type: "is-danger"
-      //     //     });
-      //     //   });
-      //   } else {
-      //     self.loading = false;
-      //   }
-      // });
     },
     reset() {
       this.f_data = {
         date: null
       };
       this.validation.reset();
+      this.$refs.v_rows.forEach(function(row_com) {
+        row_com.rowDataReset();
+      });
     }
   }
 };
