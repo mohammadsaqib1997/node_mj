@@ -15,6 +15,39 @@ router.use(function (req, res, next) {
   }
 })
 
+router.get("/subs_name/:id", function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        error
+      })
+    } else {
+      connection.query(
+        `SELECT name
+        FROM c_subsidiary
+        WHERE id=${req.params.id}`,
+        function (error, result, fields) {
+          connection.release();
+
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            let name = ''
+            if (result.length > 0) {
+              name = result[0].name
+            }
+            res.json({
+              name
+            })
+          }
+
+        });
+    }
+  })
+})
+
 router.get("/list_controllers", function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {

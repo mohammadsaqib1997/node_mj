@@ -13,8 +13,8 @@
       </div>
       <div class="body">
         <div class="section">
-          <form class="form" @submit.prevent="addVoucher">
-            <h3>Add Voucher</h3>
+          <form class="form" @submit.prevent="is_update ? updateVoucher(): addVoucher()">
+            <h3>{{ is_update ? 'Update': 'Add' }} Voucher</h3>
             <table class="table is-fullwidth is-bordered entry_table">
               <thead>
                 <tr>
@@ -36,28 +36,29 @@
               >
                 <b-datepicker placeholder="Voucher Date" v-model="f_data.date"></b-datepicker>
               </b-field>
-              <b-field>
+              <b-field grouped>
                 <p class="control">
-                  <button class="button btn-des-1" type="submit">Save</button>
+                  <button class="button btn-des-1" type="submit">{{ is_update ? 'Update': 'Save' }}</button>
+                </p>
+                <p class="control" v-if="is_update">
+                  <button
+                    @click.prevent="reset"
+                    class="button btn-des-1 dark"
+                    type="button"
+                  >New Voucher</button>
                 </p>
               </b-field>
             </b-field>
           </form>
           <hr>
-          <!-- <expFinanceComp title="Voucher" :type="2" @loading="loading=$event"></expFinanceComp> -->
-          <!-- <hr> -->
+
           <tblTopFilter
             :act_view="String(load_params.limit)"
             :s_txt="load_params.search"
             @change_act_view="update_params('limit', parseInt($event))"
             @change_s_txt="update_params('search', $event)"
           ></tblTopFilter>
-          <!-- <b-field class="total-count">
-            <p class="control has-text-right">
-              <span>Total Balance:</span>
-              <span class="count">{{ tot_balance }}/-</span>
-            </p>
-          </b-field> -->
+
           <tableComp
             :arr="l_data"
             :loading="loading"
@@ -80,7 +81,22 @@
                 <td>{{ row.id }}</td>
                 <td>{{ $store.getters.formatDate(row.v_date) }}</td>
                 <td>{{ row.v_id }}</td>
-                <td></td>
+                <td>
+                  <b-field grouped>
+                    <p class="control">
+                      <button
+                        @click.prevent="deleteVoucher(row.id)"
+                        class="button is-small is-danger"
+                      >Delete</button>
+                    </p>
+                    <p class="control">
+                      <button
+                        @click.prevent="loadUpdateData(row.id)"
+                        class="button is-small is-info"
+                      >Edit</button>
+                    </p>
+                  </b-field>
+                </td>
               </tr>
             </template>
           </tableComp>
@@ -92,6 +108,8 @@
 </template>
 
 <script>
+import _ from "lodash";
+import moment from "moment";
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
@@ -119,6 +137,8 @@ export default {
     return {
       tot_balance: "",
       subs_md_act: false,
+      loaded_voucher: null,
+      is_update: false,
       f_data: {
         date: null
       }
@@ -187,7 +207,7 @@ export default {
                 v_date: self.f_data.date,
                 rows: fill
               })
-              .then(res => {
+              .then(async res => {
                 if (res.data.status === true) {
                   self.$toast.open({
                     duration: 1000,
@@ -196,6 +216,7 @@ export default {
                     type: "is-success"
                   });
                   self.reset();
+                  await self.loadData();
                 } else {
                   self.$toast.open({
                     duration: 1000,
@@ -219,14 +240,182 @@ export default {
         }
       });
     },
+    updateVoucher() {
+      const self = this;
+      self.loading = true;
+      Promise.all(
+        self.$refs.v_rows.map(function(row_com) {
+          return row_com.validate();
+        })
+      ).then(async function(result) {
+        let self_form_chk = false;
+        await self.$validate().then(
+          function(success) {
+            self_form_chk = success;
+          }.bind(this)
+        );
+
+        let fill = result.filter(function(row_data) {
+          return (
+            typeof row_data !== "undefined" &&
+            !_.get(row_data, "empty", false) &&
+            !_.get(row_data, "required", false)
+          );
+        });
+        if (_.filter(result, "required").length > 0) {
+          self.loading = false;
+          return;
+        }
+        if (fill.length < 1) {
+          self.loading = false;
+          self.$toast.open({
+            duration: 1000,
+            message: "Minimum one entry.",
+            position: "is-bottom",
+            type: "is-danger"
+          });
+        } else {
+          if (self_form_chk) {
+            let upd_rows = [];
+
+            self.$refs.v_rows.forEach(function(comp, i) {
+              let fill_row = fill[i];
+              let prev_row = self.loaded_voucher.v_ent_data[i];
+
+              if (fill_row && prev_row) {
+                fill_row["id"] = prev_row.id;
+                upd_rows[i] = fill_row;
+              } else if (!fill_row && prev_row) {
+                upd_rows[i] = {
+                  id: prev_row.id,
+                  remove: true
+                };
+              } else if (fill_row && !prev_row) {
+                upd_rows[i] = fill_row;
+              }
+            });
+
+            await self.$axios
+              .post("/api/voucher/update", {
+                upd_id: self.loaded_voucher.v_data.id,
+                v_date: moment(self.f_data.date).format(),
+                rows: upd_rows
+              })
+              .then(async res => {
+                if (res.data.status === true) {
+                  self.$toast.open({
+                    duration: 1000,
+                    message: "Successfully voucher updated.",
+                    position: "is-bottom",
+                    type: "is-success"
+                  });
+                  self.reset();
+                  await self.loadData();
+                } else {
+                  self.$toast.open({
+                    duration: 1000,
+                    message: res.data.message,
+                    position: "is-bottom",
+                    type: "is-danger"
+                  });
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                self.$toast.open({
+                  duration: 1000,
+                  message: "Server Error.",
+                  position: "is-bottom",
+                  type: "is-danger"
+                });
+              });
+          }
+          self.loading = false;
+        }
+      });
+    },
+    deleteVoucher(id) {
+      const self = this;
+      this.$dialog.confirm({
+        title: "Deleting voucher #" + id,
+        message:
+          "Are you sure you want to <b>delete</b> voucher? This action cannot be undone.",
+        confirmText: "Delete Voucher",
+        type: "is-danger",
+        hasIcon: true,
+        onConfirm: async () => {
+          self.loading = true;
+          await self.$axios
+            .post("/api/voucher/delete", {
+              del_id: id
+            })
+            .then(async res => {
+              self.$toast.open({
+                duration: 1000,
+                message: "Successfully voucher deleted.",
+                position: "is-bottom",
+                type: "is-success"
+              });
+              await self.loadData();
+            })
+            .catch(err => {
+              self.loading = false;
+              console.log(err);
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error.",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
+        }
+      });
+    },
     reset() {
       this.f_data = {
         date: null
       };
+      this.is_update = false;
+      this.loaded_voucher = null;
       this.validation.reset();
       this.$refs.v_rows.forEach(function(row_com) {
         row_com.rowDataReset();
       });
+    },
+    async loadUpdateData(id) {
+      const self = this;
+      self.loading = true;
+      await self.$axios
+        .get("/api/voucher/load/" + id)
+        .then(res => {
+          if (res.data.status == false) {
+            self.$toast.open({
+              duration: 1000,
+              message: res.data.message,
+              position: "is-bottom",
+              type: "is-danger"
+            });
+          } else {
+            self.is_update = true;
+            self.loaded_voucher = res.data;
+            self.f_data.date = new Date(res.data.v_data.v_date);
+            self.$refs.v_rows.forEach(function(row_com, ind) {
+              row_com.rowDataReset();
+              row_com.setRowData(res.data.v_ent_data[ind]);
+            });
+          }
+          self.loading = false;
+        })
+        .catch(err => {
+          self.loading = false;
+          console.log(err);
+          self.$toast.open({
+            duration: 1000,
+            message: "Server Error.",
+            position: "is-bottom",
+            type: "is-danger"
+          });
+        });
     }
   }
 };

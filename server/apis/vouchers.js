@@ -81,6 +81,57 @@ router.get('/list_voucher', function (req, res) {
   })
 })
 
+router.get('/load/:id', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        error
+      })
+    } else {
+      connection.query(
+        `SELECT id, v_id, v_date 
+        FROM vouchers
+        WHERE id LIKE ?`,
+        [req.params.id],
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (result.length > 0) {
+              let v_data = result[0]
+              connection.query(
+                `SELECT id, subs_id, particular, debit, credit 
+                FROM v_entries
+                WHERE v_id LIKE ?`,
+                [req.params.id],
+                function (error, result) {
+                  connection.release()
+                  if (error) {
+                    res.status(500).json({
+                      error
+                    })
+                  } else {
+                    res.json({
+                      v_data,
+                      v_ent_data: result
+                    })
+                  }
+                })
+            } else {
+              res.json({
+                status: false,
+                message: "Invalid Id!"
+              })
+            }
+          }
+        })
+    }
+  })
+})
+
 router.post("/add", function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {
@@ -141,107 +192,131 @@ router.post("/add", function (req, res) {
   })
 })
 
-// router.post("/update", function (req, res) {
-//   db.getConnection(function (err, connection) {
-//     if (err) {
-//       res.status(500).json({
-//         error
-//       })
-//     } else {
-//       db_util.connectTrans(connection, function (resolve, err_cb) {
-//         connection.query(
-//           `SELECT * 
-//           FROM c_subsidiary 
-//           WHERE id='${req.body.update_id}'`,
-//           async function (error, result) {
-//             if (error) {
-//               err_cb(error)
-//               resolve()
-//             } else {
-//               let p_code = result[0].parent_code
-//               let code = result[0].code
-//               if (p_code !== req.body.sel_control) {
-//                 let thr_err = null
-//                 await new Promise(resolve2 => {
-//                   connection.query(
-//                     `SELECT code 
-//                     FROM c_subsidiary 
-//                     WHERE parent_code='${req.body.sel_control}' 
-//                     ORDER BY code DESC LIMIT 1`,
-//                     function (error, result) {
-//                       if (error) {
-//                         thr_err = error
-//                         return resolve2()
-//                       } else {
-//                         let new_inc = result.length > 0 ? (parseInt(result[0].code) + 1).toString() : '1'
-//                         code = (new_inc.length < 4) ? ("0000" + new_inc).substr(-4, 4) : new_inc
-//                         return resolve2()
-//                       }
-//                     }
-//                   )
-//                 })
-//                 if (thr_err) {
-//                   err_cb(thr_err)
-//                   return resolve()
-//                 }
-//               }
+router.post("/update", function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        error
+      })
+    } else {
+      db_util.connectTrans(connection, function (resolve, err_cb) {
+        connection.query(
+          `UPDATE vouchers SET ? WHERE id=${req.body.upd_id}`, {
+            v_date: moment(req.body.v_date).format("YYYY-MM-DD HH-mm-ss"),
+            updated_at: moment().format("YYYY-MM-DD HH-mm-ss")
+          },
+          async function (error, result) {
+            if (error) {
+              err_cb(error)
+              resolve()
+            } else {
 
-//               connection.query(
-//                 `UPDATE c_subsidiary SET ? WHERE id=?`, [{
-//                   code: code,
-//                   name: req.body.subs_name,
-//                   type: 1,
-//                   parent_code: req.body.sel_control
-//                 }, req.body.update_id],
-//                 function (error, result) {
-//                   if (error) {
-//                     err_cb(error)
-//                   }
-//                   resolve()
-//                 })
-//             }
-//           })
-//       }, function (error) {
-//         if (error) {
-//           res.status(500).json({
-//             error
-//           })
-//         } else {
-//           res.json({
-//             status: true
-//           })
-//         }
-//       })
-//     }
-//   })
-// })
+              let thr_err = null
+              for (let upd_row of req.body.rows) {
+                if (_.get(upd_row, 'remove', false)) {
+                  await new Promise(in_res => {
+                    connection.query(
+                      `DELETE FROM v_entries WHERE id=${upd_row.id}`,
+                      function (error, result) {
+                        if (error) {
+                          thr_err = error
+                        }
+                        in_res()
+                      })
+                  })
+                } else if (_.get(upd_row, 'id', null)) {
+                  let upd_db_row = _.cloneDeep(upd_row)
+                  delete upd_db_row['id']
+                  await new Promise(in_res => {
+                    connection.query(
+                      `UPDATE v_entries SET ? WHERE id=${upd_row.id}`,
+                      upd_db_row,
+                      function (error, result) {
+                        if (error) {
+                          thr_err = error
+                        }
+                        in_res()
+                      })
+                  })
+                } else {
+                  await new Promise(in_res => {
+                    upd_row['v_id'] = req.body.upd_id;
+                    connection.query(
+                      `INSERT INTO v_entries SET ?`,
+                      upd_row,
+                      function (error, result) {
+                        if (error) {
+                          thr_err = error
+                        }
+                        in_res()
+                      })
+                  })
+                }
 
-// router.post('/delete', function (req, res) {
-//   db.getConnection(function (err, connection) {
-//     if (err) {
-//       res.status(500).json({
-//         error
-//       })
-//     } else {
-//       connection.query(
-//         `DELETE FROM c_subsidiary WHERE id=?`,
-//         req.body.del_id,
-//         function (error, result) {
-//           connection.release()
-//           if (error) {
-//             res.status(500).json({
-//               error
-//             })
-//           } else {
-//             res.json({
-//               status: true
-//             })
-//           }
-//         }
-//       )
-//     }
-//   })
-// })
+                if (thr_err) break
+              }
+              if (thr_err) {
+                err_cb(thr_err)
+              }
+              resolve()
+            }
+          })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
+        }
+      })
+    }
+  })
+})
+
+router.post('/delete', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        error
+      })
+    } else {
+      db_util.connectTrans(connection, function (resolve, err_cb) {
+        connection.query(
+          `DELETE FROM v_entries 
+          WHERE v_id='${req.body.del_id}'`,
+          async function (error, result) {
+            if (error) {
+              err_cb(error)
+              resolve()
+            } else {
+              connection.query(
+                `DELETE FROM vouchers 
+                WHERE id='${req.body.del_id}'`,
+                async function (error, result) {
+                  if (error) {
+                    err_cb(error)
+                  }
+                  resolve()
+                })
+            }
+          })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
+        }
+      })
+    }
+  })
+})
 
 
 module.exports = router

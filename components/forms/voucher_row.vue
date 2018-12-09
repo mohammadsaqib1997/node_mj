@@ -65,9 +65,11 @@ export default {
   },
   data() {
     return {
+      upd_ac_subs: null,
       ac_subs: "",
       list_subs: [],
       isFetching: false,
+      is_auto: false,
       f_data: {
         sel_subs_id: null,
         particular: "",
@@ -123,38 +125,42 @@ export default {
     }
   },
   methods: {
-    loadSubs: _.debounce(function() {
-      if (this.f_data.sel_subs_id !== null) {
-        return;
-      }
-      this.isFetching = true;
-      this.list_subs = [];
-
-      if (!this.ac_subs.length) {
-        this.list_subs = [];
-        this.isFetching = false;
-        return;
-      }
-      this.$axios
-        .get(`/api/c_subsidiary/subs/${this.ac_subs}`)
-        .then(({ data }) => {
-          this.list_subs = data.result;
-        })
-        .catch(error => {
-          this.list_subs = [];
-          throw error;
-        })
-        .finally(() => {
-          this.isFetching = false;
-        });
+    after_f_settle: _.debounce(function(cb) {
+      cb();
     }, 500),
-
-    blurAC() {
-      this.list_subs = [];
-      if (!this.f_data.sel_subs_id) {
-        this.ac_subs = "";
+    loadSubs: function(event) {
+      const self = this;
+      if (self.is_auto && self.upd_ac_subs !== event) {
+        self.f_data.sel_subs_id = null;
+        self.is_auto = false;
       }
+      self.after_f_settle(function() {
+        if (self.f_data.sel_subs_id !== null) {
+          return;
+        }
+        self.isFetching = true;
+        self.list_subs = [];
+
+        if (!self.ac_subs.length) {
+          self.list_subs = [];
+          self.isFetching = false;
+          return;
+        }
+        self.$axios
+          .get(`/api/c_subsidiary/subs/${self.ac_subs}`)
+          .then(({ data }) => {
+            self.list_subs = data.result;
+          })
+          .catch(error => {
+            self.list_subs = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isFetching = false;
+          });
+      });
     },
+
     emptyCheck() {
       return (
         this.f_data.sel_subs_id === null &&
@@ -187,6 +193,8 @@ export default {
       this.validation.reset();
     },
     rowDataReset: function() {
+      this.is_auto = false;
+      this.upd_ac_subs = null;
       this.ac_subs = "";
       this.f_data = {
         sel_subs_id: null,
@@ -195,6 +203,29 @@ export default {
         debit: ""
       };
       this.reset();
+    },
+    setRowData: async function(data) {
+      const self = this;
+      if (data) {
+        self.is_auto = true;
+        self.f_data = {
+          sel_subs_id: data.subs_id,
+          particular: data.particular,
+          credit: data.credit,
+          debit: data.debit
+        };
+        self.isFetching = true;
+        await self.$axios
+          .get("/api/c_subsidiary/subs_name/" + data.subs_id)
+          .then(res => {
+            self.ac_subs = res.data.name;
+            this.upd_ac_subs = res.data.name;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        self.isFetching = false;
+      }
     }
   }
 };
