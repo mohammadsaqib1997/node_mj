@@ -55,14 +55,14 @@ const authRoutes = [{
         name: "members-area-members-profile",
         type_allowed: [1, 2]
     },
-    {
-        name: "moderators-add-new-moderator",
-        type_allowed: [2]
-    },
-    {
-        name: "moderators-moderators-profile",
-        type_allowed: [2]
-    },
+    // {
+    //     name: "moderators-add-new-moderator",
+    //     type_allowed: [2]
+    // },
+    // {
+    //     name: "moderators-moderators-profile",
+    //     type_allowed: [2]
+    // },
     {
         name: "partners-area-add-new-partner",
         type_allowed: [2]
@@ -97,6 +97,10 @@ const authRoutes = [{
     },
     {
         name: "account-vouchers",
+        type_allowed: [2]
+    },
+    {
+        name: "campaign-create",
         type_allowed: [2]
     }
 ]

@@ -172,30 +172,30 @@ export default {
             }
           ]
         },
-        {
-          name: "moderators",
-          active: false,
-          img: "group",
-          url: false,
-          title: "Moderators",
-          show: [2],
-          children: [
-            {
-              name: "add-new-moderator",
-              active: false,
-              url: "/moderators/add-new-moderator",
-              title: "Add New Moderator",
-              show: [2]
-            },
-            {
-              name: "moderators-profile",
-              active: false,
-              url: "/moderators/moderators-profile",
-              title: "Moderators Profile",
-              show: [2]
-            }
-          ]
-        },
+        // {
+        //   name: "moderators",
+        //   active: false,
+        //   img: "group",
+        //   url: false,
+        //   title: "Moderators",
+        //   show: [2],
+        //   children: [
+        //     {
+        //       name: "add-new-moderator",
+        //       active: false,
+        //       url: "/moderators/add-new-moderator",
+        //       title: "Add New Moderator",
+        //       show: [2]
+        //     },
+        //     {
+        //       name: "moderators-profile",
+        //       active: false,
+        //       url: "/moderators/moderators-profile",
+        //       title: "Moderators Profile",
+        //       show: [2]
+        //     }
+        //   ]
+        // },
         {
           name: "partners-area",
           active: false,
@@ -307,6 +307,31 @@ export default {
               active: false,
               url: "/account/financial-statement",
               title: "Financial Statement",
+              show: [2]
+            }
+          ]
+        },
+        {
+          name: "campaign",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-bullhorn"></i>',
+          url: false,
+          title: "Campaign",
+          show: [2],
+          children: [
+            {
+              name: "create",
+              active: false,
+              url: "/campaign/create",
+              title: "Campaign Create",
+              show: [2]
+            },
+            {
+              name: "completed",
+              active: false,
+              url: "/campaign/completed",
+              title: "Campaign Completed",
               show: [2]
             }
           ]
