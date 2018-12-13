@@ -462,7 +462,7 @@ router.get('/list_partner', (req, res) => {
           } else {
             let rows_count = results[0].total_rows
             connection.query(
-              `SELECT full_name, email, discount, cont_num, city, address, logo
+              `SELECT id, full_name, email, discount, cont_num, city, address, logo
               FROM partners
               WHERE active=1
               ${(search !== '') ? 'AND (discount LIKE ? OR full_name LIKE ? OR city LIKE ?)' : ''}
@@ -493,6 +493,41 @@ router.get('/list_partner', (req, res) => {
       )
     }
   })
+})
+
+router.get('/partner_info/:id', function (req, res) {
+  if (/^[0-9]*$/.test(req.params.id)) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `SELECT id, full_name, email, discount, disc_prds, cont_num, city, address, logo 
+          FROM \`partners\` 
+          WHERE \`id\`=?`,
+          [req.params.id],
+          function (error, results, fields) {
+            connection.release();
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result: results[0]
+              })
+            }
+          })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid id!"
+    })
+  }
 })
 
 router.get('/partner/logo/:file_name', function (req, res) {

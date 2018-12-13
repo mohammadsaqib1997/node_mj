@@ -4,25 +4,45 @@
       <div class="container">
         <h1 class="title-1 main-title">Supreme Partners And Associates</h1>
         <b-field class="search-cont">
-          <b-input type='text' @input="update_params('search', $event)" placeholder="Search by city, vendor name, or discount."></b-input>
+          <b-input
+            type="text"
+            @input="update_params('search', $event)"
+            placeholder="Search by city, vendor name, or discount."
+          ></b-input>
         </b-field>
         <div v-if="l_data.length > 0" class="columns is-multiline">
           <div class="column is-3" v-for="(row, ind) in l_data" :key="ind+row.email">
             <div class="box-cont">
-              <partnerImg :logo="row.logo" />
+              <partnerImg :logo="row.logo"/>
               <div class="content">
                 <h1 class="title is-4">{{ row.full_name }}</h1>
                 <p>{{ row.email }}</p>
                 <p>{{ row.cont_num }}</p>
                 <p>{{ row.city }}</p>
                 <p>{{ row.address }}</p>
-                <h1 class="title is-6">Discount: {{row.discount}}%</h1>
+                <div class="level">
+                  <div class="level-left">
+                    <div class="level-item">
+                      <h1 class="title is-6">Discount upto: {{row.discount}}%</h1>
+                    </div>
+                  </div>
+                  <div class="level-right">
+                    <div class="level-item">
+                      <button class="button btn-des-2" @click.prevent="det_md=true;det_md_id=row.id">View</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           <div class="column is-12 has-text-centered">
             <div class="pag-cont">
-              <b-pagination :total="num_rows" :per-page="12" :current.sync="load_params.page" @change="update_params('page', $event)"></b-pagination>
+              <b-pagination
+                :total="num_rows"
+                :per-page="12"
+                :current.sync="load_params.page"
+                @change="update_params('page', $event)"
+              ></b-pagination>
             </div>
           </div>
         </div>
@@ -32,16 +52,25 @@
       </div>
     </div>
     <b-loading :is-full-page="true" :active="loading" :can-cancel="false"></b-loading>
+    <showPartnerDet :md_act="det_md" :id="det_md_id" @closed="det_md=false;det_md_id=null;"></showPartnerDet>
   </div>
 </template>
 
 <script>
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import partnerImg from "~/components/html_comp/lazy_partner_img.vue";
+import showPartnerDet from "~/components/modals/show-partner-details.vue";
 export default {
   mixins: [mxn_tableFilterListing],
   components: {
-    partnerImg
+    partnerImg,
+    showPartnerDet
+  },
+  data() {
+    return {
+      det_md: false,
+      det_md_id: null
+    };
   },
   methods: {
     async loadData() {
@@ -152,7 +181,7 @@ export default {
     overflow: hidden;
 
     .content {
-      padding: 1rem;
+      padding: 1rem 1rem 1.5rem;
 
       .title.is-4 {
         text-transform: uppercase;
@@ -163,6 +192,24 @@ export default {
         margin-bottom: 5px;
         color: #7d7d7d;
       }
+    }
+  }
+
+  .btn-des-2 {
+    color: #666666;
+    border: 1px solid #d9bd68;
+    box-shadow: none !important;
+    font-weight: 400;
+    text-transform: uppercase;
+    height: auto;
+    border-radius: 0;
+    padding: 2px 9px;
+    font-size: 12px;
+
+    &:focus,
+    &:hover {
+      border: 1px solid #3d3e5a;
+      color: #3d3e5a;
     }
   }
 }

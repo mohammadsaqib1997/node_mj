@@ -99,10 +99,10 @@ const authRoutes = [{
         name: "account-vouchers",
         type_allowed: [2]
     },
-    {
-        name: "campaign-create",
-        type_allowed: [2]
-    }
+    // {
+    //     name: "campaign-create",
+    //     type_allowed: [2]
+    // }
 ]
 
 const un_paid_routes = [{

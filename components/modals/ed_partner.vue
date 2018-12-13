@@ -87,6 +87,24 @@
               ></b-input>
             </b-field>
 
+            <b-field
+              label="Discount Products"
+              :type="(validation.hasError('f_data.disc_prds')) ? 'is-danger':''"
+              :message="validation.firstError('f_data.disc_prds')"
+            >
+              <div class="columns is-variable is-1 is-multiline" style="margin-bottom:0;">
+                <div class="column is-6" v-for="n in 4" :key="n">
+                  <b-field :type="(validation.hasError('f_data.disc_prds')) ? 'is-danger':''">
+                    <b-input
+                      type="text"
+                      :placeholder="'Product '+ (n)"
+                      v-model="f_data.disc_prds[n-1]"
+                    ></b-input>
+                  </b-field>
+                </div>
+              </div>
+            </b-field>
+
             <div class="field">
               <label class="label">Logo</label>
               <div class="img-cont" v-if="loaded_img_url !== null">
@@ -134,6 +152,7 @@
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 import mxn_modal from "~/mixins/modal.js";
+import _ from "lodash";
 import { mask } from "vue-the-mask";
 import maskPercent from "~/directives/mask-percent.js";
 import mxn_cityAC from "~/mixins/city-ac.js";
@@ -170,6 +189,7 @@ export default {
         full_name: "",
         email: "",
         discount: "",
+        disc_prds: [],
         cont_num: "",
         address: "",
         city: ""
@@ -240,6 +260,23 @@ export default {
       return Validator.value(value)
         .required()
         .regex(/^(0|[1-9][0-9]?|100)%$/, "Invalid Percentage(e.g 20%)");
+    },
+    "f_data.disc_prds": function(value) {
+      return Validator.value(value).custom(function() {
+        let chk_lng = _.filter(value, function(item) {
+          return item && item !== "";
+        });
+        if (chk_lng.length < 1) {
+          return "Minimum entered one product.";
+        }
+
+        let chk_txt = _.filter(chk_lng, function(item) {
+          return !/^[a-zA-Z0-9 .]*$/.test(item);
+        });
+        if (chk_txt.length > 0) {
+          return "Invalid characters used.";
+        }
+      });
     }
   },
   methods: {
@@ -256,6 +293,9 @@ export default {
             full_name: res.data.result.full_name,
             email: res.data.result.email,
             discount: res.data.result.discount + "%",
+            disc_prds: res.data.result.disc_prds
+              ? res.data.result.disc_prds.split("|")
+              : [],
             cont_num: res.data.result.cont_num,
             address: res.data.result.address,
             city: res.data.result.city
@@ -360,10 +400,15 @@ export default {
             form_data.append("logo_remove", self.load_data.logo);
           }
 
+          let disc_prds = _.filter(self.f_data.disc_prds, function(item) {
+            return item && item !== "";
+          }).join("|");
+
           form_data.append("address", self.f_data.address);
           form_data.append("city", self.f_data.city);
           form_data.append("cont_num", self.f_data.cont_num);
           form_data.append("discount", self.f_data.discount.replace("%", ""));
+          form_data.append("disc_prds", disc_prds);
           form_data.append("email", self.f_data.email);
           form_data.append("full_name", self.f_data.full_name);
           form_data.append("update_id", self.id);
@@ -411,6 +456,7 @@ export default {
         full_name: "",
         email: "",
         discount: "",
+        disc_prds: [],
         cont_num: "",
         address: "",
         city: ""
