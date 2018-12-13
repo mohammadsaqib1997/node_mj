@@ -164,6 +164,7 @@ export default {
       border-radius: 100%;
       overflow: hidden;
       box-shadow: 0 3px 10px 2px #bfbfbf;
+      min-width: 150px;
       img {
         width: 250px;
       }
