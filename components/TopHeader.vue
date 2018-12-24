@@ -20,13 +20,16 @@
                         .navbar-item
                             ul.social_icons
                                 li.sc_icon
-                                    a(href="https://www.facebook.com/mjsupremepk" target="_blank")
+                                    a(href="https://www.facebook.com/mjsupremeofficial/" target="_blank")
                                         b-icon(icon="facebook-f" size="is-small" pack="fab")
-                                // li.sc_icon
-                                //     a
-                                //         b-icon(icon="twitter" size="is-small" pack="fab")
                                 li.sc_icon
-                                    a(href="https://plus.google.com/u/1/117264538400098931844" target="_blank")
+                                    a(href="https://www.instagram.com/mjsupremeofficial/" target="_blank")
+                                        b-icon(icon="instagram" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://twitter.com/MjSupreme5?lang=en" target="_blank")
+                                        b-icon(icon="twitter" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
                                         b-icon(icon="google-plus-g" size="is-small" pack="fab")
                         .navbar-item.has-dropdown.is-hoverable.p-0.profile_con_nav
                             .navbar-item
