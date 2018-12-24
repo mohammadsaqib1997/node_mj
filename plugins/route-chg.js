@@ -99,6 +99,18 @@ const authRoutes = [{
         name: "account-vouchers",
         type_allowed: [2]
     },
+    {
+        name: "company-chart-assign-roles",
+        type_allowed: [2]
+    },
+    {
+        name: "company-chart-branch-management",
+        type_allowed: [2]
+    },
+    {
+        name: "company-chart-sales",
+        type_allowed: [2]
+    },
     // {
     //     name: "campaign-create",
     //     type_allowed: [2]

@@ -17,7 +17,10 @@ router.use((req, res, next) => {
   if (token) {
     jwt.verify(token, config.secret, function (err, decoded) {
       if (err) {
-        return res.status(403).json({ status: false, message: err.message });
+        return res.status(403).json({
+          status: false,
+          message: err.message
+        });
       } else {
         req.decoded = decoded;
         // res.json(decoded)
@@ -52,11 +55,12 @@ router.use("/gen_excel", cors(corsOptions), require('./gen_excels.js'))
 router.use("/email", cors(corsOptions), require('./emails.js'))
 router.use("/c_subsidiary", cors(corsOptions), require('./c_subsidiary.js'))
 router.use("/voucher", cors(corsOptions), require('./vouchers.js'))
+router.use("/crzb-list", cors(corsOptions), require('./crzb_list.js'))
 
 router.all("*", function (req, res) {
-  res.status(403).json({ error: 'Invalid Request!' })
+  res.status(403).json({
+    error: 'Invalid Request!'
+  })
 })
 
 module.exports = router
-
-

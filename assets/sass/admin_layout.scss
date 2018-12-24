@@ -738,6 +738,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
             }
 
             input.input,
+            textarea.textarea,
             .cus-des-1 .select>select {
 
                 background-color: #f5f6f7;
@@ -764,6 +765,7 @@ $primary-light: rgba(217, 189, 104, 0.25);
             }
 
             input.input.is-danger,
+            textarea.textarea.is-danger,
             .cus-des-1 .select.is-danger>select {
                 border: 1px solid #ff3860 !important;
 
@@ -774,6 +776,10 @@ $primary-light: rgba(217, 189, 104, 0.25);
                     box-shadow: 0 0 2px 0 #ff3860;
                     background-color: #ffffff;
                 }
+            }
+
+            textarea.textarea {
+                padding: 1rem;
             }
 
             .select:not(.is-multiple) {

@@ -74,5 +74,13 @@
             "0": "token is not verify",
             "1": "token is verified"
         }
+    },
+    "crzb_list": {
+        "type": {
+            "0": "Country",
+            "1": "Region",
+            "2": "Zone",
+            "3": "Branch"
+        }
     }
 }

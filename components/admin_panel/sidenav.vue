@@ -72,6 +72,45 @@ export default {
           show: [0, 1, 2]
         },
         {
+          name: "company-chart",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-building"></i>',
+          url: false,
+          title: "Company Chart",
+          show: [2],
+          children: [
+            {
+              name: "assign-roles",
+              active: false,
+              url: "/company-chart/assign-roles",
+              title: "Assign Roles",
+              show: [2]
+            },
+            {
+              name: "branch-management",
+              active: false,
+              url: "/company-chart/branch-management",
+              title: "Branch Management",
+              show: [2]
+            },
+            {
+              name: "sales",
+              active: false,
+              url: "/company-chart/sales",
+              title: "Sales",
+              show: [2]
+            },
+            {
+              name: "hierarchy",
+              active: false,
+              url: "/company-chart/hierarchy",
+              title: "Hierarchy",
+              show: [2]
+            }
+          ]
+        },
+        {
           name: "fund-manager",
           active: false,
           img: "coin",
