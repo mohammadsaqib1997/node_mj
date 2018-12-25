@@ -115,28 +115,24 @@
               <tr>
                 <th>ID</th>
                 <th>Date</th>
-                <th>Voucher ID</th>
+                <th>Head Of Depart</th>
+                <th>Name Of Area</th>
                 <th>Action</th>
               </tr>
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
                 <td>{{ row.id }}</td>
-                <td>{{ $store.getters.formatDate(row.v_date) }}</td>
-                <td>{{ row.v_id }}</td>
+                <td>{{ $store.getters.formatDate(row.created_at) }}</td>
+                <td>{{ row.full_name }}</td>
+                <td>{{ row.name }}</td>
                 <td>
                   <b-field grouped>
                     <p class="control">
                       <button
-                        @click.prevent="deleteVoucher(row.id)"
+                        @click.prevent="deleteRow(row.id)"
                         class="button is-small is-danger"
                       >Delete</button>
-                    </p>
-                    <p class="control">
-                      <button
-                        @click.prevent="loadUpdateData(row.id)"
-                        class="button is-small is-info"
-                      >Edit</button>
                     </p>
                   </b-field>
                 </td>
@@ -179,6 +175,7 @@ export default {
       search_mj_user: "",
       submitted: false,
       s_name: "",
+      s_user_cac_load: false,
       f_data: {
         mem_id: "",
         sel_role: "",
@@ -208,22 +205,20 @@ export default {
           } else {
             return validator.custom(() => {
               if (!Validator.isEmpty(value)) {
-                if (value !== self.f_data.user_asn_id) {
-                  return self.$axios
-                    .post("/api/crzb-list/get-user-info", {
-                      email: value
-                    })
-                    .then(res => {
-                      if (res.data.count < 1) {
-                        return "Invalid User.";
-                      } else {
-                        self.s_name = res.data.result.full_name;
-                        self.f_data.mem_id = res.data.result.id;
-                      }
-                    });
-                } else {
-                  return "Invalid User.";
-                }
+                self.s_user_cac_load = true;
+                return self.$axios
+                  .post("/api/crzb-list/get-user-info", {
+                    email: value
+                  })
+                  .then(res => {
+                    if (res.data.count < 1) {
+                      return "Invalid User.";
+                    } else {
+                      self.s_name = res.data.result.full_name;
+                      self.f_data.mem_id = res.data.result.id;
+                    }
+                    self.s_user_cac_load = false;
+                  });
               }
             });
           }
@@ -236,11 +231,55 @@ export default {
         .digit()
         .lessThanOrEqualTo(3);
     },
-    "f_data.sel_crzb_id": function(value) {
-      return Validator.value(value)
-        .required()
-        .digit()
-        .lessThanOrEqualTo(11);
+    "f_data.sel_crzb_id": {
+      cache: false,
+      validator: function(value) {
+        const self = this;
+
+        let validator = Validator.value(value)
+          .required()
+          .digit()
+          .maxLength(11);
+
+        if (validator.hasImmediateError()) {
+          return validator;
+        } else {
+          return validator.custom(() => {
+            if (!Validator.isEmpty(value)) {
+              return new Promise(resolve => {
+                let interval = setInterval(async function() {
+                  if (self.s_user_cac_load === false) {
+                    await self.$axios
+                      .get(`/api/assign-role/exist-check/${value}`, {
+                        params: {
+                          mem_id: self.f_data.mem_id
+                        }
+                      })
+                      .then(res => {
+                        if (res.data.count > 0) {
+                          if (
+                            res.data.result.member_id === self.f_data.mem_id
+                          ) {
+                            return resolve(
+                              "This user is already assigned role."
+                            );
+                          }
+                          return resolve("Already assigned.");
+                        }
+                      });
+                    clearInterval(interval);
+                    return resolve();
+                  }
+                  if (self.validation.hasError("f_data.mem_id")) {
+                    clearInterval(interval);
+                    return resolve();
+                  }
+                }, 100);
+              });
+            }
+          });
+        }
+      }
     }
   },
   methods: {
@@ -257,17 +296,17 @@ export default {
     async loadData() {
       const self = this;
       self.loading = true;
-      // await self.$axios
-      //   .get("/api/voucher/list_voucher", {
-      //     params: self.load_params
-      //   })
-      //   .then(res => {
-      //     self.l_data = res.data.data;
-      //     self.num_rows = res.data.tot_rows;
-      //   })
-      //   .catch(err => {
-      //     console.log(err);
-      //   });
+      await self.$axios
+        .get("/api/assign-role/list", {
+          params: self.load_params
+        })
+        .then(res => {
+          self.l_data = res.data.data;
+          self.num_rows = res.data.tot_rows;
+        })
+        .catch(err => {
+          console.log(err);
+        });
       self.loading = false;
     },
     after_f_settle: _.debounce(function(cb) {
@@ -309,54 +348,85 @@ export default {
     },
     submit() {
       const self = this;
+      self.submitted = true;
+      self.loading_form = true;
       self.$validate().then(function(success) {
         if (success) {
-          self.$toast.open({
-            duration: 1000,
-            message: "Successfully Submitted!",
-            position: "is-bottom",
-            type: "is-success"
-          });
-          self.reset();
-          // let form_data = new FormData();
-          // if (self.f_data.logo !== null) {
-          //   form_data.append("logo", self.f_data.logo);
-          // }
-
-          // form_data.append("address", self.f_data.address);
-          // form_data.append("city", self.f_data.city);
-          // form_data.append("cont_num", self.f_data.cont_num);
-          // form_data.append("discount", self.f_data.discount.replace("%", ""));
-          // form_data.append("email", self.f_data.email);
-          // form_data.append("full_name", self.f_data.full_name);
-
-          // let config = {
-          //   headers: { "content-type": "multipart/form-data" }
-          // };
-          // self.$axios
-          //   .post("/api/partner/add", form_data, config)
-          //   .then(res => {
-          //     self.reset();
-          //     self.form.loading = false;
-          //     self.form.suc = "Successfully Partner Added.";
-          //     setTimeout(() => (self.form.suc = ""), 2000);
-          //   })
-          //   .catch(err => {
-          //     console.log(err);
-          //     self.form.loading = false;
-          //     self.form.err = "Server Error!";
-          //     $(".main-content").animate({ scrollTop: 20 }, 500);
-          //   });
+          self.$axios
+            .post("/api/assign-role/assign", self.f_data)
+            .then(async res => {
+              self.reset();
+              self.loading_form = false;
+              self.$toast.open({
+                duration: 1000,
+                message: "Successfully Assigned!",
+                position: "is-bottom",
+                type: "is-success"
+              });
+              await self.loadData();
+            })
+            .catch(err => {
+              console.log(err);
+              self.loading_form = false;
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error!",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
+        } else {
+          self.loading_form = false;
         }
       });
     },
     reset() {
-      // this.f_data = {
-      //   start_date: null,
-      //   end_date: null,
-      //   img: null
-      // };
+      this.f_data = {
+        mem_id: "",
+        sel_role: "",
+        sel_crzb_id: null
+      };
+      this.search_mj_user = "";
+      this.s_name = "";
+      this.submitted = false;
       this.validation.reset();
+    },
+    deleteRow(id) {
+      const self = this;
+      this.$dialog.confirm({
+        title: "Delete assigned member!",
+        message:
+          "Are you sure you want to <b>delete</b> assigned member? This action cannot be undone.",
+        confirmText: "Delete",
+        type: "is-danger",
+        hasIcon: true,
+        onConfirm: async () => {
+          self.loading = true;
+          await self.$axios
+            .post("/api/assign-role/delete", {
+              del_id: id
+            })
+            .then(async res => {
+              self.$toast.open({
+                duration: 1000,
+                message: "Successfully assigned member deleted.",
+                position: "is-bottom",
+                type: "is-success"
+              });
+              await self.loadData();
+            })
+            .catch(err => {
+              self.loading = false;
+              console.log(err);
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error.",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
+        }
+      });
     }
   }
 };

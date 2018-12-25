@@ -8,42 +8,25 @@
       </div>
       <div class="body">
         <div class="section">
-          <form class="form" @submit.prevent="submit">
+          <form class="form" @submit.prevent="updated_id !== null ? update(): submit()">
             <div class="columns is-variable is-2">
-              <div class="column">
+              <div class="column is-6">
                 <b-field
-                  class="cus-des-1"
                   expanded
-                  :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_role')"
+                  :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.sel_crzb_id')"
                 >
-                  <b-select v-model="f_data.sel_role" expanded>
-                    <option value>Select Country</option>
-                  </b-select>
-                </b-field>
-              </div>
-              <div class="column">
-                <b-field
-                  class="cus-des-1"
-                  expanded
-                  :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_role')"
-                >
-                  <b-select v-model="f_data.sel_role" expanded>
-                    <option value>Select Region</option>
-                  </b-select>
-                </b-field>
-              </div>
-              <div class="column">
-                <b-field
-                  class="cus-des-1"
-                  expanded
-                  :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_role')"
-                >
-                  <b-select v-model="f_data.sel_role" expanded>
-                    <option value>Select Zone</option>
-                  </b-select>
+                  <b-autocomplete
+                    :data="crzb_list"
+                    v-model="ac_crzb"
+                    field="name"
+                    expanded
+                    :keep-first="true"
+                    @select="option => f_data.sel_crzb_id = option ? option.id : null"
+                    @input="loadCRZB"
+                    :loading="isFetching"
+                    placeholder="Search by Zone, Region, Country"
+                  ></b-autocomplete>
                 </b-field>
               </div>
             </div>
@@ -52,10 +35,15 @@
               <div class="column is-6">
                 <b-field
                   expanded
-                  :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_role')"
+                  :type="(validation.hasError('f_data.branch')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.branch')"
                 >
-                  <b-input type="text" placeholder="Enter Branch Name" v-model="f_data.sel_role"></b-input>
+                  <b-input
+                    type="text"
+                    placeholder="Enter Branch Name"
+                    v-model="f_data.branch"
+                    :loading="validation.isValidating('f_data.branch')"
+                  ></b-input>
                 </b-field>
               </div>
             </div>
@@ -64,20 +52,36 @@
               <div class="column is-6">
                 <b-field
                   expanded
-                  :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_role')"
+                  :type="(validation.hasError('f_data.branch_desc')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.branch_desc')"
                 >
-                  <b-input type="textarea" placeholder="Enter Branch Description" v-model="f_data.sel_role"></b-input>
+                  <b-input
+                    type="textarea"
+                    placeholder="Enter Branch Description"
+                    v-model="f_data.branch_desc"
+                  ></b-input>
                 </b-field>
               </div>
             </div>
 
-            <b-field>
+            <b-field grouped>
               <p class="control">
-                <button type="submit" class="button btn-des-1">Save</button>
+                <button
+                  type="submit"
+                  class="button btn-des-1"
+                >{{ updated_id !== null ? 'Update': 'Save' }}</button>
+              </p>
+
+              <p class="control" v-if="updated_id !== null">
+                <button
+                  type="button"
+                  class="button btn-des-1 dark"
+                  @click="resetUpdateForm"
+                >Create New Branch</button>
               </p>
             </b-field>
           </form>
+          <b-loading :is-full-page="false" :active="loading_form" :can-cancel="false"></b-loading>
         </div>
       </div>
     </div>
@@ -108,21 +112,23 @@
             <template slot="thead">
               <tr>
                 <th>ID</th>
-                <th>Date</th>
-                <th>Voucher ID</th>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Description</th>
                 <th>Action</th>
               </tr>
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
                 <td>{{ row.id }}</td>
-                <td>{{ $store.getters.formatDate(row.v_date) }}</td>
-                <td>{{ row.v_id }}</td>
+                <td>{{ row.code }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.description }}</td>
                 <td>
                   <b-field grouped>
                     <p class="control">
                       <button
-                        @click.prevent="deleteVoucher(row.id)"
+                        @click.prevent="deleteRow(row.id)"
                         class="button is-small is-danger"
                       >Delete</button>
                     </p>
@@ -144,6 +150,7 @@
 </template>
 
 <script>
+import _ from "lodash";
 import moment from "moment";
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
@@ -159,93 +166,292 @@ export default {
   },
   data() {
     return {
+      updated_id: null,
+      load_upd_data: null,
+      is_auto_crzb: false,
+      loading_form: false,
+      isFetching: false,
+      submitted: false,
+      ac_crzb: "",
+      crzb_list: [],
       f_data: {
-        mj_id: "",
-        sel_role: "",
-        start_date: null,
-        end_date: null,
-        img: null
+        sel_crzb_id: null,
+        branch: "",
+        branch_desc: ""
       }
     };
   },
   validators: {
-    "f_data.start_date": function(value) {
-      return Validator.value(value).required();
+    "f_data.sel_crzb_id": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
     },
-    "f_data.end_date": function(value) {
-      return Validator.value(value).required();
+    "f_data.branch": {
+      cache: false,
+      debounce: 500,
+      validator: function(value) {
+        const self = this;
+
+        if (self.submitted || self.validation.isTouched("f_data.branch")) {
+          let validator = Validator.value(value)
+            .required()
+            .maxLength(100);
+
+          if (validator.hasImmediateError()) {
+            return validator;
+          } else {
+            return validator.custom(() => {
+              if (!Validator.isEmpty(value)) {
+                if (
+                  self.updated_id !== null &&
+                  value.toLowerCase() == self.load_upd_data.name.toLowerCase()
+                ) {
+                  return;
+                }
+                return self.$axios
+                  .get(`/api/crzb-list/exist-check/${value}`)
+                  .then(res => {
+                    if (res.data.count > 0) {
+                      return "Branch name is already existed!";
+                    }
+                  });
+              }
+            });
+          }
+        }
+      }
     },
-    "f_data.img": function(value) {
-      return Validator.value(value).required();
+    "f_data.branch_desc": function(value) {
+      return Validator.value(value).maxLength(250);
     }
   },
   methods: {
     async loadData() {
       const self = this;
       self.loading = true;
-      // await self.$axios
-      //   .get("/api/voucher/list_voucher", {
-      //     params: self.load_params
-      //   })
-      //   .then(res => {
-      //     self.l_data = res.data.data;
-      //     self.num_rows = res.data.tot_rows;
-      //   })
-      //   .catch(err => {
-      //     console.log(err);
-      //   });
+      await self.$axios
+        .get("/api/crzb-list/branch-list", {
+          params: self.load_params
+        })
+        .then(res => {
+          self.l_data = res.data.data;
+          self.num_rows = res.data.tot_rows;
+        })
+        .catch(err => {
+          console.log(err);
+        });
       self.loading = false;
+    },
+    after_f_settle: _.debounce(function(cb) {
+      cb();
+    }, 500),
+    loadCRZB(event) {
+      const self = this;
+      self.isFetching = true;
+      if (self.is_auto_crzb && event !== self.load_upd_data.parent_name) {
+        self.f_data.sel_crzb_id = null;
+        self.is_auto_crzb = false;
+      }
+      self.after_f_settle(function() {
+        if (self.f_data.sel_crzb_id !== null) {
+          self.isFetching = false;
+          return;
+        }
+        self.crzb_list = [];
+
+        if (!self.ac_crzb.length) {
+          self.crzb_list = [];
+          self.isFetching = false;
+          return;
+        }
+        self.$axios
+          .get(`/api/crzb-list/ac_search_zone/${self.ac_crzb}`)
+          .then(({ data }) => {
+            self.crzb_list = data.result;
+          })
+          .catch(error => {
+            self.crzb_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isFetching = false;
+          });
+      });
     },
     submit() {
       const self = this;
+      self.submitted = true;
       self.$validate().then(function(success) {
         if (success) {
-          self.$toast.open({
-            duration: 1000,
-            message: "Successfully Submitted!",
-            position: "is-bottom",
-            type: "is-success"
-          });
-          self.reset();
-          // let form_data = new FormData();
-          // if (self.f_data.logo !== null) {
-          //   form_data.append("logo", self.f_data.logo);
-          // }
-
-          // form_data.append("address", self.f_data.address);
-          // form_data.append("city", self.f_data.city);
-          // form_data.append("cont_num", self.f_data.cont_num);
-          // form_data.append("discount", self.f_data.discount.replace("%", ""));
-          // form_data.append("email", self.f_data.email);
-          // form_data.append("full_name", self.f_data.full_name);
-
-          // let config = {
-          //   headers: { "content-type": "multipart/form-data" }
-          // };
-          // self.$axios
-          //   .post("/api/partner/add", form_data, config)
-          //   .then(res => {
-          //     self.reset();
-          //     self.form.loading = false;
-          //     self.form.suc = "Successfully Partner Added.";
-          //     setTimeout(() => (self.form.suc = ""), 2000);
-          //   })
-          //   .catch(err => {
-          //     console.log(err);
-          //     self.form.loading = false;
-          //     self.form.err = "Server Error!";
-          //     $(".main-content").animate({ scrollTop: 20 }, 500);
-          //   });
+          self.loading_form = true;
+          self.$axios
+            .post("/api/crzb-list/branch-added", self.f_data)
+            .then(async res => {
+              self.reset();
+              self.loading_form = false;
+              self.$toast.open({
+                duration: 1000,
+                message: "Successfully Branch Added!",
+                position: "is-bottom",
+                type: "is-success"
+              });
+              await self.loadData();
+            })
+            .catch(err => {
+              console.log(err);
+              self.loading_form = false;
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error!",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
+        }
+      });
+    },
+    update() {
+      const self = this;
+      self.submitted = true;
+      self.$validate().then(function(success) {
+        if (success) {
+          self.loading_form = true;
+          let data = _.cloneDeep(self.f_data);
+          data["update_id"] = self.updated_id;
+          self.$axios
+            .post("/api/crzb-list/branch-update", data)
+            .then(async res => {
+              if (res.data.status === false) {
+                self.loading_form = false;
+                self.$toast.open({
+                  duration: 1000,
+                  message: res.data.message,
+                  position: "is-bottom",
+                  type: "is-danger"
+                });
+              } else {
+                self.resetUpdateForm();
+                self.loading_form = false;
+                self.$toast.open({
+                  duration: 1000,
+                  message: "Successfully Branch Updated!",
+                  position: "is-bottom",
+                  type: "is-success"
+                });
+                await self.loadData();
+              }
+            })
+            .catch(err => {
+              console.log(err);
+              self.loading_form = false;
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error!",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
         }
       });
     },
     reset() {
       this.f_data = {
-        start_date: null,
-        end_date: null,
-        img: null
+        sel_crzb_id: null,
+        branch: "",
+        branch_desc: ""
       };
+      this.is_auto_crzb = false;
+      this.ac_crzb = "";
+      this.submitted = false;
       this.validation.reset();
+    },
+    deleteRow(id) {
+      const self = this;
+      this.$dialog.confirm({
+        title: "Delete assigned member!",
+        message:
+          "Are you sure you want to <b>delete</b> branch? This action cannot be undone.",
+        confirmText: "Delete",
+        type: "is-danger",
+        hasIcon: true,
+        onConfirm: async () => {
+          self.loading = true;
+          await self.$axios
+            .post("/api/crzb-list/del-branch", {
+              del_id: id
+            })
+            .then(async res => {
+              if (res.data.status === false) {
+                self.$toast.open({
+                  duration: 1000,
+                  message: res.data.message,
+                  position: "is-bottom",
+                  type: "is-danger"
+                });
+              } else {
+                self.$toast.open({
+                  duration: 1000,
+                  message: "Successfully branch deleted.",
+                  position: "is-bottom",
+                  type: "is-success"
+                });
+                await self.loadData();
+              }
+              self.loading = false;
+            })
+            .catch(err => {
+              self.loading = false;
+              console.log(err);
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error.",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
+        }
+      });
+    },
+    async loadUpdateData(id) {
+      const self = this;
+      self.reset();
+      self.loading_form = true;
+      await self.$axios
+        .get(`/api/crzb-list/branch-load/${id}`)
+        .then(res => {
+          if (res.data.status === false) {
+            self.$toast.open({
+              duration: 1000,
+              message: "Invalid ID!",
+              position: "is-bottom",
+              type: "is-danger"
+            });
+          } else {
+            self.load_upd_data = res.data.result;
+            self.is_auto_crzb = true;
+            self.f_data = {
+              sel_crzb_id: self.load_upd_data.parent_id,
+              branch: self.load_upd_data.name,
+              branch_desc: self.load_upd_data.description
+            };
+            self.ac_crzb = self.load_upd_data.parent_name;
+            self.updated_id = id;
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      self.loading_form = false;
+      $(".main-content").animate({ scrollTop: 20 }, 500);
+    },
+    resetUpdateForm() {
+      const self = this;
+      self.is_auto_crzb = false;
+      self.updated_id = null;
+      self.load_upd_data = null;
+      self.reset();
     }
   }
 };
