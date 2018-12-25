@@ -54,11 +54,33 @@
 </template>
 
 <script>
-import upcomingProdSection from "~/components/upcoming-prod-section.vue"
-import winnerSec from "~/components/winner-sec.vue"
-import hmSlider from "~/components/hm_slider.vue"
-import hmPgPromotion from "~/components/modals/home_pg_promotion.vue"
+import upcomingProdSection from "~/components/upcoming-prod-section.vue";
+import winnerSec from "~/components/winner-sec.vue";
+import hmSlider from "~/components/hm_slider.vue";
+import hmPgPromotion from "~/components/modals/home_pg_promotion.vue";
 export default {
+  head: {
+    meta: [
+      { name: "p:domain_verify", content: "d2c642f9f3af0663d2c72c5a499fa248" }
+    ],
+    script: [
+      {
+        async: true,
+        src: "https://www.googletagmanager.com/gtag/js?id=UA-131367350-1"
+      }
+    ]
+  },
+  mounted() {
+    this.$nextTick(function() {
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "UA-131367350-1");
+    });
+  },
   components: {
     "upcoming-prod-section": upcomingProdSection,
     winnerSec,
@@ -66,11 +88,9 @@ export default {
     hmSlider
   },
   data() {
-    return {
-
-    }
+    return {};
   }
-}
+};
 </script>
 
 <style scoped lang="scss">

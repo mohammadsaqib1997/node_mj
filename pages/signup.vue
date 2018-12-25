@@ -69,6 +69,25 @@ import userDetailForm from "~/components/forms/user_details.vue";
 import productDetailForm from "~/components/forms/product_details.vue";
 import bikeDetailForm from "~/components/forms/bike_details.vue";
 export default {
+  head: {
+    script: [
+      {
+        async: true,
+        src: "https://www.googletagmanager.com/gtag/js?id=UA-131367350-1"
+      }
+    ]
+  },
+  mounted() {
+    this.$nextTick(function() {
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "UA-131367350-1");
+    });
+  },
   components: {
     userDetailForm,
     productDetailForm,
