@@ -40,7 +40,7 @@ router.get('/list', function (req, res) {
 
       connection.query(
         `SELECT COUNT(*) as tot_rows 
-        FROM mj_supreme.assign_roles as as_role
+        FROM assign_roles as as_role
         left join members as m
         on as_role.member_id = m.id
         left join crzb_list as crzb_l
@@ -57,7 +57,7 @@ router.get('/list', function (req, res) {
 
             connection.query(
               `SELECT as_role.*, m.full_name, crzb_l.name 
-                FROM mj_supreme.assign_roles as as_role
+                FROM assign_roles as as_role
                 left join members as m
                 on as_role.member_id = m.id
                 left join crzb_list as crzb_l
