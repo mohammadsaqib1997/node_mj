@@ -65,7 +65,7 @@ if (config.dev) {
 // Listen the server
 // server.listen(port, () => console.log('Start Nuxt Project!'))
 httpServer.listen(port_http, () => {
-	console.log('HTTP Server running on port 3000');
+  console.log('HTTP Server running on port ' + port_http);
 });
 
 // httpsServer.listen(port_https, () => {

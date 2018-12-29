@@ -111,7 +111,7 @@ router.get('/branch-list', (req, res) => {
             let tot_rows = result[0].tot_rows
 
             connection.query(
-              `SELECT ls_b.id, ls_b.name, ls_b.description, concat(ls_c.rd_id, "-", ls_r.rd_id, "-", ls_z.rd_id, "-", ls_b.rd_id) as code
+              `SELECT ls_b.id, ls_b.name, ls_b.description, ls_b.active, concat(ls_c.rd_id, "-", ls_r.rd_id, "-", ls_z.rd_id, "-", ls_b.rd_id) as code
                 FROM crzb_list as ls_b
                 left join crzb_list as ls_z
                 on ls_b.parent_id = ls_z.id
@@ -456,7 +456,7 @@ router.post('/branch-update', function (req, res) {
   })
 })
 
-router.post('/del-branch', function (req, res) {
+router.post('/tg-act-branch', function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {
       res.status(500).json({
@@ -466,43 +466,14 @@ router.post('/del-branch', function (req, res) {
       let str_err = null
       db_util.connectTrans(connection, function (resolve, err_cb) {
         connection.query(
-          `SELECT count(*) as tot_rows FROM assign_roles where crzb_id=${req.body.del_id}`,
+          `UPDATE crzb_list SET ? WHERE id=${req.body.del_id}`, {
+            active: !req.body.sts
+          },
           function (error, result) {
             if (error) {
               err_cb(error)
-              resolve()
-            } else {
-              let tot_rows_asn_role = result[0].tot_rows
-
-              if (tot_rows_asn_role > 0) {
-                str_err = "Deleting Error! Branch in used."
-                resolve()
-              } else {
-                connection.query(
-                  `SELECT count(*) as tot_rows FROM assign_roles_trans where crzb_id=${req.body.del_id}`,
-                  function (error, result) {
-                    if (error) {
-                      err_cb(error)
-                      resolve()
-                    } else {
-                      let tot_rows_asn_role_trans = result[0].tot_rows
-                      if (tot_rows_asn_role_trans > 0) {
-                        str_err = "Deleting Error! Branch in used."
-                        resolve()
-                      } else {
-                        connection.query(
-                          `DELETE FROM crzb_list WHERE id=${req.body.del_id}`,
-                          function (error, result) {
-                            if (error) {
-                              err_cb(error)
-                            }
-                            resolve()
-                          })
-                      }
-                    }
-                  })
-              }
             }
+            resolve()
           })
       }, function (error) {
         if (error) {

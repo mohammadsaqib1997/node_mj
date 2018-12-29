@@ -122,6 +122,12 @@ const un_paid_routes = [{
     },
     {
         name: 'user-bank-details'
+    },
+    {
+        name: 'product'
+    },
+    {
+        name: 'dashboard'
     }
 ]
 
@@ -186,11 +192,12 @@ export default ({
             }
         } else {
             if (_.indexOf(unAuthRoutes, to.name) > -1) {
-                if (app.store.state.user.data.type === 0 && app.store.state.user.data.is_paid === 0) {
-                    app.router.push('/user/profile')
-                } else {
-                    app.router.push('/dashboard')
-                }
+                app.router.push('/dashboard')
+                // if (app.store.state.user.data.type === 0 && app.store.state.user.data.is_paid === 0) {
+                //     app.router.push('/user/profile')
+                // } else {
+                //     app.router.push('/dashboard')
+                // }
             } else {
                 let findAuthR = _.find(authRoutes, o => {
                     return o.name === to.name

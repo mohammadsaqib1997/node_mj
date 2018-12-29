@@ -308,11 +308,13 @@ router.get("/get_prd_detail", function (req, res) {
         })
       } else {
         connection.query(
-          `SELECT p_d.product_id, p_d.buyer_type, p_d.buyer_pay_type, p_d.buyer_qty_prd, iv_m.package_act_date
-                    FROM user_product_details as p_d
-                    LEFT JOIN info_var_m as iv_m
-                    ON p_d.member_id = iv_m.member_id
-                    WHERE p_d.member_id=?`,
+          `SELECT p_d.product_id, p.name, p.reg_amount, iv_m.package_act_date, p_d.created_at as sel_prd_date
+            FROM user_product_details as p_d
+            LEFT JOIN products as p
+            ON p_d.product_id = p.id
+            LEFT JOIN info_var_m as iv_m
+            ON p_d.member_id = iv_m.member_id
+            WHERE p_d.member_id=?`,
           req.decoded.data.user_id,
           function (err, result) {
             connection.release()

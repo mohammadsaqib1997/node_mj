@@ -1,6 +1,6 @@
 <template lang="pug">
   .top-bar-comp
-    .funds-cont
+    .funds-cont(v-if="$store.state.user.data.is_paid === 1")
       button.button.tr-btn(@click.prevent="transMDAct=true") Transfer Funds
       nuxt-link.button.wd-btn(to="/withdraw") Withdraw
     .prg-cont

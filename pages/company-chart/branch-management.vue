@@ -128,9 +128,9 @@
                   <b-field grouped>
                     <p class="control">
                       <button
-                        @click.prevent="deleteRow(row.id)"
-                        class="button is-small is-danger"
-                      >Delete</button>
+                        @click.prevent="toggleActRow(row.id, row.active)"
+                        :class="[{'is-danger': row.active === 1}, {'is-success': row.active === 0}, 'button is-small']"
+                      >{{ row.active === 1 ? 'Disable':'Enable' }}</button>
                     </p>
                     <p class="control">
                       <button
@@ -367,20 +367,22 @@ export default {
       this.submitted = false;
       this.validation.reset();
     },
-    deleteRow(id) {
+    toggleActRow(id, sts) {
       const self = this;
       this.$dialog.confirm({
-        title: "Delete assigned member!",
-        message:
-          "Are you sure you want to <b>delete</b> branch? This action cannot be undone.",
-        confirmText: "Delete",
+        title: `${sts === 1 ? "Disable" : "Enable"} Branch!`,
+        message: `Are you sure you want to <b>${
+          sts === 1 ? "disable" : "enable"
+        }</b> branch?`,
+        confirmText: `${sts === 1 ? "Disable" : "Enable"}`,
         type: "is-danger",
         hasIcon: true,
         onConfirm: async () => {
           self.loading = true;
           await self.$axios
-            .post("/api/crzb-list/del-branch", {
-              del_id: id
+            .post("/api/crzb-list/tg-act-branch", {
+              del_id: id,
+              sts
             })
             .then(async res => {
               if (res.data.status === false) {
@@ -393,7 +395,9 @@ export default {
               } else {
                 self.$toast.open({
                   duration: 1000,
-                  message: "Successfully branch deleted.",
+                  message: `Successfully branch ${
+                    sts === 1 ? "disabled" : "enabled"
+                  }.`,
                   position: "is-bottom",
                   type: "is-success"
                 });

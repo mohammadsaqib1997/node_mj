@@ -136,6 +136,50 @@ router.use((req, res, next) => {
   }
 })
 
+router.get('/ac_branch/:search', (req, res) => {
+  if (req.params.search) {
+
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        let sel_query = `SELECT CONCAT(l_b.name, ", ", l_z.name, ", ", l_r.name, ", ", l_c.name) as name, l_b.id FROM crzb_list as l_b`,
+          join_b = ` join crzb_list as l_z
+          on l_b.parent_id = l_z.id
+          join crzb_list as l_r
+          on l_z.parent_id = l_r.id
+          join crzb_list as l_c
+          on l_r.parent_id = l_c.id`,
+          where_b = ` where (l_b.name like '%${req.params.search}%' OR l_z.name like '%${req.params.search}%' OR l_r.name like '%${req.params.search}%' OR l_c.name like '%${req.params.search}%') AND l_b.type=3 AND l_b.active=1`,
+          limit_b = ` LIMIT 10`
+
+        connection.query(sel_query + join_b + where_b + limit_b, function (error, result) {
+          connection.release();
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            res.json({
+              result
+            })
+          }
+        })
+      }
+    })
+
+
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Parameters!"
+    })
+  }
+
+})
+
 router.get('/get_list_winners_auto', function (req, res) {
   db.getConnection(async function (err, connection) {
     if (err) {
@@ -856,6 +900,7 @@ router.post('/signup', (req, res) => {
           sendDBError(res, err)
         } else {
           let throw_error = null
+          let mem_id = null
           let email_grab_data = {
             template_data: {},
             email: null,
@@ -869,9 +914,9 @@ router.post('/signup', (req, res) => {
                 throw_error = error
                 return resolve()
               } else {
-                let mem_id = results.insertId
-                req.body.prd_data['member_id'] = mem_id
-                req.body.bank_data['member_id'] = mem_id
+                mem_id = results.insertId
+                // req.body.prd_data['member_id'] = mem_id
+                // req.body.bank_data['member_id'] = mem_id
 
                 email_grab_data['email'] = req.body.member_data.email
                 email_grab_data['template_data']['name'] = req.body.member_data.full_name
@@ -913,12 +958,18 @@ router.post('/signup', (req, res) => {
                     throw_error = error
                     return resolve()
                   } else {
-                    connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
+                    connection.query('INSERT INTO `user_product_details` SET ?', {
+                      product_id: req.body.ext_data.prd_id,
+                      member_id: mem_id
+                    }, function (error, results, fields) {
                       if (error) {
                         throw_error = error
                         return resolve()
                       } else {
-                        connection.query('INSERT INTO `user_bank_details` SET ?', req.body.bank_data, function (error, results, fields) {
+                        connection.query('INSERT INTO `mem_link_crzb` SET ?', {
+                          member_id: mem_id,
+                          crzb_id: req.body.ext_data.crzb_id
+                        }, function (error, results, fields) {
                           if (error) {
                             throw_error = error
                             return resolve()
@@ -989,7 +1040,18 @@ router.post('/signup', (req, res) => {
                         })
                       } else {
                         res.json({
-                          status: true
+                          status: true,
+                          token: tokenGen({
+                            email: email_grab_data['email'],
+                            type: 0,
+                            id: mem_id,
+                          }, 0),
+                          user: {
+                            email: email_grab_data['email'],
+                            type: 0,
+                            user_id: mem_id,
+                            is_paid: 0
+                          }
                         })
                       }
                     })
