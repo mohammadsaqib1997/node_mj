@@ -22,6 +22,15 @@
                             li.sc_icon
                                 a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
                                     b-icon(icon="google-plus-g" size="is-small" pack="fab")
+                            li.sc_icon
+                                a(href="https://www.pinterest.com/mjsupremeofficial" target="_blank")
+                                    b-icon(icon="pinterest-p" size="is-small" pack="fab")
+                            li.sc_icon
+                                a(href="https://www.youtube.com/channel/UC0rvk78JHBZ2rPEkgf2iJlg" target="_blank")
+                                    b-icon(icon="youtube" size="is-small" pack="fab")
+                            li.sc_icon
+                                a(href="https://mjsupremeofficial.wixsite.com/home" target="_blank")
+                                    b-icon(icon="wix" size="is-small" pack="fab")
                     .column
                     .column.is-2
                         h1.title Company
