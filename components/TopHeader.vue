@@ -14,6 +14,11 @@
                             span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
 
                     .navbar-end
+                        .navbar-item.prm-timer(v-if="timer_act")
+                            span.icon
+                                img(src="~/assets/img/motorbike_icon.png")
+                            span Promotion ends at:
+                            span.timer(:class="{'last-mom': timer.hour <= 4}") &nbsp;{{ `${timer.hour} ${timer.hour > 1 ? 'hours':'hour'} ${timer.minute} ${timer.minute > 1 ? 'minutes':'minute'} ${timer.second} ${timer.second > 1 ? 'seconds':'second'}` }}
                         .navbar-item.tot-reg-mem-con
                             span Members Registered -
                             span.act &nbsp;{{ tot_mem }}
@@ -73,6 +78,14 @@ export default {
           console.log(err);
         });
     });
+  },
+  computed: {
+    timer_act: function() {
+      return this.$store.state["timer-counter"]["is_timer"];
+    },
+    timer: function() {
+      return this.$store.state["timer-counter"]["timer"];
+    }
   },
   data() {
     return {

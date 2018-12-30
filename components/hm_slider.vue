@@ -1,7 +1,7 @@
 <template>
   <div class="section">
     <div id="slider-hm" class="slider-cont">
-      <div class="item sld-2">
+      <div class="item sld-2" v-if="diff_sec_check > 0">
         <div class="container">
           <div class="sld-main">
             <div class="banner-img-cont">
@@ -69,6 +69,22 @@ export default {
         pauseOnFocus: false
       });
     });
+  },
+  computed: {
+    diff_sec_check: function() {
+      return this.$store.state["timer-counter"]["diffInSec"];
+    }
+  },
+  watch: {
+    diff_sec_check: function(val) {
+      const self = this;
+      if (val < 2) {
+        self.$store.commit("pageLoadingSet", true);
+        setTimeout(function() {
+          self.$store.commit("pageLoadingSet", false);
+        }, 1500);
+      }
+    }
   }
 };
 </script>
