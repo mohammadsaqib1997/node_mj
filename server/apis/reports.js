@@ -7,8 +7,8 @@ const _ = require('lodash')
 const db = require('../db.js')
 
 router.get('/member/:start/:end', function (req, res) {
-    let start_at = moment(new Date(req.params.start)).format('YYYY-MM-DD'),
-        end_at = moment(new Date(req.params.end)).format('YYYY-MM-DD')
+    let start_at = moment(new Date(req.params.start)).startOf('d').format('YYYY-MM-DD HH:mm:ss'),
+        end_at = moment(new Date(req.params.end)).endOf('d').format('YYYY-MM-DD HH:mm:ss')
     db.getConnection(async function (err, connection) {
         if (err) {
             res.status(500).json({
@@ -111,8 +111,8 @@ router.get('/member/:start/:end', function (req, res) {
 })
 
 router.get('/finance/:start/:end', function (req, res) {
-    let start_at = moment(new Date(req.params.start)).format('YYYY-MM-DD'),
-        end_at = moment(new Date(req.params.end)).format('YYYY-MM-DD')
+    let start_at = moment(new Date(req.params.start)).startOf('d').format('YYYY-MM-DD HH:mm:ss'),
+        end_at = moment(new Date(req.params.end)).endOf('d').format('YYYY-MM-DD HH:mm:ss')
     db.getConnection(async function (err, connection) {
         if (err) {
             res.status(500).json({
@@ -319,8 +319,8 @@ router.get('/finance/:start/:end', function (req, res) {
 
 router.get('/exp_vch_report/:start/:end/:type', function (req, res) {
     if (req.decoded.data.type === 2) {
-        const start_at = moment(new Date(req.params.start)).format('YYYY-MM-DD'),
-            end_at = moment(new Date(req.params.end)).format('YYYY-MM-DD'),
+        const start_at = moment(new Date(req.params.start)).startOf('d').format('YYYY-MM-DD HH:mm:ss'),
+            end_at = moment(new Date(req.params.end)).endOf('d').format('YYYY-MM-DD HH:mm:ss'),
             type = req.params.type;
 
 
