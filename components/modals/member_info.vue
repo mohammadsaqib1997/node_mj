@@ -112,42 +112,16 @@
                   <div class="column is-6"><label>Product Selected</label></div>
                   <div class="column is-6">
                     <div class="img-cont">
-                      <img v-if="mem_info.product_id && mem_info.product_id === 1" src="~/assets/img/credit-card-active.png" />
-                      <img v-else-if="mem_info.product_id && mem_info.product_id === 2" src="~/assets/img/motorcycle-active.png" />
+                      <img src="~/assets/img/credit-card-active.png" />
                     </div>
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
                   <div class="column is-6"><label>Product Name</label></div>
                   <div class="column is-6">
-                    <h2 v-if="mem_info.product_id && mem_info.product_id === 1">Supreme Card</h2>
-                    <h2 v-else-if="mem_info.product_id && mem_info.product_id === 2">Motorcycle</h2>
+                    <h2>{{ mem_info.product_name }}</h2>
                   </div>
                 </div>
-                <template v-if="mem_info.product_id && mem_info.product_id === 2">
-                  <div class="columns is-variable is-1">
-                    <div class="column is-6"><label>Buyer Type</label></div>
-                    <div class="column is-6">
-                      <h2 v-if="mem_info.buyer_type && mem_info.buyer_type === 1">Individual</h2>
-                      <h2 v-else-if="mem_info.buyer_type && mem_info.buyer_type === 2">Reseller</h2>
-                    </div>
-                  </div>
-                  <template v-if="mem_info.buyer_type && mem_info.buyer_type === 2">
-                    <div class="columns is-variable is-1">
-                      <div class="column is-6"><label>Quantity Of Bikes</label></div>
-                      <div class="column is-6">
-                        <h2 v-if="mem_info.buyer_qty_prd">{{ mem_info.buyer_qty_prd }}</h2>
-                      </div>
-                    </div>
-                  </template>
-                  <div class="columns is-variable is-1">
-                    <div class="column is-6"><label>Payment Type</label></div>
-                    <div class="column is-6">
-                      <h2 v-if="mem_info.buyer_pay_type && mem_info.buyer_pay_type === 1">On Cash</h2>
-                      <h2 v-else-if="mem_info.buyer_pay_type && mem_info.buyer_pay_type === 2">On Installment</h2>
-                    </div>
-                  </div>
-                </template>
                 <div class="columns is-variable is-1">
                   <div class="column is-6"><label>Package Activation</label></div>
                   <div class="column is-6">

@@ -43,17 +43,10 @@
             option(v-for="sts in sts_list" v-bind:value="sts.code") {{ sts.name }}
               
         b-field.cus-des-1(label="Product" :type="(validation.hasError('prd_data.prd')) ? 'is-danger':''" :message="validation.firstError('prd_data.prd')")
-          b-select(v-model="prd_data.prd" expanded)
+          b-input(v-if="is_paid_user === true" type="text" placeholder="Select Product" readonly v-bind:value="getPrdName(prd_data.prd)")
+          b-select(v-else v-model="prd_data.prd" expanded)
             option(value="") Select Product
             option(v-for="prd in prd_list" v-bind:value="prd.id") {{ prd.name }}
-          
-        template(v-if="prd_data.prd === 2")
-          .field
-            b-radio(v-for="bt in b_type_list" v-model="prd_data.b_type" :native-value="bt.code" :key="bt.code") {{ bt.name }}
-          b-field(v-if="prd_data.b_type === 2" label="Quantity Of Bikes" :type="(validation.hasError('prd_data.qnt_bikes')) ? 'is-danger':''" :message="validation.firstError('prd_data.qnt_bikes')")
-            b-input(type="tel" placeholder="Quantity Of Bikes" v-model="prd_data.qnt_bikes" v-mask="'###'")
-          .field
-            b-radio(v-for="pt in p_type_list" v-model="prd_data.p_type" :native-value="pt.code" :key="pt.code") {{ pt.name }}
 
         .d-flex
           button.button.btn-des-1(type="submit")
@@ -78,6 +71,7 @@
 </template>
 
 <script>
+import _ from "lodash";
 import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
@@ -96,9 +90,9 @@ export default {
     const list_pds = await this.$axios.$get("/api/product/");
     const load_data = await this.$axios.$get("/api/member/" + this.edit_id);
     this.fet_m_data = load_data.data[0].m;
+    this.prd_list = list_pds.data;
     this.setFData(load_data.data[0].m);
     this.setPrdData(load_data.data[0].upd);
-    this.prd_list = list_pds.data;
     this.form.loading = false;
   },
   data() {
@@ -106,14 +100,6 @@ export default {
       modalAct: false,
       is_paid_user: false,
       prd_list: [],
-      b_type_list: [
-        { code: 1, name: "Individual" },
-        { code: 2, name: "Reseller" }
-      ],
-      p_type_list: [
-        { code: 1, name: "On Cash" },
-        { code: 2, name: "On Installment" }
-      ],
       sts_list: [{ code: 1, name: "Approved" }, { code: 0, name: "Suspended" }],
       fet_m_data: null,
       f_data: {
@@ -130,10 +116,7 @@ export default {
         status: ""
       },
       prd_data: {
-        prd: "",
-        b_type: 1,
-        qnt_bikes: 5,
-        p_type: 1
+        prd: ""
       },
       form: {
         suc: "",
@@ -311,6 +294,9 @@ export default {
     mask
   },
   methods: {
+    getPrdName(f_id) {
+      return _.get(_.find(this.prd_list, {id: f_id}), 'name', null)
+    },
     setFData: function(data) {
       this.is_paid_user = data.is_paid_m === 1 ? true : false;
       this.ac_city = data.city !== null ? data.city : "";
@@ -323,17 +309,13 @@ export default {
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
-        city: data.city,
         ref_code: data.ref_user_asn_id,
         status: data.active_sts
       };
     },
     setPrdData: function(data) {
       this.prd_data = {
-        prd: data.product_id ? data.product_id : "",
-        b_type: data.buyer_type ? data.buyer_type : 1,
-        qnt_bikes: data.buyer_qty_prd ? data.buyer_qty_prd : 5,
-        p_type: data.buyer_pay_type ? data.buyer_pay_type : 1
+        prd: data.product_id ? data.product_id : ""
       };
     },
     update: function() {

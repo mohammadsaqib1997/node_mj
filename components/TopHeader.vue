@@ -45,8 +45,8 @@
                                 b-icon(icon="user" size="is-small" pack="far")
                             .navbar-dropdown
                                 template(v-if="$store.state.user !== null")
-                                    nuxt-link.navbar-item(v-if="$store.state.user.data.type === 0 && $store.state.user.data.is_paid === 0" to="/user/profile") PROFILE
-                                    nuxt-link.navbar-item(v-else to="/dashboard") DAHSBOARD
+                                    //- nuxt-link.navbar-item(v-if="$store.state.user.data.type === 0 && $store.state.user.data.is_paid === 0" to="/user/profile") PROFILE
+                                    nuxt-link.navbar-item(to="/dashboard") DAHSBOARD
                                     a.navbar-item(@click.prevent="logoutTr") LOGOUT
                                 template(v-else)
                                     a.navbar-item(@click.prevent="$store.commit('loginModalActiveSet', true)") LOGIN

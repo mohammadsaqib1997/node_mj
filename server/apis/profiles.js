@@ -1077,6 +1077,48 @@ router.post('/update_password', function (req, res) {
   }
 })
 
+router.get('/get-process-detail', function (req, res) {
+  if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `SELECT m.email, m.full_name, m.contact_num, m.cnic_num, m.dob, m.address, m.is_paid_m, bk.id as bk_id, bk.bank_name, bk.branch_code, bk.account_title, bk.account_number, prd.reg_amount as prd_reg_amount
+          FROM members as m
+          LEFT JOIN user_bank_details as bk
+          ON m.id = bk.member_id
+          LEFT JOIN user_product_details as prd_det
+          ON m.id = prd_det.member_id
+          LEFT JOIN products as prd
+          ON prd_det.product_id = prd.id
+          WHERE m.id=${req.decoded.data.user_id}`,
+          function (error, result) {
+            connection.release();
+
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result: result[0]
+              })
+            }
+          }
+        )
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "No User Found!"
+    })
+  }
+})
+
 module.exports = router
 
 function typeGet(mimetype) {
