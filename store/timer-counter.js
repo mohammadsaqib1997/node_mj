@@ -48,7 +48,7 @@ export const actions = {
         second: 59
       })
       let diff_timer = end.diff(date, ['hour', 'minute', 'second']).toObject()
-      let diff_sec = parseInt(diff_timer.seconds);
+      let diff_sec = parseInt(end.diff(date, 'second').toObject().seconds);
 
       commit('set_diff_in_sec', diff_sec)
       if (diff_sec > 0) {
