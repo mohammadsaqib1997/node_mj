@@ -1,4 +1,6 @@
-import moment from 'moment'
+import {
+  DateTime
+} from 'luxon'
 
 export const state = () => ({
   initTimerOnce: false,
@@ -35,24 +37,28 @@ export const actions = {
     commit,
     state
   }) {
-    let s_time = await this.$axios.$get('/api/web/server-time')
-    let date = moment(s_time.datetime).utcOffset("+05:00");
-    
     commit('set_timer_interval', setInterval(function () {
-      date.add(1, 'seconds')
+      let date = DateTime.local().setZone('UTC+5');
+      let end = DateTime.local().setZone('UTC+5').set({
+        year: 2018,
+        month: 12,
+        day: 31,
+        hour: 23,
+        minute: 59,
+        second: 59
+      })
+      let diff_timer = end.diff(date, ['hour', 'minute', 'second']).toObject()
+      let diff_sec = parseInt(diff_timer.seconds);
 
-      let end = moment("2018-12-31 23:59:59");
-      let diff_sec = end.diff(date, "seconds");
       commit('set_diff_in_sec', diff_sec)
       if (diff_sec > 0) {
         if (state.is_timer === false) {
           commit('set_is_timer', true)
         }
-        let duration = moment.duration(end.diff(date));
         commit('set_timer', {
-          hour: duration.get("hours"),
-          minute: duration.get("minutes"),
-          second: duration.get("seconds")
+          hour: parseInt(diff_timer.hours),
+          minute: parseInt(diff_timer.minutes),
+          second: parseInt(diff_timer.seconds)
         })
       } else {
         clearInterval(state.timerInterval);
