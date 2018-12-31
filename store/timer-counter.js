@@ -36,9 +36,11 @@ export const actions = {
     state
   }) {
     let s_time = await this.$axios.$get('/api/web/server-time')
-    let date = moment(s_time.datetime);
+    let date = moment(s_time.datetime).utcOffset("+05:00");
+    
 
     commit('set_timer_interval', setInterval(function () {
+      console.log(date.format("YYYY-MM-DD HH:mm:ss"))
       date.add(1, 'seconds')
 
       let end = moment("2018-12-31 23:59:59");
