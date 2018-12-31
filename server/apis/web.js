@@ -12,6 +12,12 @@ const moment = require('moment');
 const fs = require('fs');
 const gm = require('gm')
 
+router.get("/server-time", function (req, res) {
+  res.json({
+    datetime: new Date()
+  })
+})
+
 router.get("/pk", function (req, res) {
   let data = JSON.parse(fs.readFileSync(__dirname + '/../files/pk.json', 'utf8'))
   let new_data = _.map(data, o => {

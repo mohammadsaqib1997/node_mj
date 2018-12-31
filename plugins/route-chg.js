@@ -164,6 +164,10 @@ export default ({
         app.store.commit('pageLoadingSet', true)
 
         setTimeout(async () => {
+            if (app.store.state['timer-counter']['initTimerOnce'] === false) {
+                await app.store.dispatch("timer-counter/getServerTime")
+            }
+
             if (app.store.state.initAuth === false) {
                 await app.store.dispatch("initAuthCheck")
             }
