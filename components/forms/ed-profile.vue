@@ -23,7 +23,8 @@
         b-input(type='text', placeholder='House No. #, Street Name, Area, City, Province, Country', v-model='f_data.address')
 
       b-field(label="Branch" :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_crzb_id')")
-        b-autocomplete(:data="crzb_list" v-model="ac_crzb" field="name" expanded :keep-first="true" @select="option => f_data.sel_crzb_id = option ? option.id : null" @input="loadCRZB" :loading="isFetching" placeholder="(example: Baldia Town)")
+        b-input(v-if="user_asn_id !== '' && profile.crzb_id !== null" type="text" placeholder="(example: Baldia Town)" readonly v-bind:value="ac_crzb")
+        b-autocomplete(v-else :data="crzb_list" v-model="ac_crzb" field="name" expanded :keep-first="true" @select="option => f_data.sel_crzb_id = option ? option.id : null" @input="loadCRZB" :loading="isFetching" placeholder="(example: Baldia Town)")
 
       b-field(label='Referral ID', :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''", :message="validation.firstError('f_data.ref_code')")
         b-input(v-if="user_asn_id === ''", type='text', placeholder='000000000', v-model='f_data.ref_code', v-mask="'#########'", :loading="validation.isValidating('f_data.ref_code')")
@@ -88,8 +89,8 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
-        city: "",
-        ref_code: ""
+        ref_code: "",
+        sel_crzb_id: null
       },
       form: {
         loading: false
@@ -158,6 +159,12 @@ export default {
         .minLength(6)
         .maxLength(100);
     },
+    "f_data.sel_crzb_id": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
     "f_data.ref_code": {
       cache: false,
       debounce: 500,
@@ -198,7 +205,7 @@ export default {
     loadCRZB(event) {
       const self = this;
       self.isFetching = true;
-      if (self.is_auto_crzb && event !== self.fet_m_data.crzb_ac_name) {
+      if (self.is_auto_crzb && event !== self.profile.crzb_name) {
         self.f_data.sel_crzb_id = null;
         self.is_auto_crzb = false;
       }
@@ -231,6 +238,7 @@ export default {
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
       this.status = data.active_sts;
+      this.is_auto_crzb = true;
       this.f_data = {
         full_name: data.full_name,
         email: data.email,
@@ -238,8 +246,10 @@ export default {
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
-        ref_code: data.ref_user_asn_id
+        ref_code: data.ref_user_asn_id,
+        sel_crzb_id: data.crzb_id
       };
+      this.ac_crzb = data.crzb_name
     },
     update: function() {
       const self = this;
@@ -275,7 +285,10 @@ export default {
           await self.$axios
             .post("/api/profile/update", {
               update_id: self.$store.state.user.data.user_id,
-              data: new_data
+              data: new_data,
+              ext_data: {
+                crzb_id: self.f_data.sel_crzb_id
+              }
             })
             .then(async res => {
               if (res.data.status !== false) {
