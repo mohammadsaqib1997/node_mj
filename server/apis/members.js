@@ -47,8 +47,12 @@ router.get("/", function (req, res) {
         FROM members as m
         LEFT JOIN info_var_m as u_var
         ON m.id = u_var.member_id
+        LEFT JOIN mem_link_crzb as mem_l_crzb
+        ON m.id=mem_l_crzb.member_id
+        LEFT JOIN crzb_list as crzb_b_l
+        ON mem_l_crzb.crzb_id=crzb_b_l.id
         ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR m.city LIKE ?)' : ''}
+        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_b_l.name LIKE ?)' : ''}
         ${(filter_qry !== '') ? filter_qry:''}
         `,
         ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
@@ -67,19 +71,23 @@ router.get("/", function (req, res) {
                   m.id, 
                   m.user_asn_id, 
                   m.email, 
-                  m.full_name, 
-                  m.city, 
+                  m.full_name,
                   m.active_sts, 
                   m.is_paid_m, 
+                  crzb_b_l.name as crzb_name,
                   u_var.level,
                   COUNT(ur.id) as tot_rcp_up 
                 FROM members as m
+                LEFT JOIN mem_link_crzb as mem_l_crzb
+                ON m.id=mem_l_crzb.member_id
+                LEFT JOIN crzb_list as crzb_b_l
+                ON mem_l_crzb.crzb_id=crzb_b_l.id
                 LEFT JOIN user_receipts as ur
                 ON m.id=ur.ref_id AND ur.type=0 
                 LEFT JOIN info_var_m as u_var
                 ON m.id = u_var.member_id
                 ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR m.city LIKE ?)' : ''}
+                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_b_l.name LIKE ?)' : ''}
                 ${(filter_qry !== '') ? filter_qry:''}
                 GROUP BY m.id
                 ORDER BY m.id DESC
@@ -129,7 +137,6 @@ router.get('/member_info/:id', function (req, res, next) {
               m.id,
               m.active_sts,
               m.address,
-              m.city,
               m.cnic_num,
               m.contact_num,
               m.dob,
@@ -149,8 +156,13 @@ router.get('/member_info/:id', function (req, res, next) {
               u_bank.account_number,
               u_bank.account_title,
               u_bank.iban_number,
-              u_bank.address as bk_address
+              u_bank.address as bk_address,
+              crzb_b_l.name as crzb_name
             FROM members as m
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            LEFT JOIN crzb_list as crzb_b_l
+            ON mem_l_crzb.crzb_id=crzb_b_l.id
             LEFT JOIN user_product_details as u_prd
             ON m.id = u_prd.member_id
             LEFT JOIN products as prd
@@ -574,13 +586,23 @@ router.get("/:id", function (req, res, next) {
       } else {
         let options = {
           sql: `
-        SELECT m.*, upd.product_id
-        FROM members AS m
-        LEFT JOIN user_product_details as upd
-        ON m.id=upd.member_id
-        WHERE m.id=?
-        `,
-          nestTables: true
+          SELECT m.*, upd.product_id, mem_l_crzb.crzb_id, 
+            (SELECT concat(ls_b.name, ", ", ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as name 
+                FROM crzb_list as ls_b
+                join crzb_list as ls_z
+                on ls_b.parent_id = ls_z.id
+                join crzb_list as ls_r
+                on ls_z.parent_id = ls_r.id
+                join crzb_list as ls_c
+                on ls_r.parent_id = ls_c.id
+              where ls_b.id=mem_l_crzb.crzb_id) as crzb_ac_name
+            FROM members AS m
+            LEFT JOIN user_product_details as upd
+            ON m.id=upd.member_id
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            WHERE m.id=?
+        `
         }
 
         connection.query(options, [req.params.id], function (error, results, fields) {
@@ -855,106 +877,87 @@ router.post('/update', function (req, res) {
         err
       })
     } else {
-      connection.beginTransaction(function (err) {
-        if (err) {
-          connection.release()
-          res.status(500).json({
-            err
-          })
-        } else {
-          connection.query('UPDATE `members` SET ? WHERE id=?', [req.body.member_data, req.body.update_id], function (error, results, fields) {
-            if (error) {
-              return connection.rollback(function () {
-                connection.release()
-                res.status(500).json({
-                  error
-                })
-              })
-            } else {
+      db_util.connectTrans(connection, function (resolve, err_hdl) {
+        connection.query('UPDATE `members` SET ? WHERE id=?', [req.body.member_data, req.body.update_id], function (error, results, fields) {
+          if (error) {
+            err_hdl(error)
+            resolve()
+          } else {
+            connection.query('SELECT member_id FROM user_product_details WHERE member_id=?', [req.body.update_id], function (error, results, fields) {
+              if (error) {
+                err_hdl(error)
+                resolve()
+              } else {
+                let query = 'UPDATE `user_product_details` SET ? WHERE member_id=?'
+                let params = [{
+                  product_id: req.body.ext_data.product_id
+                }, req.body.update_id]
 
-              connection.query('SELECT id FROM user_product_details WHERE member_id=?', [req.body.update_id], function (error, results, fields) {
-                if (error) {
-                  return connection.rollback(function () {
-                    connection.release()
-                    res.status(500).json({
-                      error
-                    })
-                  })
-                } else {
-                  let query = 'UPDATE `user_product_details` SET ? WHERE member_id=?'
-                  let params = [req.body.prd_data, req.body.update_id]
-
-                  if (results.length < 1) {
-                    query = 'INSERT INTO `user_product_details` SET ?'
-                    params = [req.body.prd_data]
-                  }
-
-                  connection.query(query, params, function (error, results, fields) {
-                    if (error) {
-                      return connection.rollback(function () {
-                        connection.release()
-                        res.status(500).json({
-                          error
-                        })
-                      })
-                    } else {
-
-                      if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
-
-                        after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
-                          if (err) {
-                            return connection.rollback(function () {
-                              connection.release()
-                              res.status(500).json({
-                                err
-                              })
-                            });
-                          } else {
-                            connection.commit(function (err) {
-                              if (err) {
-                                return connection.rollback(function () {
-                                  connection.release()
-                                  res.status(500).json({
-                                    err
-                                  })
-                                });
-                              } else {
-                                connection.release()
-                                res.json({
-                                  status: true
-                                })
-                              }
-                            })
-                          }
-                        })
-
+                if (results.length < 1) {
+                  query = 'INSERT INTO `user_product_details` SET ?'
+                  params = [{
+                    product_id: req.body.ext_data.product_id,
+                    member_id: req.body.update_id
+                  }]
+                }
+                connection.query(query, params, function (error, results, fields) {
+                  if (error) {
+                    err_hdl(error)
+                    resolve()
+                  } else {
+                    connection.query('SELECT member_id FROM mem_link_crzb WHERE member_id=?', [req.body.update_id], function (error, results, fields) {
+                      if (error) {
+                        err_hdl(error)
+                        resolve()
                       } else {
-                        connection.commit(function (err) {
-                          if (err) {
-                            return connection.rollback(function () {
-                              connection.release()
-                              res.status(500).json({
-                                err
-                              })
-                            });
+                        let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
+                        let params = [{
+                          crzb_id: req.body.ext_data.crzb_id
+                        }, req.body.update_id]
+
+                        if (results.length < 1) {
+                          query = 'INSERT INTO `mem_link_crzb` SET ?'
+                          params = [{
+                            crzb_id: req.body.ext_data.crzb_id,
+                            member_id: req.body.update_id
+                          }]
+                        }
+                        connection.query(query, params, function (error, results, fields) {
+                          if (error) {
+                            err_hdl(error)
+                            resolve()
                           } else {
-                            connection.release()
-                            res.json({
-                              status: true
-                            })
+                            if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
+                              after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
+                                if (err) {
+                                  err_hdl(err)
+                                }
+                                resolve()
+                              })
+                            } else {
+                              resolve()
+                            }
                           }
                         })
                       }
-
-                    }
-                  })
-                }
-              })
-            }
-          });
+                    })
+                  }
+                })
+              }
+            })
+          }
+        })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
         }
       })
-
     }
   })
 

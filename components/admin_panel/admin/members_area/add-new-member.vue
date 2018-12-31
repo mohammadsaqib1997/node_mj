@@ -59,7 +59,7 @@
                   b-input(type="tel" placeholder="03xx-xxx-xxxx" v-model="f_data.cont_num" v-mask="'03##-###-####'")
             .columns.is-variable.is-1
               .column.is-3
-                label Address
+                label Mailing Address
               .column
                 b-field(:type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
                   b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")

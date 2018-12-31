@@ -113,7 +113,24 @@ router.get("/", function (req, res) {
       } else {
         let query = ''
         if (req.decoded.data.type === 0) {
-          query = "SELECT user_asn_id, email, full_name, contact_num, cnic_num, dob, address, city, ref_user_asn_id, active_sts FROM members WHERE id=?"
+          query = `
+            SELECT 
+              m.user_asn_id, 
+              m.email, 
+              m.full_name, 
+              m.contact_num, 
+              m.cnic_num, 
+              m.dob, 
+              m.address, 
+              m.ref_user_asn_id, 
+              m.active_sts, 
+              crzb_b_l.name as crzb_name
+            FROM members as m
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            LEFT JOIN crzb_list as crzb_b_l
+            ON mem_l_crzb.crzb_id=crzb_b_l.id
+            WHERE m.id=?`
         } else if (req.decoded.data.type === 1) {
           query = "SELECT email, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
         } else {
@@ -1086,7 +1103,20 @@ router.get('/get-process-detail', function (req, res) {
         })
       } else {
         connection.query(
-          `SELECT m.email, m.full_name, m.contact_num, m.cnic_num, m.dob, m.address, m.is_paid_m, bk.id as bk_id, bk.bank_name, bk.branch_code, bk.account_title, bk.account_number, prd.reg_amount as prd_reg_amount
+          `SELECT 
+            m.email, 
+            m.full_name, 
+            m.contact_num, 
+            m.cnic_num, 
+            m.dob, 
+            m.address, 
+            m.is_paid_m, 
+            bk.id as bk_id, 
+            bk.bank_name, 
+            bk.branch_code, 
+            bk.account_title, 
+            bk.account_number, 
+            prd.reg_amount as prd_reg_amount
           FROM members as m
           LEFT JOIN user_bank_details as bk
           ON m.id = bk.member_id

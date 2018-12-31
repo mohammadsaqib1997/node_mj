@@ -10,9 +10,6 @@
       b-field(label='Email', :type="(validation.hasError('f_data.email')) ? 'is-danger':''", :message="validation.firstError('f_data.email')")
         b-input(type='email', placeholder='user@domain.com', v-model='f_data.email', :loading="validation.isValidating('f_data.email')")
 
-      //- b-field(label='Change Password', :type="(validation.hasError('f_data.password')) ? 'is-danger':''", :message="validation.firstError('f_data.password')")
-      //-   b-input(type='password', password-reveal='password-reveal', placeholder='******', v-model='f_data.password')
-
       b-field(label='CNIC', :type="(validation.hasError('f_data.cnic_num')) ? 'is-danger':''", :message="validation.firstError('f_data.cnic_num')")
         b-input(type='tel', placeholder='xxxxx-xxxxxxx-x', v-model='f_data.cnic_num', v-mask="'#####-#######-#'")
 
@@ -20,14 +17,13 @@
         b-datepicker(placeholder='DD/MM/YYYY', v-model='f_data.dob', expanded='expanded')
 
       b-field(label='Contact Number', :type="(validation.hasError('f_data.cont_num')) ? 'is-danger':''", :message="validation.firstError('f_data.cont_num')")
-        b-input(type='tel', placeholder='92-xxx-xxx-xxxx', v-model='f_data.cont_num', v-mask="'92-###-###-####'")
+        b-input(type='tel', placeholder="03xx-xxx-xxxx" v-model="f_data.cont_num" v-mask="'03##-###-####'")
 
-      b-field(label='Address', :type="(validation.hasError('f_data.address')) ? 'is-danger':''", :message="validation.firstError('f_data.address')")
+      b-field(label='Mailing Address', :type="(validation.hasError('f_data.address')) ? 'is-danger':''", :message="validation.firstError('f_data.address')")
         b-input(type='text', placeholder='House No. #, Street Name, Area, City, Province, Country', v-model='f_data.address')
 
-      b-field(label='City', :type="(validation.hasError('f_data.city')) ? 'is-danger':''", :message="validation.firstError('f_data.city')")
-        b-autocomplete(placeholder='Enter City Name', ref='autocomplete', v-model='ac_city', :data='filteredCityArray', @select='option => f_data.city = option', :keep-first='true', :open-on-focus='true')
-          template(slot='empty') No results for {{ac_city}}
+      b-field(label="Branch" :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_crzb_id')")
+        b-autocomplete(:data="crzb_list" v-model="ac_crzb" field="name" expanded :keep-first="true" @select="option => f_data.sel_crzb_id = option ? option.id : null" @input="loadCRZB" :loading="isFetching" placeholder="(example: Baldia Town)")
 
       b-field(label='Referral ID', :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''", :message="validation.firstError('f_data.ref_code')")
         b-input(v-if="user_asn_id === ''", type='text', placeholder='000000000', v-model='f_data.ref_code', v-mask="'#########'", :loading="validation.isValidating('f_data.ref_code')")
@@ -51,10 +47,8 @@ import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
-import mxn_cityAC from "~/mixins/city-ac.js";
 import pinVerMD from "~/components/modals/pincode-verify.vue";
 export default {
-  mixins: [mxn_cityAC],
   components: {
     pinVerMD
   },
@@ -83,10 +77,13 @@ export default {
       user_asn_id: "",
       status: "",
       secure: false,
+      ac_crzb: "",
+      crzb_list: [],
+      isFetching: false,
+      is_auto_crzb: false,
       f_data: {
         full_name: "",
         email: "",
-        // password: "",
         cnic_num: "",
         dob: null,
         cont_num: "",
@@ -139,12 +136,6 @@ export default {
         }
       }
     },
-    // "f_data.password": function(value) {
-    //   return Validator.value(value)
-    //     .required()
-    //     .minLength(6)
-    //     .maxLength(35);
-    // },
     "f_data.cnic_num": function(value) {
       return Validator.value(value)
         .required()
@@ -157,8 +148,8 @@ export default {
       return Validator.value(value)
         .required()
         .regex(
-          /^\92-\d{3}-\d{3}-\d{4}$/,
-          "Invalid Contact Number(e.g 92-000-000-0000)"
+          /^(03)+\d{2}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 0300-000-0000)"
         );
     },
     "f_data.address": function(value) {
@@ -166,9 +157,6 @@ export default {
         .required()
         .minLength(6)
         .maxLength(100);
-    },
-    "f_data.city": function(value) {
-      return Validator.value(value).required();
     },
     "f_data.ref_code": {
       cache: false,
@@ -204,19 +192,52 @@ export default {
     mask
   },
   methods: {
+    after_f_settle: _.debounce(function(cb) {
+      cb();
+    }, 500),
+    loadCRZB(event) {
+      const self = this;
+      self.isFetching = true;
+      if (self.is_auto_crzb && event !== self.fet_m_data.crzb_ac_name) {
+        self.f_data.sel_crzb_id = null;
+        self.is_auto_crzb = false;
+      }
+      self.after_f_settle(function() {
+        if (self.f_data.sel_crzb_id !== null) {
+          self.isFetching = false;
+          return;
+        }
+        self.crzb_list = [];
+
+        if (self.ac_crzb === null || !self.ac_crzb.length) {
+          self.crzb_list = [];
+          self.isFetching = false;
+          return;
+        }
+        self.$axios
+          .get(`/api/web/ac_branch/${self.ac_crzb}`)
+          .then(({ data }) => {
+            self.crzb_list = data.result;
+          })
+          .catch(error => {
+            self.crzb_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isFetching = false;
+          });
+      });
+    },
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
-      this.ac_city = data.city === null ? "" : data.city;
       this.status = data.active_sts;
       this.f_data = {
         full_name: data.full_name,
         email: data.email,
-        // password: data.password,
         cnic_num: data.cnic_num,
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
-        city: data.city === null ? "" : data.city,
         ref_code: data.ref_user_asn_id
       };
     },

@@ -50,9 +50,9 @@
 
     .columns.is-variable.is-1
       .column
-        label City
+        label Branch
       .column
-        h2 {{ profile.city }}
+        h2 {{ profile.crzb_name }}
 
     .columns.is-variable.is-1
       .column
