@@ -57,7 +57,24 @@ router.get('/list', function (req, res) {
             let tot_rows = result[0].tot_rows
 
             connection.query(
-              `SELECT as_role.*, m.full_name, crzb_l.name 
+              `SELECT as_role.id, as_role.crzb_id, as_role.role_status, m.full_name, crzb_l.name, crzb_l.type,
+                (
+                  SELECT concat(
+                    if(l_c.rd_id IS NOT NULL, concat(l_c.rd_id, "-"), ""),
+                          if(l_r.rd_id IS NOT NULL, concat(l_r.rd_id, "-"), ""),
+                          if(l_z.rd_id IS NOT NULL, concat(l_z.rd_id, "-"), ""),
+                    l_b.rd_id
+                  ) 
+                  FROM crzb_list as l_b
+                      LEFT JOIN crzb_list as l_z
+                      ON l_b.parent_id = l_z.id
+                      LEFT JOIN crzb_list as l_r
+                      ON l_z.parent_id = l_r.id
+                      LEFT JOIN crzb_list as l_c
+                      ON l_r.parent_id = l_c.id
+                  WHERE l_b.id=crzb_l.id
+                    
+                ) as crzb_code 
                 FROM assign_roles as as_role
                 left join members as m
                 on as_role.member_id = m.id
@@ -205,6 +222,75 @@ router.post('/assign', function (req, res) {
   })
 })
 
+router.post('/update-row', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      db_util.connectTrans(connection, async function (resolve, err_hdl) {
+
+          let throw_err = null
+          await new Promise(in_resolve => {
+            connection.query(
+              `SELECT COUNT(*) as tot_rows FROM assign_roles WHERE crzb_id=${req.body.crzb_id} AND role_status=1`,
+              function (error, result) {
+                if (error) {
+                  throw_err = error
+                  in_resolve()
+                } else {
+                  if (result[0].tot_rows > 0) {
+                    connection.query(
+                      `UPDATE assign_roles SET ? WHERE crzb_id=${req.body.crzb_id} AND role_status=1`, {
+                        role_status: 0
+                      },
+                      function (error, result) {
+                        if (error) {
+                          throw_err = error
+                        }
+                        in_resolve()
+                      }
+                    )
+                  } else {
+                    in_resolve()
+                  }
+                }
+              }
+            )
+          })
+          if (throw_err) {
+            err_hdl(throw_err)
+            resolve()
+          }
+
+          connection.query(
+            `UPDATE assign_roles SET ? WHERE id=${req.body.updated_id}`, {
+              crzb_id: req.body.crzb_id,
+              role_status: 1
+            },
+            function (error, results) {
+              if (error) {
+                err_hdl(error)
+              }
+              resolve()
+            });
+        },
+        function (error) {
+          if (error) {
+            res.status(500).json({
+              error
+            })
+          } else {
+            res.json({
+              status: true
+            })
+          }
+        })
+    }
+  })
+})
+
 router.post('/toggle-status', function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {
@@ -214,28 +300,25 @@ router.post('/toggle-status', function (req, res) {
     } else {
       db_util.connectTrans(connection, async function (resolve, err_hdl) {
 
-          if (req.body.change_sts === 1) {
+          if (req.body.change_sts == true) {
             let throw_err = null
             await new Promise(in_resolve => {
               connection.query(
-                `SELECT id FROM assign_roles WHERE crzb_id=${req.body.crzb_id} AND role_status=1 LIMIT 1`,
+                `SELECT COUNT(*) as tot_rows FROM assign_roles WHERE crzb_id=${req.body.crzb_id} AND role_status=1`,
                 function (error, result) {
                   if (error) {
                     throw_err = error
                     in_resolve()
                   } else {
-                    if (result.length > 0 && result[0].id !== null) {
-                      let old_asn_id = result[0].id
-
+                    if (result[0].tot_rows > 0) {
                       connection.query(
-                        `UPDATE assign_roles SET ? WHERE id=${old_asn_id}`, {
+                        `UPDATE assign_roles SET ? WHERE crzb_id=${req.body.crzb_id} AND role_status=1`, {
                           role_status: 0
                         },
                         function (error, result) {
                           if (error) {
                             throw_err = error
                           }
-                          console.log("this", result)
                           in_resolve()
                         }
                       )

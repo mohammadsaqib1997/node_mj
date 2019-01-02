@@ -1412,7 +1412,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                 `SELECT crzb_l.id, crzb_l.parent_id, crzb_l.type as crzb_type, asn_role.id as asn_role_id, asn_role.member_id, iv_mem.wallet, m.user_asn_id
                 FROM crzb_list as crzb_l
                 LEFT JOIN assign_roles as asn_role
-                ON crzb_l.id = asn_role.crzb_id
+                ON crzb_l.id = asn_role.crzb_id AND asn_role.role_status=1
                 LEFT JOIN info_var_m as iv_mem
                 ON asn_role.member_id = iv_mem.member_id
                 LEFT JOIN members as m

@@ -248,6 +248,7 @@ router.get('/ac_search_list/:role/:search', (req, res) => {
             join crzb_list as l_c
             on l_r.parent_id = l_c.id`,
             where_b = ` where (l_b.name like '%${req.params.search}%' OR l_z.name like '%${req.params.search}%' OR l_r.name like '%${req.params.search}%' OR l_c.name like '%${req.params.search}%') AND l_b.type=${role}`,
+            w_active = ` AND l_b.active=1`,
             limit_b = ` LIMIT 10`
 
           if (role == "2") {
@@ -257,17 +258,20 @@ router.get('/ac_search_list/:role/:search', (req, res) => {
             join crzb_list as l_c
             on l_r.parent_id = l_c.id`
             where_b = ` where (l_z.name like '%${req.params.search}%' OR l_r.name like '%${req.params.search}%' OR l_c.name like '%${req.params.search}%') AND l_z.type=${role}`
+            w_active = ` AND l_z.active=1`
           } else if (role == "1") {
             sel_query = `SELECT CONCAT(l_r.name, ", ", l_c.name) as name, l_r.id FROM crzb_list as l_r`
             join_b = ` join crzb_list as l_c
             on l_r.parent_id = l_c.id`
             where_b = ` where (l_r.name like '%${req.params.search}%' OR l_c.name like '%${req.params.search}%') AND l_r.type=${role}`
+            w_active = ` AND l_r.active=1`
           } else if (role == "0") {
             sel_query = `SELECT CONCAT(l_c.name) as name, l_c.id FROM crzb_list as l_c`
             join_b = ``
             where_b = ` where (l_c.name like '%${req.params.search}%') AND l_c.type=${role}`
+            w_active = ` AND l_c.active=1`
           }
-          connection.query(sel_query + join_b + where_b + limit_b, function (error, result) {
+          connection.query(sel_query + join_b + where_b + w_active + limit_b, function (error, result) {
             connection.release();
             if (error) {
               res.status(500).json({

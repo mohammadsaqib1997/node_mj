@@ -114,29 +114,23 @@
             <template slot="thead">
               <tr>
                 <th>ID</th>
-                <th>Date</th>
+                <th>Code</th>
                 <th>Head Of Depart</th>
                 <th>Name Of Area</th>
+                <th>Name Of Role</th>
                 <th>Action</th>
               </tr>
             </template>
             <template slot="tbody">
-              <tr v-for="(row, ind) in l_data" :key="ind">
-                <td>{{ row.id }}</td>
-                <td>{{ $store.getters.formatDate(row.created_at) }}</td>
-                <td>{{ row.full_name }}</td>
-                <td>{{ row.name }}</td>
-                <td>
-                  <b-field grouped>
-                    <p class="control">
-                      <button
-                        @click.prevent="toggleSts(row, !row.role_status)"
-                        :class="['button is-small', {'is-danger': row.role_status === 1, 'is-success': row.role_status === 0}]"
-                      >{{ row.role_status === 0 ? 'Active':'Deactive' }}</button>
-                    </p>
-                  </b-field>
-                </td>
-              </tr>
+              <asnRoleRow
+                v-for="(row, ind) in l_data"
+                :key="ind"
+                :row="row"
+                :edit="row.id===row_edit_id"
+                @loading="loading=$event"
+                @loadData="loadData"
+                @row_edit="row_edit_id=$event"
+              ></asnRoleRow>
             </template>
           </tableComp>
         </div>
@@ -151,6 +145,7 @@ import moment from "moment";
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
+import asnRoleRow from "~/components/forms/assign_role_row.vue";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 export default {
@@ -158,17 +153,14 @@ export default {
   mixins: [mxn_tableFilterListing],
   components: {
     tableComp,
-    tblTopFilter
-  },
-  async mounted() {
-    const self = this;
-    // self.loading_form = true;
-    // self.loading_form = false;
+    tblTopFilter,
+    asnRoleRow
   },
   data() {
     return {
       loading_form: false,
       roles: ["Country", "Region", "Zone", "Branch"],
+      row_edit_id: null,
       isFetching: false,
       ac_crzb: "",
       crzb_list: [],
@@ -253,37 +245,6 @@ export default {
                     return "Already assigned.";
                   }
                 });
-
-              // new Promise(resolve => {
-              //   let interval = setInterval(async function() {
-              //     if (self.s_user_cac_load === false) {
-              //       await self.$axios
-              //         .get(`/api/assign-role/exist-check/${value}`, {
-              //           params: {
-              //             mem_id: self.f_data.mem_id
-              //           }
-              //         })
-              //         .then(res => {
-              //           if (res.data.count > 0) {
-              //             if (
-              //               res.data.result.member_id === self.f_data.mem_id
-              //             ) {
-              //               return resolve(
-              //                 "This user is already assigned role."
-              //               );
-              //             }
-              //             return resolve("Already assigned.");
-              //           }
-              //         });
-              //       clearInterval(interval);
-              //       return resolve();
-              //     }
-              //     if (self.validation.hasError("f_data.mem_id")) {
-              //       clearInterval(interval);
-              //       return resolve();
-              //     }
-              //   }, 100);
-              // });
             }
           });
         }
@@ -398,48 +359,6 @@ export default {
       this.s_name = "";
       this.submitted = false;
       this.validation.reset();
-    },
-    toggleSts(row, asn_sts) {
-      const self = this;
-      this.$dialog.confirm({
-        title: `${asn_sts ? "Active" : "Deactive"} assigned member!`,
-        message: `Are you sure you want to <b>${
-          asn_sts ? "active" : "deactive"
-        }</b> assigned member?`,
-        confirmText: `${asn_sts ? "Active" : "Deactive"}`,
-        type: `${asn_sts ? "is-success" : "is-danger"}`,
-        hasIcon: true,
-        onConfirm: async () => {
-          self.loading = true;
-          await self.$axios
-            .post("/api/assign-role/toggle-status", {
-              row_id: row.id,
-              change_sts: asn_sts,
-              crzb_id: row.crzb_id
-            })
-            .then(async res => {
-              self.$toast.open({
-                duration: 1000,
-                message: `Successfully assigned member ${
-                  asn_sts ? "Active" : "Deactive"
-                }.`,
-                position: "is-bottom",
-                type: "is-success"
-              });
-              await self.loadData();
-            })
-            .catch(err => {
-              self.loading = false;
-              console.log(err);
-              self.$toast.open({
-                duration: 1000,
-                message: "Server Error.",
-                position: "is-bottom",
-                type: "is-danger"
-              });
-            });
-        }
-      });
     }
   }
 };
