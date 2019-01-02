@@ -1,37 +1,58 @@
 <template>
   <b-modal class="promotion" :active.sync="modalAct" :canCancel="['x']">
     <div class="main">
-      <img class="logo" src="/img/post-logo.png" alt="MJ Supreme">
-
-      <div class="banner-img-cont">
-        <div class="ribbon-cont">
-          <img src="/img/banner-ribbon.png" alt="Mega Promotion">
+      <div class="flex-container">
+        <div class="col-ord-1">
+          <img src="~/assets/img/prm_ass_1/December Promotion .png">
         </div>
-        <div class="img-cont">
-          <img src="/img/onlyBike.png" alt="WIN a Bike">
+        <div class="col-ord-2">
+          <img src="~/assets/img/prm_ass_1/badge.png">
+        </div>
+        <div class="col-ord-3">
+          <p class="content-cont">
+            Get your vouchers
+            from our headoffice.
+            For further
+            information mail us at:
+            <span
+              class="hl"
+            >info@mj-supreme.com</span>
+          </p>
         </div>
       </div>
 
-      <div class="banner-content">
-        <p>
-          Contest begins from
-          <span class="hl">8th</span> to
-          <span class="hl">31st</span> December
+      <div class="full-container">
+        <p class="content-cont">
+          Another promotion and year comes to an end. Participants who
+          <span class="hl">qualified</span>
+          for the
+          <span class="hl">lucky draw</span> which will be on
+          <span class="hl">19th of January</span> are listed below.
         </p>
-        <p>
-          Just sponser
-          <span class="hl">5 direct referrals</span> from your referral ID and increase your chances to get rewarded.
+        <p class="content-cont">
+          <span class="hl">Winners</span> will be announced and handed over
+          the
+          <span class="hl">reward</span> in that event.
         </p>
       </div>
 
-      <div class="terms-cont">
-        <div>
-          <p>Terms and conditions apply</p>
-        </div>
-        <div>
-          <p>Lucky Draw to be held on 15th January 2019 in Karachi.</p>
-          <p>Related details will be posted on website & social media soon.</p>
-        </div>
+      <div class="table-container">
+        <table class="table is-fullwidth">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>City</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(td, ind) in rows" :key="ind">
+              <td>{{ genId(td.id) }}</td>
+              <td>{{ td.name }}</td>
+              <td>{{ td.city }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </b-modal>
@@ -40,7 +61,144 @@
 <script>
 import mxn_modal from "~/mixins/modal.js";
 export default {
-  mixins: [mxn_modal]
+  mixins: [mxn_modal],
+  data() {
+    return {
+      rows: [
+        {
+          id: 1005,
+          name: "Syed Waqar Ali Shah Bukhari",
+          city: "Mardan"
+        },
+        {
+          id: 1024,
+          name: "Basharat ali",
+          city: "Okara"
+        },
+        {
+          id: 1055,
+          name: "Rehmatullah",
+          city: "Peshawar"
+        },
+        {
+          id: 1060,
+          name: "Rehmatullah",
+          city: "Peshawar"
+        },
+        {
+          id: 27,
+          name: "Adeel Iqbal",
+          city: "Karachi"
+        },
+        {
+          id: 28,
+          name: "Mifrah Adeel",
+          city: "Karachi"
+        },
+        {
+          id: 878,
+          name: "Islam Akbar",
+          city: "Mardan"
+        },
+        {
+          id: 851,
+          name: "Muhammad ahmed",
+          city: "Karachi"
+        },
+        {
+          id: 15,
+          name: "Syeda Maham Adeel",
+          city: "Karachi"
+        },
+        {
+          id: 16,
+          name: "Syeda Rimsha Javaid",
+          city: "Karachi"
+        },
+        {
+          id: 17,
+          name: "Syeda Aysha Javaid",
+          city: "Karachi"
+        },
+        {
+          id: 21,
+          name: "Syed Maaz Javaid",
+          city: "Karachi"
+        },
+        {
+          id: 22,
+          name: "Syed Khizar Javaid",
+          city: "Karachi"
+        },
+        {
+          id: 905,
+          name: "Ijaz Ahmad Shah",
+          city: "Lahore"
+        },
+        {
+          id: 873,
+          name: "Hyder Ali",
+          city: "Hyderabad"
+        },
+        {
+          id: 815,
+          name: "Muddasir",
+          city: "Karachi"
+        },
+        {
+          id: 814,
+          name: "Muhammad maaz",
+          city: "Karachi"
+        },
+        {
+          id: 4,
+          name: "Syed Javaid Hassan",
+          city: "Karachi"
+        },
+        {
+          id: 5,
+          name: "Syeda Rozina Javaid",
+          city: "Karachi"
+        },
+        {
+          id: 869,
+          name: "Ghulam Ali Jatoi",
+          city: "Hyderabad"
+        },
+        {
+          id: 543,
+          name: "Zaid Ahmed",
+          city: "Malakand"
+        },
+        {
+          id: 876,
+          name: "Aman Ullah",
+          city: "Lakki Marwat"
+        },
+        {
+          id: 51,
+          name: "Syed zaid javaid",
+          city: "Karachi"
+        },
+        {
+          id: 180,
+          name: "Syeda Hafsa Adeel",
+          city: "Karachi"
+        },
+        {
+          id: 574,
+          name: "Muhammad Amir",
+          city: "Karachi"
+        }
+      ]
+    };
+  },
+  methods: {
+    genId(id) {
+      let str_id = parseInt(id).toString();
+      return str_id.length < 9 ? ("000000000" + str_id).substr(-9, 9) : str_id;
+    }
+  }
 };
 </script>
 
@@ -48,152 +206,152 @@ export default {
 .promotion /deep/ {
   .modal-content {
     width: 820px;
+    max-width: 100% !important;
   }
   .main {
     position: relative;
-    background-image: url("/img/post-bg.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-    & > .logo {
-      width: 330px;
-      position: relative;
-      top: 42px;
-      left: 295px;
+    background-color: #3b3f57;
 
-      @media screen and (max-width: 820px) {
-        top: 20px;
-        width: 220px;
+    &:before {
+      content: "";
+      position: absolute;
+      background-image: url("/img/prm-ass-1/bgpatt.png");
+      background-repeat: no-repeat;
+      background-position: center -1px;
+      background-size: 101%;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+    }
+
+    .content-cont {
+      color: #bdbdc3;
+      font-size: 16px;
+      text-align: center;
+      font-weight: 400;
+      .hl {
+        color: #d8bb62;
+        white-space: nowrap;
+        font-weight: 600;
       }
     }
 
-    & > .banner-img-cont {
+    .flex-container {
+      display: flex;
+      justify-content: center;
       position: relative;
-      width: 100%;
-      .ribbon-cont {
-        width: 35rem;
-        position: relative;
-        margin-left: 200px;
-        top: 60px;
+      @media screen and (max-width: 768px) {
+        flex-wrap: wrap;
+      }
+
+      .col-ord-2 {
+        flex-grow: 2;
+        flex-shrink: 0;
+        flex-basis: 0;
+        margin-top: -75px;
         img {
-          position: relative;
-          z-index: 1;
+          display: block;
+          margin: 0 auto;
+          max-width: 500px;
+          width: 100%;
         }
-        &:before {
-          content: "";
-          position: absolute;
-          box-shadow: 0 0 53px 35px #1b1d29;
-          width: 70%;
-          height: 27%;
-          top: 32%;
-          left: 16%;
+        @media screen and (max-width: 768px) {
+          min-width: 100%;
         }
-        @media screen and (max-width: 820px) {
-          width: 15rem;
-          margin-left: 325px;
-          top: 55px;
-          &:before {
-            box-shadow: 0 0 53px 25px #1b1d29;
-            width: 66%;
-            height: 0;
-            top: 42%;
+      }
+      .col-ord-1,
+      .col-ord-3 {
+        flex-grow: 1;
+        flex-shrink: 1;
+        flex-basis: 0;
+        @media screen and (min-width: 769px) {
+          display: flex;
+          align-items: center;
+          margin-top: 110px;
+          justify-content: flex-end;
+          max-width: 225px;
+        }
+
+        &.col-ord-1 {
+          img {
+            max-width: 160px;
+            @media screen and (max-width: 768px) {
+              display: block;
+              margin: 0 auto 2rem;
+            }
           }
         }
-      }
-      .img-cont {
-        width: 35rem;
-        position: relative;
-        margin-top: -150px;
-        margin-left: -100px;
-        img {
-          position: relative;
-          z-index: 1;
-        }
-        &:before {
-          content: "";
-          position: absolute;
-          box-shadow: 0 0 53px 50px #171923;
-          width: 50%;
-          height: 50%;
-          transform: rotate(45deg);
-          left: 25%;
-          top: 25%;
-        }
-        @media screen and (max-width: 820px) {
-          width: 20rem;
-          margin-top: -35px;
-          margin-left: 150px;
-          &:before {
-            width: 35%;
-            height: 35%;
-            left: 32%;
-            top: 33%;
-          }
-        }
-      }
-    }
-
-    & > .banner-content {
-      width: 250px;
-      position: relative;
-      margin-right: 60px;
-      margin-left: auto;
-      margin-top: -310px;
-      p {
-        color: #b5b5bc;
-        font-size: 24px;
-        margin-bottom: 1rem;
-        font-weight: 400;
-        .hl {
-          color: #d3b867;
-          font-weight: 500;
-        }
-      }
-
-      @media screen and (max-width: 820px) {
-        width: 245px;
-        margin: 0 auto;
-        margin-top: 0;
-        text-align: center;
-        p {
-          font-size: 16px;
-        }
-      }
-    }
-
-    & > .terms-cont {
-      margin-top: 5rem;
-      min-height: 4rem;
-      @media screen and (min-width: 821px) {
-        display: flex;
-        & > div {
-          flex-grow: 1;
-          &:first-child {
+        &.col-ord-3 {
+          .content-cont {
+            padding-right: 55px;
             text-align: right;
-            border-right: 2px solid #d3b867;
+          }
+        }
+
+        @media screen and (max-width: 768px) {
+          min-width: 100%;
+          &.col-ord-1 {
+            order: 2;
+          }
+          &.col-ord-3 {
+            order: 3;
+            .content-cont {
+              max-width: 200px;
+              margin: 0 auto 2rem;
+              padding-right: 0;
+              text-align: center;
+            }
           }
         }
       }
-      & > div {
-        padding: 0 1rem;
-      }
+    }
 
-      p {
-        color: #b5b5bc;
-        font-size: 14px;
-        font-weight: 400;
-      }
-      @media screen and (max-width: 820px) {
-        width: 245px;
-        text-align: center;
-        padding-bottom: 2rem;
+    .full-container {
+      position: relative;
+      .content-cont {
+        padding: 15px;
+        font-size: 20px;
+        max-width: 675px;
         margin: 0 auto;
-        margin-top: 3rem;
-        & > div {
-          &:first-child {
-            border-bottom: 2px solid #d3b867;
-            padding-bottom: 5px;
-            margin-bottom: 5px;
+      }
+      .content-cont:last-child {
+        max-width: 400px;
+      }
+    }
+
+    .table-container {
+      position: relative;
+      padding: 20px;
+      .table {
+        background-color: transparent;
+        thead {
+          th {
+            color: #d9bd68;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-color: #d9bd68;
+            font-size: 18px;
+            padding: 5px;
+          }
+        }
+        tbody {
+          td {
+            color: #bdbdc3;
+            font-size: 20px;
+            font-weight: 400;
+            padding: 12px 5px;
+            border-color: #616891;
+          }
+        }
+        thead th:last-child,
+        tbody td:last-child {
+          text-align: right;
+        }
+        @media screen and (max-width: 425px) {
+          thead th,
+          tbody td {
+            font-size: 15px;
           }
         }
       }
