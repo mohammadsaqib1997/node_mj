@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const db = require('../db.js')
+const db_util = require('../func/db-util.js')
 
 router.use(function (req, res, next) {
   if (req.decoded.data.type === 2) {
@@ -93,10 +94,7 @@ router.get('/exist-check/:crzb_id', (req, res) => {
           err
         })
       } else {
-        let query = `SELECT member_id, crzb_id FROM \`assign_roles\` where \`crzb_id\`=${req.params.crzb_id}`
-        if (req.query.mem_id) {
-          query += ` OR member_id=${req.query.mem_id}`
-        }
+        let query = `SELECT COUNT(*) as count FROM assign_roles where crzb_id=${req.params.crzb_id} AND role_status=1`
         connection.query(query, function (error, result) {
           connection.release();
           if (error) {
@@ -104,10 +102,9 @@ router.get('/exist-check/:crzb_id', (req, res) => {
               error
             })
           } else {
-            if (result.length > 0) {
+            if (result[0].count > 0) {
               res.json({
-                count: 1,
-                result: result[0]
+                count: result[0].count
               })
             } else {
               res.json({
@@ -125,6 +122,59 @@ router.get('/exist-check/:crzb_id', (req, res) => {
     })
   }
 
+})
+
+router.post('/get-user-check', function (req, res) {
+  db.getConnection(function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      connection.query(
+        'SELECT id, full_name FROM `members` where (binary `email`=? OR binary `user_asn_id`=?) AND is_paid_m=1',
+        [req.body.email, req.body.email],
+        function (error, results, fields) {
+          if (error) {
+            connection.release();
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (results.length > 0) {
+              let user_data = results[0]
+              connection.query(
+                `SELECT COUNT(*) as count FROM assign_roles WHERE member_id=${user_data.id}`,
+                function (error, result) {
+                  connection.release();
+                  if (error) {
+                    res.status(500).json({
+                      error
+                    })
+                  } else {
+                    if (result[0].count > 0) {
+                      res.json({
+                        status: false,
+                        message: "This user is already assigned role!"
+                      })
+                    } else {
+                      res.json({
+                        result: user_data
+                      })
+                    }
+                  }
+                })
+            } else {
+              connection.release();
+              res.json({
+                status: false,
+                message: "Invalid User!"
+              })
+            }
+          }
+        });
+    }
+  })
 })
 
 router.post('/assign', function (req, res) {
@@ -155,18 +205,67 @@ router.post('/assign', function (req, res) {
   })
 })
 
-router.post('/delete', function (req, res) {
+router.post('/toggle-status', function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {
       res.status(500).json({
         error
       })
     } else {
-      connection.query(
-        `DELETE FROM assign_roles 
-        WHERE id='${req.body.del_id}'`,
-        async function (error, result) {
-          connection.release();
+      db_util.connectTrans(connection, async function (resolve, err_hdl) {
+
+          if (req.body.change_sts === 1) {
+            let throw_err = null
+            await new Promise(in_resolve => {
+              connection.query(
+                `SELECT id FROM assign_roles WHERE crzb_id=${req.body.crzb_id} AND role_status=1 LIMIT 1`,
+                function (error, result) {
+                  if (error) {
+                    throw_err = error
+                    in_resolve()
+                  } else {
+                    if (result.length > 0 && result[0].id !== null) {
+                      let old_asn_id = result[0].id
+
+                      connection.query(
+                        `UPDATE assign_roles SET ? WHERE id=${old_asn_id}`, {
+                          role_status: 0
+                        },
+                        function (error, result) {
+                          if (error) {
+                            throw_err = error
+                          }
+                          console.log("this", result)
+                          in_resolve()
+                        }
+                      )
+                    } else {
+                      in_resolve()
+                    }
+                  }
+                }
+              )
+            })
+            if (throw_err) {
+              err_hdl(throw_err)
+              resolve()
+            }
+          }
+
+
+          connection.query(
+            `UPDATE assign_roles SET ? WHERE id=${req.body.row_id}`, {
+              role_status: req.body.change_sts
+            },
+            function (error) {
+              if (error) {
+                err_hdl(error)
+              }
+              resolve()
+            }
+          )
+        },
+        function (error) {
           if (error) {
             res.status(500).json({
               error

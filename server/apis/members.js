@@ -633,148 +633,166 @@ router.post("/add_referral", function (req, res) {
         err
       })
     } else {
-      connection.beginTransaction(async function (err) {
-        if (err) {
-          connection.release()
-          res.status(500).json({
-            err
-          })
-        } else {
-          let throw_error = null
-          await new Promise(resolve => {
-            connection.query('SELECT COUNT(*) as count FROM members WHERE id=? AND user_asn_id=?', [req.decoded.data.user_id, req.body.member_data.ref_user_asn_id], function (error, results, fields) {
-              if (error) {
-                throw_error = error
-                resolve()
-              } else {
-                if (results[0].count > 0) {
-
-                  // deduct amount from wallet
-                  connection.query('SELECT wallet FROM `info_var_m` WHERE member_id=?', req.decoded.data.user_id, function (error, results, fields) {
+      db_util.connectTrans(connection, function (resolve, err_hdl) {
+        connection.query(
+          'SELECT COUNT(*) as count FROM members WHERE id=? AND user_asn_id=?',
+          [req.decoded.data.user_id, req.body.member_data.ref_user_asn_id],
+          function (error, results) {
+            if (error) {
+              err_hdl(error)
+              resolve()
+            } else {
+              if (results[0].count > 0) {
+                connection.query(
+                  `SELECT reg_amount FROM products WHERE id=?`,
+                  req.body.ext_data.product_id,
+                  function (error, result) {
                     if (error) {
-                      throw_error = error
-                      return resolve()
+                      err_hdl(error)
+                      resolve()
                     } else {
+                      if (result.length > 0) {
+                        let prd_reg_amount = result[0].reg_amount
 
-                      if (results.length > 0 && parseInt(results[0].wallet) >= 5000) {
-
-                        let set_w_params = {
-                          wallet: parseInt(results[0].wallet) - 5000
-                        }
-                        connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [set_w_params, req.decoded.data.user_id], function (error, results, fields) {
-                          if (error) {
-                            throw_error = error
-                            return resolve()
-                          } else {
-
-                            // grab last user asn id
-                            connection.query('SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1', function (error, results, fields) {
-                              if (error) {
-                                throw_error = error
-                                return resolve()
-                              } else {
-                                req.body.member_data['is_paid_m'] = 1
-                                req.body.member_data['active_sts'] = 1
-
-                                // id increament with last id
-                                let new_inc = (parseInt(results[0].user_asn_id) + 1).toString()
-                                new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
-                                req.body.member_data['user_asn_id'] = new_inc
-
-                                // insert member for new data
-                                connection.query('INSERT INTO members SET ?', req.body.member_data, function (error, results, fields) {
-                                  if (error) {
-                                    throw_error = error
-                                    return resolve()
-                                  } else {
-                                    let mem_id = results.insertId
-                                    req.body.prd_data['member_id'] = mem_id
-                                    connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
-                                      if (error) {
-                                        throw_error = error
-                                        return resolve()
-                                      } else {
-
-                                        connection.query('INSERT INTO `transactions_m` SET ?', {
-                                          member_id: req.decoded.data.user_id,
-                                          remarks: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
-                                          credit: 5000
-                                        }, function (error, results, fields) {
+                        // deduct amount from wallet
+                        connection.query(
+                          'SELECT wallet FROM `info_var_m` WHERE member_id=?',
+                          req.decoded.data.user_id,
+                          function (error, results) {
+                            if (error) {
+                              err_hdl(error)
+                              resolve()
+                            } else {
+                              if (results.length > 0 && parseInt(results[0].wallet) >= prd_reg_amount) {
+                                let set_w_params = {
+                                  wallet: parseInt(results[0].wallet) - prd_reg_amount
+                                }
+                                connection.query(
+                                  'UPDATE info_var_m SET ? WHERE member_id=?',
+                                  [set_w_params, req.decoded.data.user_id],
+                                  function (error, results) {
+                                    if (error) {
+                                      err_hdl(error)
+                                      resolve()
+                                    } else {
+                                      // grab last user asn id
+                                      connection.query(
+                                        'SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1',
+                                        function (error, results) {
                                           if (error) {
-                                            throw_error = error
-                                            return resolve()
+                                            err_hdl(error)
+                                            resolve()
                                           } else {
+                                            req.body.member_data['is_paid_m'] = 1
+                                            req.body.member_data['active_sts'] = 1
 
-                                            connection.query('INSERT INTO `notifications` SET ?', {
-                                              from_type: 1,
-                                              to_type: 0,
-                                              from_id: 1,
-                                              to_id: req.decoded.data.user_id,
-                                              message: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
-                                              notify_type: 0
-                                            }, function (error, results, fields) {
-                                              if (error) {
-                                                throw_error = error
-                                                return resolve()
-                                              } else {
-                                                after_paid_member(connection, mem_id, req.body.member_data['user_asn_id'], function (err) {
-                                                  if (err) {
-                                                    throw_error = err
-                                                  }
+                                            // id increament with last id
+                                            let new_inc = (parseInt(results[0].user_asn_id) + 1).toString()
+                                            new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
+                                            req.body.member_data['user_asn_id'] = new_inc
+
+                                            // insert member for new data
+                                            connection.query(
+                                              'INSERT INTO members SET ?',
+                                              req.body.member_data,
+                                              function (error, results) {
+                                                if (error) {
+                                                  err_hdl(error)
                                                   resolve()
-                                                })
-                                              }
+                                                } else {
+                                                  let mem_id = results.insertId
 
-                                            })
+                                                  connection.query(
+                                                    'INSERT INTO `user_product_details` SET ?', {
+                                                      product_id: req.body.ext_data.product_id,
+                                                      member_id: mem_id
+                                                    },
+                                                    function (error, results) {
+                                                      if (error) {
+                                                        err_hdl(error)
+                                                        resolve()
+                                                      } else {
+                                                        connection.query(
+                                                          'INSERT INTO `mem_link_crzb` SET ?', {
+                                                            member_id: mem_id,
+                                                            crzb_id: req.body.ext_data.crzb_id
+                                                          },
+                                                          function (error, results) {
+                                                            if (error) {
+                                                              err_hdl(error)
+                                                              resolve()
+                                                            } else {
+                                                              connection.query(
+                                                                'INSERT INTO `transactions_m` SET ?', {
+                                                                  member_id: req.decoded.data.user_id,
+                                                                  remarks: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
+                                                                  credit: prd_reg_amount
+                                                                },
+                                                                function (error, results) {
+                                                                  if (error) {
+                                                                    err_hdl(error)
+                                                                    resolve()
+                                                                  } else {
+                                                                    connection.query('INSERT INTO `notifications` SET ?', {
+                                                                      from_type: 1,
+                                                                      to_type: 0,
+                                                                      from_id: 1,
+                                                                      to_id: req.decoded.data.user_id,
+                                                                      message: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
+                                                                      notify_type: 0
+                                                                    }, function (error, results) {
+                                                                      if (error) {
+                                                                        err_hdl(error)
+                                                                        resolve()
+                                                                      } else {
+                                                                        after_paid_member(connection, mem_id, req.body.member_data['user_asn_id'], function (err) {
+                                                                          if (err) {
+                                                                            err_hdl(err)
+                                                                          }
+                                                                          resolve()
+                                                                        })
+                                                                      }
+                                                                    })
+                                                                  }
+                                                                })
+                                                            }
+                                                          })
+                                                      }
+                                                    })
+                                                }
+                                              })
                                           }
                                         })
-                                      }
-                                    })
-                                  }
-                                })
+                                    }
+                                  })
+                              } else {
+                                err_hdl(`You have not Rs. ${prd_reg_amount}/- in your wallet!`)
+                                resolve()
                               }
-                            })
-                          }
-                        })
+                            }
+                          })
                       } else {
-                        throw_error = "You have not Rs. 5000/- in your wallet!"
-                        return resolve()
+                        err_hdl("Invalid Product Selected!")
+                        resolve()
                       }
                     }
-                  })
-                } else {
-                  throw_error = "Not valid user!"
-                  resolve()
-                }
-              }
-            })
-          })
-
-          if (throw_error) {
-            return connection.rollback(function () {
-              connection.release()
-              res.status(500).json({
-                throw_error
-              })
-            });
-          } else {
-            connection.commit(function (err) {
-              if (err) {
-                return connection.rollback(function () {
-                  connection.release()
-                  res.status(500).json({
-                    err
-                  })
-                });
+                  }
+                )
               } else {
-                connection.release()
-                res.json({
-                  status: true
-                })
+                err_hdl("Invalid User!")
+                resolve()
               }
-            })
-          }
-
+            }
+          })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
         }
       })
     }

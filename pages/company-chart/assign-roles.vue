@@ -130,9 +130,9 @@
                   <b-field grouped>
                     <p class="control">
                       <button
-                        @click.prevent="deleteRow(row.id)"
-                        class="button is-small is-danger"
-                      >Delete</button>
+                        @click.prevent="toggleSts(row, !row.role_status)"
+                        :class="['button is-small', {'is-danger': row.role_status === 1, 'is-success': row.role_status === 0}]"
+                      >{{ row.role_status === 0 ? 'Active':'Deactive' }}</button>
                     </p>
                   </b-field>
                 </td>
@@ -207,12 +207,12 @@ export default {
               if (!Validator.isEmpty(value)) {
                 self.s_user_cac_load = true;
                 return self.$axios
-                  .post("/api/crzb-list/get-user-info", {
+                  .post("/api/assign-role/get-user-check", {
                     email: value
                   })
                   .then(res => {
-                    if (res.data.count < 1) {
-                      return "Invalid User.";
+                    if (res.data.status === false) {
+                      return res.data.message;
                     } else {
                       self.s_name = res.data.result.full_name;
                       self.f_data.mem_id = res.data.result.id;
@@ -246,36 +246,44 @@ export default {
         } else {
           return validator.custom(() => {
             if (!Validator.isEmpty(value)) {
-              return new Promise(resolve => {
-                let interval = setInterval(async function() {
-                  if (self.s_user_cac_load === false) {
-                    await self.$axios
-                      .get(`/api/assign-role/exist-check/${value}`, {
-                        params: {
-                          mem_id: self.f_data.mem_id
-                        }
-                      })
-                      .then(res => {
-                        if (res.data.count > 0) {
-                          if (
-                            res.data.result.member_id === self.f_data.mem_id
-                          ) {
-                            return resolve(
-                              "This user is already assigned role."
-                            );
-                          }
-                          return resolve("Already assigned.");
-                        }
-                      });
-                    clearInterval(interval);
-                    return resolve();
+              return self.$axios
+                .get(`/api/assign-role/exist-check/${value}`)
+                .then(res => {
+                  if (res.data.count > 0) {
+                    return "Already assigned.";
                   }
-                  if (self.validation.hasError("f_data.mem_id")) {
-                    clearInterval(interval);
-                    return resolve();
-                  }
-                }, 100);
-              });
+                });
+
+              // new Promise(resolve => {
+              //   let interval = setInterval(async function() {
+              //     if (self.s_user_cac_load === false) {
+              //       await self.$axios
+              //         .get(`/api/assign-role/exist-check/${value}`, {
+              //           params: {
+              //             mem_id: self.f_data.mem_id
+              //           }
+              //         })
+              //         .then(res => {
+              //           if (res.data.count > 0) {
+              //             if (
+              //               res.data.result.member_id === self.f_data.mem_id
+              //             ) {
+              //               return resolve(
+              //                 "This user is already assigned role."
+              //               );
+              //             }
+              //             return resolve("Already assigned.");
+              //           }
+              //         });
+              //       clearInterval(interval);
+              //       return resolve();
+              //     }
+              //     if (self.validation.hasError("f_data.mem_id")) {
+              //       clearInterval(interval);
+              //       return resolve();
+              //     }
+              //   }, 100);
+              // });
             }
           });
         }
@@ -391,25 +399,30 @@ export default {
       this.submitted = false;
       this.validation.reset();
     },
-    deleteRow(id) {
+    toggleSts(row, asn_sts) {
       const self = this;
       this.$dialog.confirm({
-        title: "Delete assigned member!",
-        message:
-          "Are you sure you want to <b>delete</b> assigned member? This action cannot be undone.",
-        confirmText: "Delete",
-        type: "is-danger",
+        title: `${asn_sts ? "Active" : "Deactive"} assigned member!`,
+        message: `Are you sure you want to <b>${
+          asn_sts ? "active" : "deactive"
+        }</b> assigned member?`,
+        confirmText: `${asn_sts ? "Active" : "Deactive"}`,
+        type: `${asn_sts ? "is-success" : "is-danger"}`,
         hasIcon: true,
         onConfirm: async () => {
           self.loading = true;
           await self.$axios
-            .post("/api/assign-role/delete", {
-              del_id: id
+            .post("/api/assign-role/toggle-status", {
+              row_id: row.id,
+              change_sts: asn_sts,
+              crzb_id: row.crzb_id
             })
             .then(async res => {
               self.$toast.open({
                 duration: 1000,
-                message: "Successfully assigned member deleted.",
+                message: `Successfully assigned member ${
+                  asn_sts ? "Active" : "Deactive"
+                }.`,
                 position: "is-bottom",
                 type: "is-success"
               });

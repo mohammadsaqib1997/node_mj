@@ -297,36 +297,6 @@ router.get('/ac_search_list/:role/:search', (req, res) => {
 
 })
 
-router.post('/get-user-info', function (req, res) {
-  db.getConnection(function (err, connection) {
-    if (err) {
-      res.status(500).json({
-        err
-      })
-    } else {
-      connection.query('SELECT id, full_name FROM `members` where (binary `email`=? OR binary `user_asn_id`=?) AND is_paid_m=1', [req.body.email, req.body.email], function (error, results, fields) {
-        connection.release();
-        if (error) {
-          res.status(500).json({
-            error
-          })
-        } else {
-          if (results.length > 0) {
-            res.json({
-              result: results[0],
-              count: 1
-            })
-          } else {
-            res.json({
-              count: 0
-            })
-          }
-        }
-      });
-    }
-  })
-})
-
 router.post('/branch-added', function (req, res) {
   db.getConnection(function (err, connection) {
     if (err) {

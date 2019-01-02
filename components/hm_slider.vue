@@ -76,15 +76,16 @@ export default {
     }
   },
   watch: {
-    diff_sec_check: function(val) {
-      const self = this;
-      if (val < 2) {
-        self.$store.commit("pageLoadingSet", true);
-        setTimeout(function() {
-          self.$store.commit("pageLoadingSet", false);
-        }, 1500);
-      }
-    }
+    // diff_sec_check: function(val) {
+    //   const self = this;
+    //   if (val < 2) {
+    //     console.log("this is hit")
+    //     self.$store.commit("pageLoadingSet", true);
+    //     setTimeout(function() {
+    //       self.$store.commit("pageLoadingSet", false);
+    //     }, 1500);
+    //   }
+    // }
   }
 };
 </script>
