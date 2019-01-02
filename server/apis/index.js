@@ -57,6 +57,7 @@ router.use("/c_subsidiary", cors(corsOptions), require('./c_subsidiary.js'))
 router.use("/voucher", cors(corsOptions), require('./vouchers.js'))
 router.use("/crzb-list", cors(corsOptions), require('./crzb_list.js'))
 router.use("/assign-role", cors(corsOptions), require('./assign-role.js'))
+router.use("/assign-role-trans", cors(corsOptions), require('./assign-role-trans.js'))
 
 router.all("*", function (req, res) {
   res.status(403).json({

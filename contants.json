@@ -82,5 +82,11 @@
             "2": "Zone",
             "3": "Branch"
         }
+    },
+    "mem_link_crzb": {
+        "linked_type": {
+            "0": "old user linked in crzb",
+            "1": "New user linked in crzb"
+        }
     }
 }

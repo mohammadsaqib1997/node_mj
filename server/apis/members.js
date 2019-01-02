@@ -715,7 +715,8 @@ router.post("/add_referral", function (req, res) {
                                                         connection.query(
                                                           'INSERT INTO `mem_link_crzb` SET ?', {
                                                             member_id: mem_id,
-                                                            crzb_id: req.body.ext_data.crzb_id
+                                                            crzb_id: req.body.ext_data.crzb_id,
+                                                            linked_type: 1
                                                           },
                                                           function (error, results) {
                                                             if (error) {
@@ -849,7 +850,8 @@ router.post('/add', function (req, res) {
               } else {
                 connection.query('INSERT INTO `mem_link_crzb` SET ?', {
                   member_id: mem_id,
-                  crzb_id: req.body.ext_data.crzb_id
+                  crzb_id: req.body.ext_data.crzb_id,
+                  linked_type: 1
                 }, function (error, results, fields) {
                   if (error) {
                     err_hdl(error)

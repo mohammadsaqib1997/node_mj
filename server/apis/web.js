@@ -968,7 +968,8 @@ router.post('/signup', (req, res) => {
                       } else {
                         connection.query('INSERT INTO `mem_link_crzb` SET ?', {
                           member_id: mem_id,
-                          crzb_id: req.body.ext_data.crzb_id
+                          crzb_id: req.body.ext_data.crzb_id,
+                          linked_type: 1
                         }, function (error, results, fields) {
                           if (error) {
                             throw_error = error
