@@ -925,42 +925,53 @@ router.post('/update', function (req, res) {
                     err_hdl(error)
                     resolve()
                   } else {
-                    connection.query('SELECT member_id FROM mem_link_crzb WHERE member_id=?', [req.body.update_id], function (error, results, fields) {
-                      if (error) {
-                        err_hdl(error)
-                        resolve()
-                      } else {
-                        let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
-                        let params = [{
-                          crzb_id: req.body.ext_data.crzb_id
-                        }, req.body.update_id]
+                    connection.query(
+                      `SELECT link_mem.member_id, m.is_paid_m FROM members as m
+                      LEFT JOIN mem_link_crzb as link_mem
+                      ON m.id = link_mem.member_id
+                      WHERE m.id=?`,
+                      [req.body.update_id],
+                      function (error, results, fields) {
+                        if (error) {
+                          err_hdl(error)
+                          resolve()
+                        } else {
+                          let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
+                          let params = [{
+                            crzb_id: req.body.ext_data.crzb_id
+                          }, req.body.update_id]
 
-                        if (results.length < 1) {
-                          query = 'INSERT INTO `mem_link_crzb` SET ?'
-                          params = [{
-                            crzb_id: req.body.ext_data.crzb_id,
-                            member_id: req.body.update_id
-                          }]
-                        }
-                        connection.query(query, params, function (error, results, fields) {
-                          if (error) {
-                            err_hdl(error)
-                            resolve()
-                          } else {
-                            if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
-                              after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
-                                if (err) {
-                                  err_hdl(err)
-                                }
-                                resolve()
-                              })
-                            } else {
-                              resolve()
+                          if (results.length > 0) {
+                            if (!results[0].member_id) {
+                              query = 'INSERT INTO `mem_link_crzb` SET ?'
+                              params = [{
+                                crzb_id: req.body.ext_data.crzb_id,
+                                member_id: req.body.update_id
+                              }]
+                            }
+                            if (results[0].is_paid_m == 0) {
+                              params[0]['linked_type'] = 1
                             }
                           }
-                        })
-                      }
-                    })
+                          connection.query(query, params, function (error, results, fields) {
+                            if (error) {
+                              err_hdl(error)
+                              resolve()
+                            } else {
+                              if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
+                                after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
+                                  if (err) {
+                                    err_hdl(err)
+                                  }
+                                  resolve()
+                                })
+                              } else {
+                                resolve()
+                              }
+                            }
+                          })
+                        }
+                      })
                   }
                 })
               }
