@@ -92,33 +92,22 @@
           >
             <template slot="thead">
               <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Voucher ID</th>
-                <th>Action</th>
+                <th>MJ ID</th>
+                <th>MJ Name</th>
+                <th>Code</th>
+                <th>Area Name</th>
+                <th>Monthly Sale</th>
+                <th>Total Sale</th>
               </tr>
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
-                <td>{{ row.id }}</td>
-                <td>{{ $store.getters.formatDate(row.v_date) }}</td>
-                <td>{{ row.v_id }}</td>
-                <td>
-                  <b-field grouped>
-                    <p class="control">
-                      <button
-                        @click.prevent="deleteVoucher(row.id)"
-                        class="button is-small is-danger"
-                      >Delete</button>
-                    </p>
-                    <p class="control">
-                      <button
-                        @click.prevent="loadUpdateData(row.id)"
-                        class="button is-small is-info"
-                      >Edit</button>
-                    </p>
-                  </b-field>
-                </td>
+                <td>{{ row.mj_id }}</td>
+                <td>{{ row.mj_name }}</td>
+                <td>{{ row.crzb_code }}</td>
+                <td>{{ row.crzb_name }}</td>
+                <td>{{ row.total_month_comm ? row.total_month_comm : 0 }}/-</td>
+                <td>{{ row.total_comm ? row.total_comm: 0 }}/-</td>
               </tr>
             </template>
           </tableComp>
@@ -208,6 +197,17 @@ export default {
         .get("/api/assign-role-trans/commission-country")
         .then(res => {
           self.countries_comm = res.data.countries;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      await self.$axios
+        .get("/api/assign-role-trans/commission-list", {
+          params: self.load_params
+        })
+        .then(res => {
+          self.l_data = res.data.data;
+          self.num_rows = res.data.tot_rows;
         })
         .catch(err => {
           console.log(err);

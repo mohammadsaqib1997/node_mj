@@ -112,7 +112,7 @@ const authRoutes = [{
         type_allowed: [2]
     },
     // {
-    //     name: "campaign-create",
+    //     name: "company-chart-hierarchy",
     //     type_allowed: [2]
     // }
 ]

@@ -17,9 +17,163 @@ router.use(function (req, res, next) {
   }
 })
 
-router.get('/list', function (req, res) {
-  res.json({
-    status: true
+router.get('/sale-list', function (req, res) {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `select 
+            COUNT(*) as tot_rows
+          from assign_roles as asr
+          join crzb_list as crzb_l
+          on asr.crzb_id = crzb_l.id
+          join members as m
+          on asr.member_id = m.id
+          where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')`,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
+            connection.query(
+              `select                   
+                  m.user_asn_id as mj_id,
+                  m.full_name as mj_name,
+                  get_crzb_rd_code(crzb_l.id) as crzb_code,
+                  crzb_l.name as crzb_name,
+                  crzb_l.type as crzb_type,
+                  get_crzb_mem_sale(crzb_l.id) as total_sale,
+                  get_crzb_mem_sale_monthly(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
+                from assign_roles as asr
+                join crzb_list as crzb_l
+                on asr.crzb_id = crzb_l.id
+                join members as m
+                on asr.member_id = m.id
+                where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')
+                order by crzb_type, crzb_id
+                LIMIT ${limit}
+                OFFSET ${offset}`,
+              function (error, results) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
+  })
+})
+
+router.get('/commission-list', function (req, res) {
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `select 
+            COUNT(*) as tot_rows
+          from assign_roles as asr
+          join crzb_list as crzb_l
+          on asr.crzb_id = crzb_l.id
+          join members as m
+          on asr.member_id = m.id
+          where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')`,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
+            connection.query(
+              `select                   
+                  m.user_asn_id as mj_id,
+                  m.full_name as mj_name,
+                  get_crzb_rd_code(crzb_l.id) as crzb_code,
+                  crzb_l.name as crzb_name,
+                  crzb_l.type as crzb_type,
+                  get_crzb_mem_comm(crzb_l.id) as total_comm,
+                  get_crzb_mem_comm_monthly(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
+                from assign_roles as asr
+                join crzb_list as crzb_l
+                on asr.crzb_id = crzb_l.id
+                join members as m
+                on asr.member_id = m.id
+                where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')
+                order by crzb_type, crzb_id
+                LIMIT ${limit}
+                OFFSET ${offset}`,
+              function (error, results) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
   })
 })
 
