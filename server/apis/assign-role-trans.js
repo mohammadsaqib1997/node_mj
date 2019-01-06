@@ -43,12 +43,34 @@ router.get('/sale-list', function (req, res) {
       connection.query(
         `select 
             COUNT(*) as tot_rows
-          from assign_roles as asr
-          join crzb_list as crzb_l
-          on asr.crzb_id = crzb_l.id
-          join members as m
-          on asr.member_id = m.id
-          where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')`,
+            from mem_link_crzb as mem_lk_crzb
+            join members as m
+            on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+            join (
+              select 
+                crzb_l.id,
+                get_crzb_rd_code(crzb_l.id) as crzb_code,
+                get_crzb_with_p_name(crzb_l.id) as crzb_name
+                from crzb_list as crzb_l
+            ) as crzb_var
+            on mem_lk_crzb.crzb_id = crzb_var.id
+            
+            left join assign_roles_trans as asn_role_tns
+            on mem_lk_crzb.crzb_id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+            
+            left join members as asn_mem
+            on asn_role_tns.member_id = asn_mem.id
+            
+            where 
+            mem_lk_crzb.linked_type=1 and
+            (
+              asn_mem.user_asn_id like '%${search}%' or
+              asn_mem.full_name like '%${search}%' or
+              crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+              crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+            )
+            group by mem_lk_crzb.crzb_id, asn_role_tns.member_id`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -56,26 +78,53 @@ router.get('/sale-list', function (req, res) {
               error
             })
           } else {
+            if (result.length < 1) {
+              connection.release()
+              return res.json({
+                data: [],
+                tot_rows: 0
+              })
+            }
             let tot_rows = result[0].tot_rows
             let date = moment()
             let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
               gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select                   
-                  m.user_asn_id as mj_id,
-                  m.full_name as mj_name,
-                  get_crzb_rd_code(crzb_l.id) as crzb_code,
-                  crzb_l.name as crzb_name,
-                  crzb_l.type as crzb_type,
-                  get_crzb_mem_sale(crzb_l.id) as total_sale,
-                  get_crzb_mem_sale_monthly(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
-                from assign_roles as asr
-                join crzb_list as crzb_l
-                on asr.crzb_id = crzb_l.id
+              `select 
+                    asn_mem.user_asn_id,
+                    asn_mem.full_name,
+                    crzb_var.crzb_code,
+                    crzb_var.crzb_name,
+                    count(*) as total_sale,
+                    get_crzb_mem_sale_monthly(mem_lk_crzb.crzb_id, asn_mem.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
+                
+                from mem_link_crzb as mem_lk_crzb
                 join members as m
-                on asr.member_id = m.id
-                where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')
-                order by crzb_type, crzb_id
+                on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+                join (
+                  select 
+                    crzb_l.id,
+                    get_crzb_rd_code(crzb_l.id) as crzb_code,
+                    get_crzb_with_p_name(crzb_l.id) as crzb_name
+                    from crzb_list as crzb_l
+                ) as crzb_var
+                on mem_lk_crzb.crzb_id = crzb_var.id
+                
+                left join assign_roles_trans as asn_role_tns
+                on mem_lk_crzb.crzb_id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+                
+                left join members as asn_mem
+                on asn_role_tns.member_id = asn_mem.id
+                
+                where mem_lk_crzb.linked_type=1 and (
+                  asn_mem.user_asn_id like '%${search}%' or
+                  asn_mem.full_name like '%${search}%' or
+                  crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                  crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+                )
+                group by mem_lk_crzb.crzb_id, asn_role_tns.member_id
+                order by total_sale desc
                 LIMIT ${limit}
                 OFFSET ${offset}`,
               function (error, results) {
@@ -123,12 +172,26 @@ router.get('/commission-list', function (req, res) {
       connection.query(
         `select 
             COUNT(*) as tot_rows
-          from assign_roles as asr
-          join crzb_list as crzb_l
-          on asr.crzb_id = crzb_l.id
+          from assign_roles_trans as asr_trans
           join members as m
-          on asr.member_id = m.id
-          where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')`,
+          on asr_trans.member_id = m.id
+          
+          join (
+            select 
+            crzb_l.id,
+            get_crzb_rd_code(crzb_l.id) as crzb_code,
+            get_crzb_with_p_name(crzb_l.id) as crzb_name
+            from crzb_list as crzb_l
+          ) as crzb_var
+          on asr_trans.crzb_id = crzb_var.id
+          
+          where (
+            m.user_asn_id like '%${search}%' or
+              m.full_name like '%${search}%' or
+              crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
+              crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+            )
+          group by m.id, crzb_var.id`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -136,26 +199,47 @@ router.get('/commission-list', function (req, res) {
               error
             })
           } else {
+            if (result.length < 1) {
+              connection.release()
+              return res.json({
+                data: [],
+                tot_rows: 0
+              })
+            }
             let tot_rows = result[0].tot_rows
             let date = moment()
             let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
               gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select                   
+              `select 
                   m.user_asn_id as mj_id,
                   m.full_name as mj_name,
-                  get_crzb_rd_code(crzb_l.id) as crzb_code,
-                  crzb_l.name as crzb_name,
-                  crzb_l.type as crzb_type,
-                  get_crzb_mem_comm(crzb_l.id) as total_comm,
-                  get_crzb_mem_comm_monthly(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
-                from assign_roles as asr
-                join crzb_list as crzb_l
-                on asr.crzb_id = crzb_l.id
+                  crzb_var.crzb_code,
+                  crzb_var.crzb_name,
+                  sum(asr_trans.amount) as total_comm,
+                  get_crzb_mem_comm_monthly(crzb_var.id, m.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
+                  
+                from assign_roles_trans as asr_trans
                 join members as m
-                on asr.member_id = m.id
-                where asr.role_status=1 and (m.user_asn_id like '%${search}%' or m.full_name like '%${search}%' or crzb_l.name like '%${search}%')
-                order by crzb_type, crzb_id
+                on asr_trans.member_id = m.id
+                
+                join (
+                  select 
+                  crzb_l.id,
+                  get_crzb_rd_code(crzb_l.id) as crzb_code,
+                  get_crzb_with_p_name(crzb_l.id) as crzb_name
+                  from crzb_list as crzb_l
+                ) as crzb_var
+                on asr_trans.crzb_id = crzb_var.id
+                
+                where (
+                  m.user_asn_id like '%${search}%' or
+                    m.full_name like '%${search}%' or
+                    crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
+                    crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+                  )
+                group by m.id, crzb_var.id
+                order by total_comm desc
                 LIMIT ${limit}
                 OFFSET ${offset}`,
               function (error, results) {

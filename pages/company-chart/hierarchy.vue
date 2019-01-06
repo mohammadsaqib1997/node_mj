@@ -8,13 +8,19 @@
       </div>
       <div class="body">
         <div class="section">
-          <HCountries></HCountries>
-          <hr>
-          <HRegions></HRegions>
-          <hr>
-          <HZones></HZones>
-          <hr>
-          <HBranches></HBranches>
+          <HCountries id="country-cont" @load_child="setNextLoad(1, $event)"></HCountries>
+          <template v-if="tab_act > 0 && r_p_id !== null">
+            <hr>
+            <HRegions id="region-cont" :parent_id="r_p_id" @load_child="setNextLoad(2, $event)"></HRegions>
+          </template>
+          <template v-if="tab_act > 1 && z_p_id !== null">
+            <hr>
+            <HZones id="zone-cont" :parent_id="z_p_id" @load_child="setNextLoad(3, $event)"></HZones>
+          </template>
+          <template v-if="tab_act > 2 && b_p_id !== null">
+            <hr>
+            <HBranches id="branch-cont" :parent_id="b_p_id"></HBranches>
+          </template>
         </div>
       </div>
     </div>
@@ -36,8 +42,23 @@ export default {
   },
   data() {
     return {
-      tab_act: 0
+      tab_act: 0,
+      r_p_id: null,
+      z_p_id: null,
+      b_p_id: null
     };
+  },
+  methods: {
+    setNextLoad(type, id) {
+      this.tab_act = type;
+      if (type === 1) {
+        this.r_p_id = id;
+      } else if (type === 2) {
+        this.z_p_id = id;
+      } else if (type === 3) {
+        this.b_p_id = id;
+      }
+    }
   }
 };
 </script>
@@ -53,9 +74,18 @@ export default {
       font-weight: 100;
       margin-bottom: 1rem;
     }
-
-    hr {
+    .main-box > .body > .section > hr {
       background-color: #d9bd68;
+    }
+
+    .table-des-1 {
+      .table {
+        tbody {
+          tr {
+            cursor: pointer;
+          }
+        }
+      }
     }
   }
 }

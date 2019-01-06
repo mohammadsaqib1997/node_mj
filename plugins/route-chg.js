@@ -108,13 +108,13 @@ const authRoutes = [{
         type_allowed: [2]
     },
     {
-        name: "company-chart-sales",
+        name: "company-chart-sales-commission",
         type_allowed: [2]
     },
-    // {
-    //     name: "company-chart-hierarchy",
-    //     type_allowed: [2]
-    // }
+    {
+        name: "company-chart-hierarchy",
+        type_allowed: [2]
+    }
 ]
 
 const un_paid_routes = [{

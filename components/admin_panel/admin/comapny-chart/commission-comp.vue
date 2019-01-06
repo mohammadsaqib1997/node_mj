@@ -96,8 +96,8 @@
                 <th>MJ Name</th>
                 <th>Code</th>
                 <th>Area Name</th>
-                <th>Monthly Sale</th>
-                <th>Total Sale</th>
+                <th>Monthly Commission</th>
+                <th>Total Commission</th>
               </tr>
             </template>
             <template slot="tbody">

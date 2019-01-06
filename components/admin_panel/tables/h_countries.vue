@@ -20,21 +20,25 @@
       <template slot="thead">
         <tr>
           <th>MJ ID</th>
+          <th>MJ Name</th>
           <th>Code</th>
           <th>Area Name</th>
-          <th>Total Regions</th>
-          <th>Total Sale</th>
+          <th>Total Sales</th>
+          <th>Monthly Sales</th>
           <th>Total Commission</th>
+          <th>Monthly Commission</th>
         </tr>
       </template>
       <template slot="tbody">
-        <tr v-for="(row, ind) in l_data" :key="ind">
-          <td>{{ row.mj_id }}</td>
+        <tr v-for="(row, ind) in l_data" :key="ind" @click.prevent="nextChild(row.crzb_id)">
+          <td>{{ row.user_asn_id }}</td>
+          <td>{{ row.full_name }}</td>
           <td>{{ row.crzb_code }}</td>
-          <td>{{ row.crzb_name }}</td>
-          <td>{{ row.crzb_name }}</td>
-          <td>{{ row.total_month_sale }}</td>
+          <td>{{ row.area_name }}</td>
           <td>{{ row.total_sale }}</td>
+          <td>{{ row.monthly_sale }}</td>
+          <td>{{ row.total_comm }}</td>
+          <td>{{ row.monthly_comm }}</td>
         </tr>
       </template>
     </tableComp>
@@ -51,23 +55,25 @@ export default {
     tableComp,
     tblTopFilter
   },
-  data() {
-    return {
-      l_data: [
-        {
-          mj_id: 1,
-          crzb_code: 1,
-          crzb_name: 1,
-          total_month_sale: 1,
-          total_sale: 1,
-        }
-      ]
-    }
-  },
   methods: {
-    loadData() {
+    async loadData() {
       const self = this;
+      self.loading = true;
+      await self.$axios
+        .get("/api/company-hierarchy/crzb-list/0/0", {
+          params: self.load_params
+        })
+        .then(res => {
+          self.l_data = res.data.data;
+          self.num_rows = res.data.tot_rows;
+        })
+        .catch(err => {
+          console.log(err);
+        });
       self.loading = false;
+    },
+    nextChild(crzb_id) {
+      this.$emit('load_child', crzb_id)
     }
   }
 };

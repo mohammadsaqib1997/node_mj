@@ -102,8 +102,8 @@
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
-                <td>{{ row.mj_id }}</td>
-                <td>{{ row.mj_name }}</td>
+                <td>{{ row.user_asn_id }}</td>
+                <td>{{ row.full_name }}</td>
                 <td>{{ row.crzb_code }}</td>
                 <td>{{ row.crzb_name }}</td>
                 <td>{{ row.total_month_sale }}</td>

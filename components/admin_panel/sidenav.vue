@@ -95,10 +95,10 @@ export default {
               show: [2]
             },
             {
-              name: "sales",
+              name: "sales-commission",
               active: false,
-              url: "/company-chart/sales",
-              title: "Sales",
+              url: "/company-chart/sales-commission",
+              title: "Sales - Commission",
               show: [2]
             },
             {

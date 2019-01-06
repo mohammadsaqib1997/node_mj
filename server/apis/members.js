@@ -1250,6 +1250,28 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
         throw_error = error
         return resolve()
       } else {
+
+        if (results[0].ref_user_asn_id == null) {
+          results[0].ref_user_asn_id = '000000272'
+          await new Promise(resolve2 => {
+            connection.query(
+              `UPDATE members SET ? WHERE id=?`,
+              [{
+                ref_user_asn_id: '000000272'
+              }, mem_id],
+              function (error, result) {
+                if (error) {
+                  throw_error = error
+                }
+                return resolve2()
+              }
+            )
+          })
+          if (throw_error) {
+            return resolve()
+          }
+        }
+
         if (results[0].ref_user_asn_id !== null) {
           let grab_ref_usr_ids = [results[0].ref_user_asn_id]
 
@@ -1463,6 +1485,8 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                       }
                       set_param['wallet'] = asn_role_mem_wallet + commission_amount
 
+                      add_to_c_wallet = add_to_c_wallet - commission_amount
+
                       let crzb_names = ['Country', 'Region', 'Zone', 'Branch']
 
                       connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, asn_role_mem_id], function (error, results) {
@@ -1476,6 +1500,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                             member_id: asn_role_mem_id,
                             crzb_id,
                             asn_role_id,
+                            linked_member_id: mem_id,
                             amount: commission_amount
                           }, function (error, results, fields) {
                             if (error) {
@@ -1508,7 +1533,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                                     } else {
                                       // transaction insert in company
                                       connection.query('INSERT INTO `transactions_comp` SET ?', {
-                                        remarks: `Issued Commission For ${crzb_names[crzb_type]} To User ID ${asn_role_mem_asn_id}.`,
+                                        remarks: `Issued Commission For ${crzb_names[crzb_type]} To User ID ${asn_role_mem_asn_id}`,
                                         credit: commission_amount
                                       }, function (error, results, fields) {
                                         if (error) {
@@ -1583,7 +1608,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                 to_type: 1,
                 from_id: mem_id,
                 to_id: 1,
-                message: `${(is_add) ? "Add" : "Deduct"} Amount Rs.${add_to_c_wallet}/- From Wallet After Paid Member.`,
+                message: `${(is_add) ? "Add" : "Deduct"} Amount Rs.${add_to_c_wallet}/- From Wallet After Paid Member`,
                 notify_type: 0
               }, function (error, results, fields) {
                 if (error) {
