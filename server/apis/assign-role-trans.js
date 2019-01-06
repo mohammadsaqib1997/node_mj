@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const moment = require('moment')
 const _ = require('lodash')
+const config = require('../config.js')
 
 const db = require('../db.js')
 const db_util = require('../func/db-util.js')
@@ -67,8 +68,8 @@ router.get('/sale-list', function (req, res) {
             (
               asn_mem.user_asn_id like '%${search}%' or
               asn_mem.full_name like '%${search}%' or
-              crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-              crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              crzb_var.crzb_code collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%' or 
+              crzb_var.crzb_name collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%'
             )
             group by mem_lk_crzb.crzb_id, asn_role_tns.member_id`,
         function (error, result) {
@@ -120,8 +121,8 @@ router.get('/sale-list', function (req, res) {
                 where mem_lk_crzb.linked_type=1 and (
                   asn_mem.user_asn_id like '%${search}%' or
                   asn_mem.full_name like '%${search}%' or
-                  crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-                  crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+                  crzb_var.crzb_code collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%' or 
+                  crzb_var.crzb_name collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%'
                 )
                 group by mem_lk_crzb.crzb_id, asn_role_tns.member_id
                 order by total_sale desc
@@ -188,8 +189,8 @@ router.get('/commission-list', function (req, res) {
           where (
             m.user_asn_id like '%${search}%' or
               m.full_name like '%${search}%' or
-              crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
-              crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              crzb_var.crzb_code collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%' or
+              crzb_var.crzb_name collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%'
             )
           group by m.id, crzb_var.id`,
         function (error, result) {
@@ -235,8 +236,8 @@ router.get('/commission-list', function (req, res) {
                 where (
                   m.user_asn_id like '%${search}%' or
                     m.full_name like '%${search}%' or
-                    crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
-                    crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+                    crzb_var.crzb_code collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%' or
+                    crzb_var.crzb_name collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%'
                   )
                 group by m.id, crzb_var.id
                 order by total_comm desc
