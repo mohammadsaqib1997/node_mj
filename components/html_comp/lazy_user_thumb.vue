@@ -1,8 +1,12 @@
 <template>
   <div class="thumb">
     <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
-    <img v-if="img === null" src="~/assets/img/default.png" />
-    <img v-else-if="render_img_url !== null && img !== null" :src="render_img_url" @load="loading=false" />
+    <img v-if="img === null" src="~/assets/img/default.png">
+    <img
+      v-else-if="render_img_url !== null && img !== null"
+      :src="render_img_url"
+      @load="loading=false"
+    >
   </div>
 </template>
 
@@ -15,10 +19,18 @@ export default {
     }
   },
   async mounted() {
+    this.loading = true;
     if (this.img !== null) {
-      this.loading = true;
       await this.loadImg();
-    } else {
+    }
+    this.loading = false;
+  },
+  watch: {
+    async img(val) {
+      this.loading = true;
+      if (this.img !== null) {
+        await this.loadImg();
+      }
       this.loading = false;
     }
   },
@@ -78,4 +90,3 @@ export default {
   }
 }
 </style>
-

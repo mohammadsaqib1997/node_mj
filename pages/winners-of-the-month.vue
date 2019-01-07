@@ -45,7 +45,7 @@
                       <tr v-for="(row, ind) in auto_rwds" :key="ind">
                         <th>{{ ind+1 }}</th>
                         <td>
-                          <userThumbLazy :img="row.file_name"></userThumbLazy>
+                          <userThumbLazy :img="row.file_name" :key="ind"></userThumbLazy>
                         </td>
                         <td>{{ row.full_name }}</td>
                         <td>LVL {{ row.level }}</td>
@@ -110,7 +110,7 @@
                       <tr v-for="(row, ind) in self_rwds" :key="ind">
                         <th>{{ ind+1 }}</th>
                         <td>
-                          <userThumbLazy :img="row.file_name"></userThumbLazy>
+                          <userThumbLazy :img="row.file_name" :key="ind"></userThumbLazy>
                         </td>
                         <td>{{ row.full_name }}</td>
                         <td>LVL {{ row.level }}</td>
