@@ -109,7 +109,7 @@ const authRoutes = [{
     },
     {
         name: "company-chart-sales-commission",
-        type_allowed: [2]
+        type_allowed: [0, 2]
     },
     {
         name: "company-chart-hierarchy",
@@ -129,6 +129,11 @@ const un_paid_routes = [{
     {
         name: 'dashboard'
     }
+]
+
+const crzbRoutes = [
+    'company-chart-sales-commission',
+    'company-chart-hierarchy'
 ]
 
 const unAuthRoutes = [
@@ -172,6 +177,10 @@ export default ({
                 await app.store.dispatch("initAuthCheck")
             }
 
+            if (app.store.state['crzb-module']['init'] === false && app.store.state.user) {
+                await app.store.dispatch("crzb-module/loadHeadInfo")
+            }
+
             next()
         }, 500)
     })
@@ -207,7 +216,7 @@ export default ({
                     return o.name === to.name
                 })
                 if (findAuthR) {
-                    if (_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) {
+                    if ((_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) || (_.indexOf(crzbRoutes, to.name) > -1 && !app.store.state['crzb-module']['hod_id'])) {
                         error({
                             statusCode: 403,
                             message: "Not permission on this page!"

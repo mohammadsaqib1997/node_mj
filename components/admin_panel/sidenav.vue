@@ -2,7 +2,7 @@
   #navbar.navbar-container
     .wrapper
       ul
-        li(v-for="item in menu" v-if="find(item.show, u_type)" :class="{ 'has-dropdown': item.hasOwnProperty('children'), 'is-active': item.active }")
+        li(v-for="item in menu" v-if="find(item.show, u_type) && store_check(item)" :class="{ 'has-dropdown': item.hasOwnProperty('children'), 'is-active': item.active }")
           template(v-if="item.url")
             nuxt-link.nav-item(:to="item.url")
               img.i-img(v-if="item.img !== null" :src="'/img/'+item.img+((item.active) ? '-active': '')+'.png'")
@@ -78,7 +78,8 @@ export default {
           icon: '<i class="fas fa-building"></i>',
           url: false,
           title: "Company Chart",
-          show: [2],
+          show: [0, 2],
+          store_key: "crzb-module.hod_id",
           children: [
             {
               name: "assign-roles",
@@ -99,7 +100,7 @@ export default {
               active: false,
               url: "/company-chart/sales-commission",
               title: "Sales - Commission",
-              show: [2]
+              show: [0, 2]
             },
             {
               name: "hierarchy",
@@ -474,6 +475,12 @@ export default {
 
     find(data, val) {
       return _.indexOf(data, val) > -1;
+    },
+    store_check(item) {
+      if (item.hasOwnProperty("store_key")) {
+        return _.get(this.$store.state, item.store_key, null) !== null;
+      }
+      return true;
     }
   }
 };

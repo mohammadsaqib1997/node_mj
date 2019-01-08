@@ -2,7 +2,9 @@
   <div class="main">
     <div class="box counter-box">
       <div class="columns is-gapless is-multiline">
-        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
+        <div
+          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
+        >
           <div class="flex">
             <div>
               <div class="tile is-ancestor c-tile is-parent">
@@ -32,33 +34,37 @@
             </div>
           </div>
         </div>
-        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
+        <div v-if="hod_data.type != 3" class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
-              <h5 class="title-cus-1">Region Sale</h5>
+              <h5
+                class="title-cus-1"
+              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Region') }} Sale</h5>
               <div class="tile is-ancestor c-tile is-parent">
                 <div class="tile is-vertical is-narrow">
-                  <div class="tile is-child" v-for="(region, ind) in regions_sale" :key="ind">
-                    <h5>{{ region.sale ? region.sale : 0 }}</h5>
+                  <div class="tile is-child" v-for="(row, ind) in lvl_2_sale" :key="ind">
+                    <h5>{{ row.sale ? row.sale : 0 }}</h5>
                   </div>
                 </div>
                 <div class="tile is-vertical">
-                  <div class="tile is-child" v-for="(region, ind) in regions_sale" :key="ind">
-                    <span>{{ region.r_name }}</span>
+                  <div class="tile is-child" v-for="(row, ind) in lvl_2_sale" :key="ind">
+                    <span>{{ row.name }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="column is-12-mobile is-12-tablet is-4-widescreen">
+        <div
+          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
+        >
           <div class="flex">
             <div>
               <div class="amount-wrapper">
-                <b>{{ getData(countries_sale, '0.c_name', 'Pakistan') }}</b>
-                <h1>{{ getData(countries_sale, '0.sale', 0) }}</h1>
+                <b>{{ getData(lvl_1_sale, 'c_name', 'Pakistan') }}</b>
+                <h1>{{ getData(lvl_1_sale, 'sale', 0) }}</h1>
               </div>
-              <h5 class="title-cus-2">Country Sale</h5>
+              <h5 class="title-cus-2">{{ type_data[getData(lvl_1_sale, 'type', 0)] }} Sale</h5>
             </div>
           </div>
         </div>
@@ -128,6 +134,11 @@ export default {
     tableComp,
     tblTopFilter
   },
+  computed: {
+    hod_data: function() {
+      return this.$store.state["crzb-module"];
+    }
+  },
   data() {
     return {
       all_sale: {
@@ -135,83 +146,115 @@ export default {
         yearly: 0,
         monthly: 0
       },
-      regions_sale: [
+      type_data: ["Country", "Region", "Zone", "Branch"],
+      lvl_2_sale: [
         {
-          r_name: "SINDH Region",
+          name: "SINDH Region",
           sale: 0
         },
         {
-          r_name: "PUNJAB Region",
+          name: "PUNJAB Region",
           sale: 0
         },
         {
-          r_name: "BALOCHISTAN Region",
+          name: "BALOCHISTAN Region",
           sale: 0
         },
         {
-          r_name: "KHYBER PAKHTUNKHWA Region",
+          name: "KHYBER PAKHTUNKHWA Region",
           sale: 0
         },
         {
-          r_name: "GILGIT BALTISTAN Region",
+          name: "GILGIT BALTISTAN Region",
           sale: 0
         },
         {
-          r_name: "OTHERS",
+          name: "OTHERS",
           sale: 0
         }
       ],
-      countries_sale: [
-        {
-          c_name: "Pakistan",
-          sale: 0
-        }
-      ]
+      lvl_1_sale: {
+        type: 0,
+        c_name: "Pakistan",
+        sale: 0
+      }
     };
   },
   methods: {
     async loadData() {
       const self = this;
+      let hod_type = self.hod_data.type;
       self.loading = true;
-      await self.$axios
-        .get("/api/assign-role-trans/sale-count")
-        .then(res => {
-          self.all_sale = {
-            total: res.data.data.total_sale,
-            yearly: res.data.data.yearly_sale,
-            monthly: res.data.data.monthly_sale
-          };
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      await self.$axios
-        .get("/api/assign-role-trans/sale-region")
-        .then(res => {
-          self.regions_sale = res.data.regions;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      await self.$axios
-        .get("/api/assign-role-trans/sale-country")
-        .then(res => {
-          self.countries_sale = res.data.countries;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      await self.$axios
-        .get("/api/assign-role-trans/sale-list", {
-          params: self.load_params
-        })
-        .then(res => {
-          self.l_data = res.data.data;
-          self.num_rows = res.data.tot_rows;
-        })
-        .catch(err => {
-          console.log(err);
-        });
+      if (hod_type === 5) {
+        await self.$axios
+          .get("/api/assign-role-trans/sale-count")
+          .then(res => {
+            self.all_sale = {
+              total: res.data.data.total_sale,
+              yearly: res.data.data.yearly_sale,
+              monthly: res.data.data.monthly_sale
+            };
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        await self.$axios
+          .get("/api/assign-role-trans/sale-region")
+          .then(res => {
+            self.lvl_2_sale = res.data.regions;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        await self.$axios
+          .get("/api/assign-role-trans/sale-country")
+          .then(res => {
+            self.lvl_1_sale = res.data.countries[0];
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        await self.$axios
+          .get("/api/assign-role-trans/sale-list", {
+            params: self.load_params
+          })
+          .then(res => {
+            self.l_data = res.data.data;
+            self.num_rows = res.data.tot_rows;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      } else if (hod_type >= 0 && hod_type <= 3) {
+        console.log("this is hod", hod_type);
+        await self.$axios
+          .get(`/api/hod/sale-count/${self.hod_data.hod_id}`)
+          .then(res => {
+            self.all_sale = {
+              total: res.data.data.total_sale,
+              yearly: res.data.data.yearly_sale,
+              monthly: res.data.data.monthly_sale
+            };
+            self.lvl_1_sale = {
+              type: res.data.data.type,
+              c_name: res.data.data.name,
+              sale: res.data.data.total_sale
+            };
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        if (hod_type != 3) {
+          await self.$axios
+            .get(`/api/hod/top-5-childs-sale/${self.hod_data.hod_id}`)
+            .then(res => {
+              self.lvl_2_sale = res.data.data;
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        }
+      }
       self.loading = false;
     },
     getData(obj, path, def) {

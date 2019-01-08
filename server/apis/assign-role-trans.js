@@ -351,7 +351,7 @@ router.get('/sale-region', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT id as r_id, name as r_name FROM crzb_list WHERE type=1`,
+          `SELECT id, name FROM crzb_list WHERE type=1`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -361,8 +361,8 @@ router.get('/sale-region', (req, res) => {
               connection.query(
                 `SELECT 
                   COUNT(*) as sale,
-                  l_r.id as r_id,
-                  l_r.name as r_name
+                  l_r.id,
+                  l_r.name
                 FROM mem_link_crzb as mem_lk_crzb
                 JOIN members as m
                 ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
@@ -380,7 +380,7 @@ router.get('/sale-region', (req, res) => {
                   } else {
                     _.each(result, o => {
                       let f_ind = _.findIndex(regions, {
-                        r_id: o.r_id
+                        id: o.id
                       })
                       if (f_ind > -1) {
                         regions[f_ind]['sale'] = o.sale
@@ -431,7 +431,8 @@ router.get('/sale-country', (req, res) => {
                 `SELECT 
                   COUNT(*) as sale,
                   l_c.id as c_id,
-                  l_c.name as c_name
+                  l_c.name as c_name,
+                  l_c.type as type
                 FROM mem_link_crzb as mem_lk_crzb
                 JOIN members as m
                 ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1

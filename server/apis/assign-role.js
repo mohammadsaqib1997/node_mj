@@ -5,6 +5,67 @@ const db = require('../db.js')
 const db_util = require('../func/db-util.js')
 
 router.use(function (req, res, next) {
+  if (req.decoded.data.type === 2 || req.decoded.data.type === 0) {
+    return next()
+  } else {
+    return res.json({
+      status: false,
+      message: "Not permission on this request."
+    })
+  }
+})
+
+router.get('/crzb-head-info', function (req, res) {
+  if (req.decoded.data.type === 2) {
+    res.json({
+      type: 5,
+      hod_mem_id: req.decoded.data.user_id,
+      hod_id: 1
+    })
+  } else {
+    db.getConnection(async function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `select 
+              asn_role.member_id, 
+                crzb_l.id as crzb_id,
+              crzb_l.type as crzb_type
+            from assign_roles as asn_role 
+            join crzb_list as crzb_l
+            on asn_role.crzb_id = crzb_l.id
+            where asn_role.member_id=${req.decoded.data.user_id} and asn_role.role_status=1`,
+          function (error, result) {
+            connection.release()
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              if (result.length > 0) {
+                res.json({
+                  type: result[0].crzb_type,
+                  hod_mem_id: result[0].member_id,
+                  hod_id: result[0].crzb_id
+                })
+              } else {
+                res.json({
+                  type: null,
+                  hod_mem_id: null,
+                  hod_id: null
+                })
+              }
+            }
+          })
+      }
+    })
+  }
+})
+
+router.use(function (req, res, next) {
   if (req.decoded.data.type === 2) {
     return next()
   } else {
