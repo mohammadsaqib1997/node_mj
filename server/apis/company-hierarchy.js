@@ -72,8 +72,8 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
           where crzb_l.type=${type} and crzb_l.parent_id=${parent_id} and crzb_l.active=1 and (
             m.user_asn_id like '%${search}%' or
             m.full_name like '%${search}%' or
-            crzb_var.crzb_code collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%' or 
-            crzb_var.crzb_name collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%'
+            crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+            crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
           )
           order by crzb_l.id`,
         function (error, result) {
@@ -124,8 +124,8 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
                 where crzb_l.type=${type} and crzb_l.parent_id=${parent_id} and crzb_l.active=1 and (
                   m.user_asn_id like '%${search}%' or
                   m.full_name like '%${search}%' or
-                  crzb_var.crzb_code collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%' or 
-                  crzb_var.crzb_name collate ${(config.dev) ? 'utf8mb4_general_ci':'latin1_general_ci'} like '%${search}%'
+                  crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                  crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
                 )
                 order by crzb_l.id
                 LIMIT ${limit}
