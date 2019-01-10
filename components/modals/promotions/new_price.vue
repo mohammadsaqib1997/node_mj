@@ -11,8 +11,8 @@
         New rates will be
         <span class="hl">9999/=</span>
         <br>which will be effective from
-        <span class="bold">20 january 2019.</span>
-        <br>Till than avail the
+        <span class="bold">20th January 2019.</span>
+        <br>Till then avail the
         <span class="hl">SIDC and Insurance card</span>
         <br>on the former price.
       </p>
