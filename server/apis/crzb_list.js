@@ -142,7 +142,7 @@ router.get('/branch-list', (req, res) => {
   })
 })
 
-router.get('/exist-check/:search', (req, res) => {
+router.get('/exist-check/:crzb_parent_id/:search', (req, res) => {
   if (req.params.search) {
 
     db.getConnection(function (err, connection) {
@@ -154,7 +154,7 @@ router.get('/exist-check/:search', (req, res) => {
 
         connection.query(
           `SELECT list.id, list.name FROM crzb_list as list
-          WHERE list.name='${req.params.search}'
+          WHERE list.name='${req.params.search}' and list.parent_id=${req.params.crzb_parent_id}
           LIMIT 1`,
           function (error, result) {
             connection.release();

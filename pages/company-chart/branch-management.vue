@@ -206,17 +206,24 @@ export default {
               if (!Validator.isEmpty(value)) {
                 if (
                   self.updated_id !== null &&
+                  self.f_data.sel_crzb_id == self.load_upd_data.parent_id &&
                   value.toLowerCase() == self.load_upd_data.name.toLowerCase()
                 ) {
                   return;
                 }
-                return self.$axios
-                  .get(`/api/crzb-list/exist-check/${value}`)
-                  .then(res => {
-                    if (res.data.count > 0) {
-                      return "Branch name is already existed!";
-                    }
-                  });
+                if (!Validator.isEmpty(self.f_data.sel_crzb_id)) {
+                  return self.$axios
+                    .get(
+                      `/api/crzb-list/exist-check/${
+                        self.f_data.sel_crzb_id
+                      }/${value}`
+                    )
+                    .then(res => {
+                      if (res.data.count > 0) {
+                        return "Branch name is already existed!";
+                      }
+                    });
+                }
               }
             });
           }

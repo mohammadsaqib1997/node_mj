@@ -39,6 +39,5 @@ export const actions = {
     let result = await this.$axios.$get('/api/assign-role/crzb-head-info')
     commit('setBasicInfo', result ? result : null)
     commit('setInit', true)
-    console.log(result)
   }
 }
