@@ -110,7 +110,7 @@ export default {
                 token: res.data.token,
                 data: res.data.user
               });
-              self.$router.push("/user/profile");
+              self.$router.push("/dashboard");
             } else {
               self.$snackbar.open({
                 message: "Error: " + res.data.message,

@@ -102,8 +102,13 @@
                 <th>MJ Name</th>
                 <th>Code</th>
                 <th>Area Name</th>
-                <th>Monthly Sale</th>
-                <th>Total Sale</th>
+                <template v-if="hod_data.type != 3">
+                  <th>Monthly Sale</th>
+                  <th>Total Sale</th>
+                </template>
+                <template v-else>
+                  <th>Join Date</th>
+                </template>
               </tr>
             </template>
             <template slot="tbody">
@@ -112,8 +117,13 @@
                 <td>{{ row.full_name }}</td>
                 <td>{{ row.crzb_code }}</td>
                 <td>{{ row.crzb_name }}</td>
-                <td>{{ row.total_month_sale }}</td>
-                <td>{{ row.total_sale }}</td>
+                <template v-if="hod_data.type != 3">
+                  <td>{{ row.total_month_sale }}</td>
+                  <td>{{ row.total_sale }}</td>
+                </template>
+                <template v-else>
+                  <td>{{ $store.getters['formatDate'](row.join_date) }}</td>
+                </template>
               </tr>
             </template>
           </tableComp>
@@ -214,19 +224,7 @@ export default {
           .catch(err => {
             console.log(err);
           });
-        await self.$axios
-          .get("/api/assign-role-trans/sale-list", {
-            params: self.load_params
-          })
-          .then(res => {
-            self.l_data = res.data.data;
-            self.num_rows = res.data.tot_rows;
-          })
-          .catch(err => {
-            console.log(err);
-          });
       } else if (hod_type >= 0 && hod_type <= 3) {
-        console.log("this is hod", hod_type);
         await self.$axios
           .get(`/api/hod/sale-count/${self.hod_data.hod_id}`)
           .then(res => {
@@ -249,6 +247,52 @@ export default {
             .get(`/api/hod/top-5-childs-sale/${self.hod_data.hod_id}`)
             .then(res => {
               self.lvl_2_sale = res.data.data;
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        }
+      }
+      await self.listLoad();
+      self.loading = false;
+    },
+    async listLoad() {
+      const self = this;
+      let hod_type = self.hod_data.type;
+      self.loading = true;
+      if (hod_type === 5) {
+        await self.$axios
+          .get("/api/assign-role-trans/sale-list", {
+            params: self.load_params
+          })
+          .then(res => {
+            self.l_data = res.data.data;
+            self.num_rows = res.data.tot_rows;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      } else if (hod_type >= 0 && hod_type <= 3) {
+        if (hod_type != 3) {
+          await self.$axios
+            .get(`/api/hod/sale-list/${self.hod_data.hod_id}`, {
+              params: self.load_params
+            })
+            .then(res => {
+              self.l_data = res.data.data;
+              self.num_rows = res.data.tot_rows;
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        } else {
+          await self.$axios
+            .get(`/api/hod/branch-sale-list/${self.hod_data.hod_id}`, {
+              params: self.load_params
+            })
+            .then(res => {
+              self.l_data = res.data.data;
+              self.num_rows = res.data.tot_rows;
             })
             .catch(err => {
               console.log(err);

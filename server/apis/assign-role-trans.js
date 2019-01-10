@@ -599,7 +599,7 @@ router.get('/commission-region', (req, res) => {
               _.each(result, o => {
                 let p_item = {}
                 p_item['r_id'] = o.r_id
-                p_item['r_name'] = o.r_name
+                p_item['name'] = o.r_name
                 p_item['comm'] = null_to_0(o.r_comm) + null_to_0(o.z_comm) + null_to_0(o.b_comm)
                 regions.push(p_item)
               })
@@ -639,6 +639,7 @@ router.get('/commission-country', (req, res) => {
           `select 
             c_l.id as c_id,
               c_l.name as c_name,
+              c_l.type
               (select sum(amount) from assign_roles_trans where crzb_id=c_l.id) as c_comm,
               sum(region.r_comm) as r_comm,
               sum(region.z_comm) as z_comm,
@@ -686,6 +687,7 @@ router.get('/commission-country', (req, res) => {
                 let p_item = {}
                 p_item['c_id'] = o.c_id
                 p_item['c_name'] = o.c_name
+                p_item['type'] = o.type
                 p_item['comm'] = null_to_0(o.c_comm) + null_to_0(o.r_comm) + null_to_0(o.z_comm) + null_to_0(o.b_comm)
                 countries.push(p_item)
               })

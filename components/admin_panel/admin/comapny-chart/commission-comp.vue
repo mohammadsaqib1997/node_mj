@@ -2,7 +2,9 @@
   <div class="main">
     <div class="box counter-box">
       <div class="columns is-gapless is-multiline">
-        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
+        <div
+          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
+        >
           <div class="flex">
             <div>
               <div class="tile is-ancestor c-tile is-parent">
@@ -32,33 +34,37 @@
             </div>
           </div>
         </div>
-        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
+        <div v-if="hod_data.type != 3" class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
-              <h5 class="title-cus-1">Region Commission</h5>
+              <h5
+                class="title-cus-1"
+              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Region') }} Commission</h5>
               <div class="tile is-ancestor c-tile is-parent">
                 <div class="tile is-vertical is-narrow">
-                  <div class="tile is-child" v-for="(region, ind) in regions_comm" :key="ind">
-                    <h5>{{ region.comm ? region.comm : 0 }}/-</h5>
+                  <div class="tile is-child" v-for="(row, ind) in lvl_2_comm" :key="ind">
+                    <h5>{{ row.comm ? row.comm : 0 }}/-</h5>
                   </div>
                 </div>
                 <div class="tile is-vertical">
-                  <div class="tile is-child" v-for="(region, ind) in regions_comm" :key="ind">
-                    <span>{{ region.r_name }}</span>
+                  <div class="tile is-child" v-for="(row, ind) in lvl_2_comm" :key="ind">
+                    <span>{{ row.name }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="column is-12-mobile is-12-tablet is-4-widescreen">
+        <div
+          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
+        >
           <div class="flex">
             <div>
               <div class="amount-wrapper">
-                <b>{{ getData(countries_comm, '0.c_name', 'Pakistan') }}</b>
-                <h1>{{ getData(countries_comm, '0.comm', 0) }}/-</h1>
+                <b>{{ getData(lvl_1_comm, 'c_name', 'Pakistan') }}</b>
+                <h1>{{ getData(lvl_1_comm, 'comm', 0) }}/-</h1>
               </div>
-              <h5 class="title-cus-2">Country Commission</h5>
+              <h5 class="title-cus-2">{{ type_data[getData(lvl_1_comm, 'type', 0)] }} Commission</h5>
             </div>
           </div>
         </div>
@@ -128,6 +134,11 @@ export default {
     tableComp,
     tblTopFilter
   },
+  computed: {
+    hod_data: function() {
+      return this.$store.state["crzb-module"];
+    }
+  },
   data() {
     return {
       all_comm: {
@@ -135,7 +146,8 @@ export default {
         yearly: 0,
         monthly: 0
       },
-      regions_comm: [
+      type_data: ["Country", "Region", "Zone", "Branch"],
+      lvl_2_comm: [
         {
           r_name: "SINDH Region",
           comm: 0
@@ -161,57 +173,59 @@ export default {
           comm: 0
         }
       ],
-      countries_comm: [
-        {
-          c_name: "Pakistan",
-          comm: 0
-        }
-      ]
+      lvl_1_comm: {
+        type: 0,
+        c_name: "Pakistan",
+        comm: 0
+      }
     };
   },
   methods: {
     async loadData() {
       const self = this;
+      let hod_type = self.hod_data.type;
       self.loading = true;
-      await self.$axios
-        .get("/api/assign-role-trans/commission-count")
-        .then(res => {
-          self.all_comm = {
-            total: res.data.data.total_comm,
-            yearly: res.data.data.yearly_comm,
-            monthly: res.data.data.monthly_comm
-          };
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      await self.$axios
-        .get("/api/assign-role-trans/commission-region")
-        .then(res => {
-          self.regions_comm = res.data.regions;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      await self.$axios
-        .get("/api/assign-role-trans/commission-country")
-        .then(res => {
-          self.countries_comm = res.data.countries;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      await self.$axios
-        .get("/api/assign-role-trans/commission-list", {
-          params: self.load_params
-        })
-        .then(res => {
-          self.l_data = res.data.data;
-          self.num_rows = res.data.tot_rows;
-        })
-        .catch(err => {
-          console.log(err);
-        });
+      if (hod_type === 5) {
+        await self.$axios
+          .get("/api/assign-role-trans/commission-count")
+          .then(res => {
+            self.all_comm = {
+              total: res.data.data.total_comm,
+              yearly: res.data.data.yearly_comm,
+              monthly: res.data.data.monthly_comm
+            };
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        await self.$axios
+          .get("/api/assign-role-trans/commission-region")
+          .then(res => {
+            self.lvl_2_comm = res.data.regions;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        await self.$axios
+          .get("/api/assign-role-trans/commission-country")
+          .then(res => {
+            self.lvl_1_comm = res.data.countries[0];
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        await self.$axios
+          .get("/api/assign-role-trans/commission-list", {
+            params: self.load_params
+          })
+          .then(res => {
+            self.l_data = res.data.data;
+            self.num_rows = res.data.tot_rows;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      }
       self.loading = false;
     },
     getData(obj, path, def) {
