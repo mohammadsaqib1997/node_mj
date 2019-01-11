@@ -12,10 +12,10 @@
               .columns.is-gapless
                 .column(@click="tabActive(1)")
                   .t-card(:class="{active: (tab_header_ind === 1)}")
-                    span Discount Card
+                    span SIDC Card
                 .column(@click="tabActive(2)")
                   .t-card(:class="{active: (tab_header_ind === 2)}")
-                    span Insurance + Discount Card
+                    span SIDC Insurance Card
 
             .tab-body
               .tab-content(:class="{active: this.cur_step === 1}")
@@ -94,14 +94,14 @@ export default {
               full_name: form_data.full_name,
               email: form_data.email,
               password: form_data.password,
-              cnic_num: form_data.cnic_num,
               contact_num: form_data.cont_num,
               ref_user_asn_id:
                 form_data.ref_code !== "" ? form_data.ref_code : null
             },
             ext_data: {
               prd_id: form_data.sel_prd,
-              crzb_id: form_data.sel_crzb_id
+              crzb_id: form_data.sel_crzb_id,
+              franchise: form_data.franchise
             }
           })
           .then(res => {

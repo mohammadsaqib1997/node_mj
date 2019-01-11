@@ -138,7 +138,6 @@ router.use((req, res, next) => {
 
 router.get('/ac_branch/:search', (req, res) => {
   if (req.params.search) {
-
     db.getConnection(function (err, connection) {
       if (err) {
         res.status(500).json({
@@ -169,15 +168,44 @@ router.get('/ac_branch/:search', (req, res) => {
         })
       }
     })
-
-
   } else {
     res.json({
       status: false,
       message: "Invalid Parameters!"
     })
   }
+})
 
+router.get('/ls_franchise/:crzb_id', (req, res) => {
+  if (req.params.crzb_id && /^[0-9]*$/.test(req.params.crzb_id)) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `SELECT id, name FROM franchises where branch_id=${req.params.crzb_id} and active=1;`,
+          function (error, result) {
+            connection.release();
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result
+              })
+            }
+          })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Parameters!"
+    })
+  }
 })
 
 router.get('/get_list_winners_auto', function (req, res) {
@@ -975,18 +1003,29 @@ router.post('/signup', (req, res) => {
                             throw_error = error
                             return resolve()
                           } else {
-                            connection.query('INSERT INTO `notifications` SET ?', {
-                              from_type: 0,
-                              to_type: 1,
-                              from_id: mem_id,
-                              to_id: 1, // admin id
-                              message: "New member added in members list. Approve it.",
-                              notify_type: 1
+                            connection.query('INSERT INTO `mem_link_franchise` SET ?', {
+                              member_id: mem_id,
+                              franchise_id: req.body.ext_data.franchise,
+                              linked_type: 1
                             }, function (error, results, fields) {
                               if (error) {
                                 throw_error = error
+                                return resolve()
+                              } else {
+                                connection.query('INSERT INTO `notifications` SET ?', {
+                                  from_type: 0,
+                                  to_type: 1,
+                                  from_id: mem_id,
+                                  to_id: 1, // admin id
+                                  message: "New member added in members list. Approve it.",
+                                  notify_type: 1
+                                }, function (error, results, fields) {
+                                  if (error) {
+                                    throw_error = error
+                                  }
+                                  return resolve()
+                                })
                               }
-                              return resolve()
                             })
                           }
                         })

@@ -26,6 +26,12 @@
         b-input(v-if="user_asn_id !== '' && profile.crzb_id !== null" type="text" placeholder="(example: Baldia Town)" readonly v-bind:value="ac_crzb")
         b-autocomplete(v-else :data="crzb_list" v-model="ac_crzb" field="name" expanded :keep-first="true" @select="option => f_data.sel_crzb_id = option ? option.id : null" @input="loadCRZB" :loading="isFetching" placeholder="(example: Baldia Town)")
 
+      b-field.cus-des-1(label="Franchise" :type="(validation.hasError('f_data.franchise')) ? 'is-danger':''" :message="validation.firstError('f_data.franchise')")
+        b-input(v-if="user_asn_id !== '' && profile.fr_id !== null" type="text" placeholder="Select Franchise" readonly v-bind:value="profile.fr_name")
+        b-select(v-else v-model="f_data.franchise" :loading="isLoadingFrc" :disabled="isLoadingFrc" expanded)
+          option(value="") Select Franchise
+          option(v-for="(fr, ind) in frc_list" :value="fr.id" :key="ind") {{ fr.name }}
+
       b-field(label='Referral ID', :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''", :message="validation.firstError('f_data.ref_code')")
         b-input(v-if="user_asn_id === ''", type='text', placeholder='000000000', v-model='f_data.ref_code', v-mask="'#########'", :loading="validation.isValidating('f_data.ref_code')")
         b-input(v-else='v-else', type='text', placeholder='000000000', readonly='readonly', v-bind:value='f_data.ref_code')
@@ -80,7 +86,9 @@ export default {
       secure: false,
       ac_crzb: "",
       crzb_list: [],
+      frc_list: [],
       isFetching: false,
+      isLoadingFrc: false,
       is_auto_crzb: false,
       f_data: {
         full_name: "",
@@ -90,12 +98,26 @@ export default {
         cont_num: "",
         address: "",
         ref_code: "",
-        sel_crzb_id: null
+        sel_crzb_id: null,
+        franchise: ""
       },
       form: {
         loading: false
       }
     };
+  },
+  watch: {
+    "f_data.sel_crzb_id": function(val) {
+      this.frc_list = [];
+      if (this.validation.isTouched("f_data.sel_crzb_id")) {
+        this.f_data.franchise = "";
+      }
+      if (val !== null) {
+        this.loadFrnList(val);
+      } else {
+        this.isLoadingFrc = false;
+      }
+    }
   },
   validators: {
     "f_data.full_name": function(value) {
@@ -165,6 +187,12 @@ export default {
         .digit()
         .maxLength(11);
     },
+    "f_data.franchise": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
     "f_data.ref_code": {
       cache: false,
       debounce: 500,
@@ -199,9 +227,20 @@ export default {
     mask
   },
   methods: {
-    after_f_settle: _.debounce(function(cb) {
-      cb();
-    }, 500),
+    after_f_settle: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
     loadCRZB(event) {
       const self = this;
       self.isFetching = true;
@@ -235,6 +274,29 @@ export default {
           });
       });
     },
+    loadFrnList(crzb_id) {
+      const self = this;
+      self.isLoadingFrc = true;
+      self.after_f_settle2(function() {
+        if (crzb_id === null) {
+          self.isLoadingFrc = false;
+          return;
+        }
+        self.frc_list = [];
+        self.$axios
+          .get(`/api/web/ls_franchise/${crzb_id}`)
+          .then(({ data }) => {
+            self.frc_list = data.result;
+          })
+          .catch(error => {
+            self.frc_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingFrc = false;
+          });
+      });
+    },
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
       this.status = data.active_sts;
@@ -247,9 +309,10 @@ export default {
         cont_num: data.contact_num,
         address: data.address,
         ref_code: data.ref_user_asn_id,
-        sel_crzb_id: data.crzb_id
+        sel_crzb_id: data.crzb_id,
+        franchise: data.fr_id ? data.fr_id : ""
       };
-      this.ac_crzb = data.crzb_name
+      this.ac_crzb = data.crzb_name;
     },
     update: function() {
       const self = this;
@@ -287,7 +350,8 @@ export default {
               update_id: self.$store.state.user.data.user_id,
               data: new_data,
               ext_data: {
-                crzb_id: self.f_data.sel_crzb_id
+                crzb_id: self.f_data.sel_crzb_id,
+                fr_id: self.f_data.franchise
               }
             })
             .then(async res => {

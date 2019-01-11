@@ -114,7 +114,7 @@ router.get("/", function (req, res) {
         let query = ''
         if (req.decoded.data.type === 0) {
           query = `
-            SELECT 
+              SELECT 
               m.user_asn_id, 
               m.email, 
               m.full_name, 
@@ -133,10 +133,16 @@ router.get("/", function (req, res) {
                 on ls_z.parent_id = ls_r.id
                 join crzb_list as ls_c
                 on ls_r.parent_id = ls_c.id
-              where ls_b.id=mem_l_crzb.crzb_id) as crzb_name
+              where ls_b.id=mem_l_crzb.crzb_id) as crzb_name,
+              mem_l_fr.franchise_id as fr_id,
+              (SELECT fr.name
+                FROM franchises as fr
+              where fr.id=mem_l_fr.franchise_id) as fr_name
             FROM members as m
             LEFT JOIN mem_link_crzb as mem_l_crzb
             ON m.id=mem_l_crzb.member_id
+            LEFT JOIN mem_link_franchise as mem_l_fr
+            ON m.id=mem_l_fr.member_id
             WHERE m.id=?`
         } else if (req.decoded.data.type === 1) {
           query = "SELECT email, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
@@ -452,31 +458,73 @@ router.post("/update", function (req, res) {
                 if (req.decoded.data.type === 0) {
                   let throw_error = null
                   await new Promise(inner_resolve => {
-                    connection.query('SELECT member_id FROM mem_link_crzb WHERE member_id=?', req.decoded.data.user_id, function (error, results, fields) {
-                      if (error) {
-                        throw_error = error
-                        inner_resolve()
-                      } else {
-                        let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
-                        let params = [{
-                          crzb_id: req.body.ext_data.crzb_id
-                        }, req.decoded.data.user_id]
-
-                        if (results.length < 1) {
-                          query = 'INSERT INTO `mem_link_crzb` SET ?'
-                          params = [{
-                            crzb_id: req.body.ext_data.crzb_id,
-                            member_id: req.decoded.data.user_id
-                          }]
-                        }
-                        connection.query(query, params, function (error, results, fields) {
-                          if (error) {
-                            throw_error = error
-                          }
+                    connection.query(
+                      `SELECT mem_lk.member_id, m.is_paid_m
+                      FROM mem_link_crzb as mem_lk
+                      right join members as m
+                      on mem_lk.member_id = m.id
+                      WHERE m.id=?`,
+                      req.decoded.data.user_id,
+                      function (error, results, fields) {
+                        if (error) {
+                          throw_error = error
                           inner_resolve()
-                        })
-                      }
-                    })
+                        } else {
+                          let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
+                          let params = [{
+                            crzb_id: req.body.ext_data.crzb_id
+                          }, req.decoded.data.user_id]
+
+                          if (results.length && results[0].member_id == null) {
+                            query = 'INSERT INTO `mem_link_crzb` SET ?'
+                            params = [{
+                              crzb_id: req.body.ext_data.crzb_id,
+                              member_id: req.decoded.data.user_id,
+                              linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                            }]
+                          }
+                          connection.query(query, params, function (error, results, fields) {
+                            if (error) {
+                              throw_error = error
+                              inner_resolve()
+                            } else {
+                              connection.query(
+                                `SELECT mem_lk.member_id, m.is_paid_m
+                                FROM mem_link_franchise as mem_lk
+                                right join members as m
+                                on mem_lk.member_id = m.id
+                                WHERE m.id=?`,
+                                req.decoded.data.user_id,
+                                function (error, results, fields) {
+                                  if (error) {
+                                    throw_error = error
+                                    inner_resolve()
+                                  } else {
+                                    let query = 'UPDATE `mem_link_franchise` SET ? WHERE member_id=?'
+                                    let params = [{
+                                      franchise_id: req.body.ext_data.fr_id
+                                    }, req.decoded.data.user_id]
+
+                                    if (results.length && results[0].member_id == null) {
+                                      query = 'INSERT INTO `mem_link_franchise` SET ?'
+                                      params = [{
+                                        franchise_id: req.body.ext_data.fr_id,
+                                        member_id: req.decoded.data.user_id,
+                                        linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                                      }]
+                                    }
+                                    connection.query(query, params, function (error, results, fields) {
+                                      if (error) {
+                                        throw_error = error
+                                      }
+                                      inner_resolve()
+                                    })
+                                  }
+                                })
+                            }
+                          })
+                        }
+                      })
                   })
                   if (throw_error) {
                     err_hdl(throw_error)

@@ -639,7 +639,7 @@ router.get('/commission-country', (req, res) => {
           `select 
             c_l.id as c_id,
               c_l.name as c_name,
-              c_l.type
+              c_l.type,
               (select sum(amount) from assign_roles_trans where crzb_id=c_l.id) as c_comm,
               sum(region.r_comm) as r_comm,
               sum(region.z_comm) as z_comm,

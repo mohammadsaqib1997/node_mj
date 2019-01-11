@@ -72,16 +72,20 @@
       </div>
       <div class="column">
         <b-field
-          label="CNIC"
-          :type="(validation.hasError('form.cnic_num')) ? 'is-danger':''"
-          :message="validation.firstError('form.cnic_num')"
+          class="cus-des-1"
+          label="Franchise"
+          :type="(validation.hasError('form.franchise')) ? 'is-danger':''"
+          :message="validation.firstError('form.franchise')"
         >
-          <b-input
-            type="text"
-            placeholder="xxxxx-xxxxxxx-x"
-            v-model="form.cnic_num"
-            v-mask="'#####-#######-#'"
-          ></b-input>
+          <b-select
+            v-model="form.franchise"
+            expanded
+            :loading="isLoadingFrc"
+            :disabled="isLoadingFrc"
+          >
+            <option value>Select Franchise</option>
+            <option v-for="(fr, ind) in frc_list" :value="fr.id" :key="ind">{{ fr.name }}</option>
+          </b-select>
         </b-field>
       </div>
     </div>
@@ -123,17 +127,30 @@ export default {
       ref_name: "",
       ac_crzb: "",
       crzb_list: [],
+      frc_list: [],
       isFetching: false,
+      isLoadingFrc: false,
       form: {
         full_name: "",
         email: "",
         password: "",
-        cnic_num: "",
         cont_num: "",
         sel_crzb_id: null,
+        franchise: "",
         ref_code: ""
       }
     };
+  },
+  watch: {
+    "form.sel_crzb_id": function(val) {
+      this.frc_list = [];
+      this.form.franchise = "";
+      if (val !== null) {
+        this.loadFrnList(val);
+      } else {
+        this.isLoadingFrc = false;
+      }
+    }
   },
   validators: {
     "form.full_name": function(value) {
@@ -174,11 +191,6 @@ export default {
         .minLength(6)
         .maxLength(35);
     },
-    "form.cnic_num": function(value) {
-      return Validator.value(value)
-        .required()
-        .regex(/^\d{5}-\d{7}-\d$/, "Invalid NIC Number(e.g 12345-1234567-1)");
-    },
     "form.cont_num": function(value) {
       return Validator.value(value)
         .required()
@@ -188,6 +200,12 @@ export default {
         );
     },
     "form.sel_crzb_id": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
+    "form.franchise": function(value) {
       return Validator.value(value)
         .required()
         .digit()
@@ -227,9 +245,20 @@ export default {
     }
   },
   methods: {
-    after_f_settle: _.debounce(function(cb) {
-      cb();
-    }, 500),
+    after_f_settle: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
     loadCRZB(event) {
       const self = this;
       self.isFetching = true;
@@ -259,6 +288,29 @@ export default {
           });
       });
     },
+    loadFrnList(crzb_id) {
+      const self = this;
+      self.isLoadingFrc = true;
+      self.after_f_settle2(function() {
+        if (crzb_id === null) {
+          self.isLoadingFrc = false;
+          return;
+        }
+        self.frc_list = [];
+        self.$axios
+          .get(`/api/web/ls_franchise/${crzb_id}`)
+          .then(({ data }) => {
+            self.frc_list = data.result;
+          })
+          .catch(error => {
+            self.frc_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingFrc = false;
+          });
+      });
+    },
     validate: function() {
       return this.$validate().then(
         function(success) {
@@ -275,5 +327,10 @@ export default {
 <style lang="scss" scoped>
 .form {
   padding: 0;
+  /deep/ {
+    .select select option {
+      color: #4a4a4a !important;
+    }
+  }
 }
 </style>

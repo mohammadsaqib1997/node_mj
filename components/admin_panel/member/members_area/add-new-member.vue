@@ -68,6 +68,14 @@
                     b-autocomplete(:data="crzb_list" v-model="ac_crzb" field="name" expanded :keep-first="true" @select="option => f_data.sel_crzb_id = option ? option.id : null" @input="loadCRZB" :loading="isFetching" placeholder="(example: Baldia Town)")
               .columns.is-variable.is-1
                 .column.is-3
+                  label Franchise
+                .column
+                  b-field.cus-des-1(:type="(validation.hasError('f_data.franchise')) ? 'is-danger':''" :message="validation.firstError('f_data.franchise')")
+                    b-select(v-model="f_data.franchise" expanded :loading="isLoadingFrc" :disabled="isLoadingFrc")
+                      option(value) Select Franchise
+                      option(v-for="(fr, ind) in frc_list" :value="fr.id" :key="ind") {{ fr.name }}
+              .columns.is-variable.is-1
+                .column.is-3
                   label Referral ID
                 .column
                   b-field
@@ -149,7 +157,9 @@ export default {
       con_pass: "",
       ac_crzb: "",
       crzb_list: [],
+      frc_list: [],
       isFetching: false,
+      isLoadingFrc: false,
       f_data: {
         full_name: "",
         email: "",
@@ -158,7 +168,8 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
-        sel_crzb_id: null
+        sel_crzb_id: null,
+        franchise: ""
       },
       prd_data: {
         prd: ""
@@ -170,6 +181,19 @@ export default {
         submitted: false
       }
     };
+  },
+  watch: {
+    "f_data.sel_crzb_id": function(val) {
+      this.frc_list = [];
+      if (this.validation.isTouched("f_data.sel_crzb_id")) {
+        this.f_data.franchise = "";
+      }
+      if (val !== null) {
+        this.loadFrnList(val);
+      } else {
+        this.isLoadingFrc = false;
+      }
+    }
   },
   validators: {
     "f_data.full_name": function(value) {
@@ -253,6 +277,12 @@ export default {
         .digit()
         .maxLength(11);
     },
+    "f_data.franchise": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
     "prd_data.prd": function(value) {
       return Validator.value(value).required();
     }
@@ -261,9 +291,20 @@ export default {
     mask
   },
   methods: {
-    after_f_settle: _.debounce(function(cb) {
-      cb();
-    }, 500),
+    after_f_settle: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
     loadCRZB(event) {
       const self = this;
       self.isFetching = true;
@@ -290,6 +331,29 @@ export default {
           })
           .finally(() => {
             self.isFetching = false;
+          });
+      });
+    },
+    loadFrnList(crzb_id) {
+      const self = this;
+      self.isLoadingFrc = true;
+      self.after_f_settle2(function() {
+        if (crzb_id === null) {
+          self.isLoadingFrc = false;
+          return;
+        }
+        self.frc_list = [];
+        self.$axios
+          .get(`/api/web/ls_franchise/${crzb_id}`)
+          .then(({ data }) => {
+            self.frc_list = data.result;
+          })
+          .catch(error => {
+            self.frc_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingFrc = false;
           });
       });
     },
@@ -323,7 +387,8 @@ export default {
               member_data: mem_data,
               ext_data: {
                 product_id: self.prd_data.prd,
-                crzb_id: self.f_data.sel_crzb_id
+                crzb_id: self.f_data.sel_crzb_id,
+                fr_id: self.f_data.franchise
               }
             })
             .then(res => {
@@ -357,7 +422,8 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
-        sel_crzb_id: null
+        sel_crzb_id: null,
+        franchise: ""
       };
       this.prd_data = {
         prd: ""

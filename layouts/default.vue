@@ -21,17 +21,17 @@ import forgotPassForm from "~/components/forms/forgot_password.vue";
 
 export default {
   //comment-in-dev-start
-  head: {
-    script: [
-      {
-        src: "https://consent.cookiebot.com/uc.js",
-        id: "Cookiebot",
-        "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
-        type: "text/javascript",
-        async: true
-      }
-    ]
-  },
+  //autocomment   head: {
+  //autocomment     script: [
+  //autocomment       {
+  //autocomment         src: "https://consent.cookiebot.com/uc.js",
+  //autocomment         id: "Cookiebot",
+  //autocomment         "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
+  //autocomment         type: "text/javascript",
+  //autocomment         async: true
+  //autocomment       }
+  //autocomment     ]
+  //autocomment   },
   //comment-in-dev-end
   components: {
     topHeader,
@@ -302,8 +302,20 @@ export default {
 
       .select {
         height: auto;
+        &.is-danger {
+          select {
+            border: 1px solid #ff3860;
+            &:focus,
+            &:active {
+              -webkit-box-shadow: 0 0 2px 0 #ff3860;
+              -moz-box-shadow: 0 0 2px 0 #ff3860;
+              box-shadow: 0 0 2px 0 #ff3860;
+              background-color: #ffffff;
+            }
+          }
+        }
 
-        &:after {
+        &:not(.is-loading):after {
           border-color: #dabd67;
         }
 

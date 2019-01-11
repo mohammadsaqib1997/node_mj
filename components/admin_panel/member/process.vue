@@ -124,6 +124,9 @@ export default {
           self.$set(self.comp_item, 0, true);
           let profile_field = {};
           _.each(res.data.result, (item, key) => {
+            if (key == "cnic_num" && (item === null || item === "")) {
+              self.incomp_p_list.push("Add CNIC Number in profile.");
+            }
             if (key == "dob" && (item === null || item === "")) {
               self.incomp_p_list.push("Add Date Of Birth in profile.");
             }

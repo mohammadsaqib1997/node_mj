@@ -56,6 +56,12 @@
 
     .columns.is-variable.is-1
       .column
+        label Franchise
+      .column
+        h2 {{ profile.fr_name }}
+
+    .columns.is-variable.is-1
+      .column
         label Referral ID
       .column
         h2 {{ profile.ref_user_asn_id }}
