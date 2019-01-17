@@ -88,5 +88,11 @@
             "0": "old user linked in crzb",
             "1": "New user linked in crzb"
         }
+    },
+    "mem_link_franchise": {
+        "linked_type": {
+            "0": "old user linked in crzb",
+            "1": "New user linked in crzb"
+        }
     }
 }

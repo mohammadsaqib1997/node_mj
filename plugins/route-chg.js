@@ -114,6 +114,14 @@ const authRoutes = [{
     {
         name: "company-chart-hierarchy",
         type_allowed: [2]
+    },
+    {
+        name: "company-chart-assign-franchise",
+        type_allowed: [0]
+    },
+    {
+        name: "company-chart-sales",
+        type_allowed: [0]
     }
 ]
 
@@ -134,6 +142,14 @@ const un_paid_routes = [{
 const crzbRoutes = [
     'company-chart-sales-commission',
     'company-chart-hierarchy'
+]
+
+const franchiseRoutes = [
+    'company-chart-sales'
+]
+
+const branchRoutes = [
+    'company-chart-assign-franchise'
 ]
 
 const unAuthRoutes = [
@@ -216,7 +232,23 @@ export default ({
                     return o.name === to.name
                 })
                 if (findAuthR) {
-                    if ((_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) || (_.indexOf(crzbRoutes, to.name) > -1 && !app.store.state['crzb-module']['hod_id'])) {
+                    if (
+                        (_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) ||
+                        (
+                            _.indexOf(crzbRoutes, to.name) > -1 &&
+                            !app.store.state['crzb-module']['hod_id']
+                        ) ||
+                        (
+                            _.indexOf(franchiseRoutes, to.name) > -1 &&
+                            (!app.store.state['crzb-module']['type'] ||
+                                app.store.state['crzb-module']['type'] != 4)
+                        ) ||
+                        (
+                            _.indexOf(branchRoutes, to.name) > -1 &&
+                            (!app.store.state['crzb-module']['type'] ||
+                                app.store.state['crzb-module']['type'] != 3 || app.store.state['crzb-module']['role_status'] === 0)
+                        )
+                    ) {
                         error({
                             statusCode: 403,
                             message: "Not permission on this page!"

@@ -6,10 +6,12 @@ export const state = () => ({
       1 - region head
       2 - zonal head
       3 - branch head
+      4 - franchise head
   */
   type: null,
   hod_mem_id: null,
   hod_id: null,
+  role_status: 0,
   init: false,
 })
 
@@ -19,12 +21,14 @@ export const mutations = {
       state.type = payload.type
       state.hod_mem_id = payload.hod_mem_id
       state.hod_id = payload.hod_id
+      state.role_status = payload.role_status
     }
   },
   resetData: (state) => {
     state.type = null
     state.hod_mem_id = null
     state.hod_id = null
+    state.role_status = 0
     state.init = false
   },
   setInit: (state, pld) => {

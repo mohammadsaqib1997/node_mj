@@ -16,7 +16,7 @@
             template(v-if="item.hasOwnProperty('children')")
               .dropdown
                 ul
-                  li(v-for="d_child in item.children" v-if="find(d_child.show, u_type)" :class="{ 'has-popover': d_child.hasOwnProperty('children'), 'is-active': d_child.active }")
+                  li(v-for="d_child in item.children" v-if="find(d_child.show, u_type) && store_check_eql(d_child)" :class="{ 'has-popover': d_child.hasOwnProperty('children'), 'is-active': d_child.active }")
                     template(v-if="d_child.url")
                       nuxt-link.nav-item(:to="d_child.url")
                         span {{ d_child.title }}
@@ -79,7 +79,7 @@ export default {
           url: false,
           title: "Company Chart",
           show: [0, 2],
-          store_key: "crzb-module.hod_id",
+          store_key: "crzb-module.type",
           children: [
             {
               name: "assign-roles",
@@ -100,7 +100,19 @@ export default {
               active: false,
               url: "/company-chart/sales-commission",
               title: "Sales - Commission",
-              show: [0, 2]
+              show: [0, 2],
+              store_key: "crzb-module.type",
+              store_eql_val: 4,
+              comp_cond: '!'
+            },
+            {
+              name: "sales",
+              active: false,
+              url: "/company-chart/sales",
+              title: "Sales",
+              show: [0],
+              store_key: "crzb-module.type",
+              store_eql_val: 4
             },
             {
               name: "hierarchy",
@@ -108,6 +120,15 @@ export default {
               url: "/company-chart/hierarchy",
               title: "Hierarchy",
               show: [2]
+            },
+            {
+              name: "assign-franchise",
+              active: false,
+              url: "/company-chart/assign-franchise",
+              title: "Assign Franchise",
+              show: [0],
+              store_key: "crzb-module.type",
+              store_eql_val: 3
             }
           ]
         },
@@ -479,6 +500,24 @@ export default {
     store_check(item) {
       if (item.hasOwnProperty("store_key")) {
         return _.get(this.$store.state, item.store_key, null) !== null;
+      }
+      return true;
+    },
+    store_check_eql(item) {
+      if (
+        item.hasOwnProperty("store_key") &&
+        item.hasOwnProperty("store_eql_val")
+      ) {
+        if (item.hasOwnProperty("comp_cond") && item.comp_cond === "!") {
+          return (
+            _.get(this.$store.state, item.store_key, null) !=
+            item["store_eql_val"]
+          );
+        }
+        return (
+          _.get(this.$store.state, item.store_key, null) ===
+          item["store_eql_val"]
+        );
       }
       return true;
     }

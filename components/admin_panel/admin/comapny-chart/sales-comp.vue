@@ -224,34 +224,6 @@ export default {
           .catch(err => {
             console.log(err);
           });
-      } else if (hod_type >= 0 && hod_type <= 3) {
-        await self.$axios
-          .get(`/api/hod/sale-count/${self.hod_data.hod_id}`)
-          .then(res => {
-            self.all_sale = {
-              total: res.data.data.total_sale,
-              yearly: res.data.data.yearly_sale,
-              monthly: res.data.data.monthly_sale
-            };
-            self.lvl_1_sale = {
-              type: res.data.data.type,
-              c_name: res.data.data.name,
-              sale: res.data.data.total_sale
-            };
-          })
-          .catch(err => {
-            console.log(err);
-          });
-        if (hod_type != 3) {
-          await self.$axios
-            .get(`/api/hod/top-5-childs-sale/${self.hod_data.hod_id}`)
-            .then(res => {
-              self.lvl_2_sale = res.data.data;
-            })
-            .catch(err => {
-              console.log(err);
-            });
-        }
       }
       await self.listLoad();
       self.loading = false;
@@ -272,32 +244,6 @@ export default {
           .catch(err => {
             console.log(err);
           });
-      } else if (hod_type >= 0 && hod_type <= 3) {
-        if (hod_type != 3) {
-          await self.$axios
-            .get(`/api/hod/sale-list/${self.hod_data.hod_id}`, {
-              params: self.load_params
-            })
-            .then(res => {
-              self.l_data = res.data.data;
-              self.num_rows = res.data.tot_rows;
-            })
-            .catch(err => {
-              console.log(err);
-            });
-        } else {
-          await self.$axios
-            .get(`/api/hod/branch-sale-list/${self.hod_data.hod_id}`, {
-              params: self.load_params
-            })
-            .then(res => {
-              self.l_data = res.data.data;
-              self.num_rows = res.data.tot_rows;
-            })
-            .catch(err => {
-              console.log(err);
-            });
-        }
       }
       self.loading = false;
     },

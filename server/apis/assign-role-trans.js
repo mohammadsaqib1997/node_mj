@@ -2,7 +2,6 @@ const express = require('express')
 const router = express.Router()
 const moment = require('moment')
 const _ = require('lodash')
-const config = require('../config.js')
 
 const db = require('../db.js')
 const db_util = require('../func/db-util.js')
@@ -44,34 +43,37 @@ router.get('/sale-list', function (req, res) {
       connection.query(
         `select 
             COUNT(*) as tot_rows
-            from mem_link_crzb as mem_lk_crzb
-            join members as m
-            on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
-
-            join (
-              select 
+            from (
+              select mem_lk_crzb.crzb_id
+              from mem_link_crzb as mem_lk_crzb
+              join members as m
+              on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+      
+              join (
+                select 
                 crzb_l.id,
                 get_crzb_rd_code(crzb_l.id) as crzb_code,
                 get_crzb_with_p_name(crzb_l.id) as crzb_name
                 from crzb_list as crzb_l
-            ) as crzb_var
-            on mem_lk_crzb.crzb_id = crzb_var.id
-            
-            left join assign_roles_trans as asn_role_tns
-            on mem_lk_crzb.crzb_id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
-            
-            left join members as asn_mem
-            on asn_role_tns.member_id = asn_mem.id
-            
-            where 
-            mem_lk_crzb.linked_type=1 and
-            (
-              asn_mem.user_asn_id like '%${search}%' or
-              asn_mem.full_name like '%${search}%' or
-              crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-              crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-            )
-            group by mem_lk_crzb.crzb_id, asn_role_tns.member_id`,
+              ) as crzb_var
+              on mem_lk_crzb.crzb_id = crzb_var.id
+              
+              left join assign_roles_trans as asn_role_tns
+              on mem_lk_crzb.crzb_id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+              
+              left join members as asn_mem
+              on asn_role_tns.member_id = asn_mem.id
+              
+              where 
+              mem_lk_crzb.linked_type=1 and
+              (
+                asn_mem.user_asn_id like '%${search}%' or
+                asn_mem.full_name like '%${search}%' or
+                crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}$%'
+              )
+              group by mem_lk_crzb.crzb_id, asn_role_tns.member_id
+            ) as all_data`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -173,26 +175,29 @@ router.get('/commission-list', function (req, res) {
       connection.query(
         `select 
             COUNT(*) as tot_rows
-          from assign_roles_trans as asr_trans
-          join members as m
-          on asr_trans.member_id = m.id
-          
-          join (
-            select 
-            crzb_l.id,
-            get_crzb_rd_code(crzb_l.id) as crzb_code,
-            get_crzb_with_p_name(crzb_l.id) as crzb_name
-            from crzb_list as crzb_l
-          ) as crzb_var
-          on asr_trans.crzb_id = crzb_var.id
-          
-          where (
-            m.user_asn_id like '%${search}%' or
-              m.full_name like '%${search}%' or
-              crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
-              crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-            )
-          group by m.id, crzb_var.id`,
+            from (
+              select m.id
+              from assign_roles_trans as asr_trans
+              join members as m
+              on asr_trans.member_id = m.id
+              
+              join (
+              select 
+              crzb_l.id,
+              get_crzb_rd_code(crzb_l.id) as crzb_code,
+              get_crzb_with_p_name(crzb_l.id) as crzb_name
+              from crzb_list as crzb_l
+              ) as crzb_var
+              on asr_trans.crzb_id = crzb_var.id
+              
+              where (
+              m.user_asn_id like '%${search}%' or
+                m.full_name like '%${search}%' or
+                crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
+                crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              )
+              group by m.id, crzb_var.id
+            ) as all_data`,
         function (error, result) {
           if (error) {
             connection.release()

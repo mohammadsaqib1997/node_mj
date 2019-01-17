@@ -144,28 +144,34 @@ router.get('/ac_branch/:search', (req, res) => {
           err
         })
       } else {
-        let sel_query = `SELECT CONCAT(l_b.name, ", ", l_z.name, ", ", l_r.name, ", ", l_c.name) as name, l_b.id FROM crzb_list as l_b`,
-          join_b = ` join crzb_list as l_z
-          on l_b.parent_id = l_z.id
-          join crzb_list as l_r
-          on l_z.parent_id = l_r.id
-          join crzb_list as l_c
-          on l_r.parent_id = l_c.id`,
-          where_b = ` where (l_b.name like '%${req.params.search}%' OR l_z.name like '%${req.params.search}%' OR l_r.name like '%${req.params.search}%' OR l_c.name like '%${req.params.search}%') AND l_b.type=3 AND l_b.active=1`,
-          limit_b = ` LIMIT 10`
-
-        connection.query(sel_query + join_b + where_b + limit_b, function (error, result) {
-          connection.release();
-          if (error) {
-            res.status(500).json({
-              error
-            })
-          } else {
-            res.json({
-              result
-            })
-          }
-        })
+        connection.query(
+          `select 
+                crzb_var.*
+            from crzb_list as main_l
+            join (
+              select 
+                crzb_l.id,
+                get_crzb_with_p_name(crzb_l.id) as name
+              from crzb_list as crzb_l
+            ) as crzb_var
+            on main_l.id = crzb_var.id
+            
+            where main_l.type=3 AND main_l.active=1 AND (
+              crzb_var.name collate utf8mb4_general_ci like '%${req.params.search}%'
+            )
+            limit 10`,
+          function (error, result) {
+            connection.release();
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result
+              })
+            }
+          })
       }
     })
   } else {

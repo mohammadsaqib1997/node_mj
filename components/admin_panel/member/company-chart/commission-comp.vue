@@ -1,0 +1,190 @@
+<template>
+  <div class="main">
+    <div class="box counter-box">
+      <div class="columns is-gapless is-multiline">
+        <div class="column is-12-mobile is-6-tablet">
+          <div class="flex">
+            <div>
+              <div class="tile is-ancestor c-tile is-parent">
+                <div class="tile is-vertical is-narrow">
+                  <div class="tile is-child">
+                    <h5>{{ all_comm.monthly }}/-</h5>
+                  </div>
+                  <div class="tile is-child">
+                    <h5>{{ all_comm.yearly }}/-</h5>
+                  </div>
+                  <div class="tile is-child">
+                    <h5>{{ all_comm.total }}/-</h5>
+                  </div>
+                </div>
+                <div class="tile is-vertical">
+                  <div class="tile is-child">
+                    <span>Monthly Commission</span>
+                  </div>
+                  <div class="tile is-child">
+                    <span>Yearly Commission</span>
+                  </div>
+                  <div class="tile is-child">
+                    <span>Total Commission</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="column is-12-mobile is-6-tablet">
+          <div class="flex">
+            <div>
+              <div class="amount-wrapper">
+                <b>{{ getData(lvl_1_comm, 'name', 'Others') }}</b>
+                <h1>{{ getData(lvl_1_comm, 'comm', 0) }}/-</h1>
+              </div>
+              <h5
+                class="title-cus-2"
+              >{{ getData(type_data, getData(hod_data, 'type', 0), null) }} Commission</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+      <b-loading :is-full-page="false" :active="loading" :can-cancel="false"></b-loading>
+    </div>
+    <div class="box main-box">
+      <div class="header columns is-gapless is-multiline">
+        <div class="column">
+          <h1>Commission List</h1>
+        </div>
+      </div>
+      <div class="body">
+        <div class="section">
+          <tblTopFilter
+            :act_view="String(load_params.limit)"
+            :s_txt="load_params.search"
+            @change_act_view="update_params('limit', parseInt($event))"
+            @change_s_txt="update_params('search', $event)"
+          ></tblTopFilter>
+
+          <tableComp
+            :arr="l_data"
+            :loading="loading"
+            :striped="true"
+            :total_record="num_rows"
+            :per_page="parseInt(load_params.limit)"
+            :page_set="load_params.page"
+            @page_change="update_params('page', $event)"
+          >
+            <template slot="thead">
+              <tr>
+                <th>ID</th>
+                <th>Joined Member ID</th>
+                <th>Joined Member Name</th>
+                <th>Code</th>
+                <th>Area Name</th>
+                <th>Amount</th>
+                <th>issue_date</th>
+              </tr>
+            </template>
+            <template slot="tbody">
+              <tr v-for="(row, ind) in l_data" :key="ind">
+                <td>{{ row.id }}</td>
+                <td>{{ row.j_mj_id }}</td>
+                <td>{{ row.j_mj_name }}</td>
+                <td>{{ row.code }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.amount }}</td>
+                <td>{{ $store.getters['formatDate'](row.issue_date) }}</td>
+              </tr>
+            </template>
+          </tableComp>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import _ from "lodash";
+import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
+import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
+import tableComp from "~/components/html_comp/tableComp.vue";
+export default {
+  mixins: [mxn_tableFilterListing],
+  components: {
+    tableComp,
+    tblTopFilter
+  },
+  computed: {
+    hod_data: function() {
+      return this.$store.state["crzb-module"];
+    }
+  },
+  data() {
+    return {
+      all_comm: {
+        total: 0,
+        yearly: 0,
+        monthly: 0
+      },
+      lvl_1_comm: {},
+      type_data: ["Country", "Region", "Zone", "Branch"]
+    };
+  },
+  methods: {
+    async loadData() {
+      const self = this;
+      self.loading = true;
+      await self.$axios
+        .get(`/api/hod/commission-count/${self.hod_data.hod_id}`)
+        .then(res => {
+          self.all_comm = {
+            total: res.data.data.total_comm,
+            yearly: res.data.data.yearly_comm,
+            monthly: res.data.data.monthly_comm
+          };
+          self.lvl_1_comm = {
+            type: res.data.data.type,
+            name: res.data.data.name,
+            comm: res.data.data.total_comm
+          };
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      await self.$axios
+        .get(`/api/hod/commission-list/${self.hod_data.hod_id}/${self.hod_data.type+1}`, {
+          params: self.load_params
+        })
+        .then(res => {
+          self.l_data = res.data.data;
+          self.num_rows = res.data.tot_rows;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      self.loading = false;
+    },
+
+    getData(obj, path, def) {
+      return _.get(obj, path, def);
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.main {
+  /deep/ {
+    h1.title {
+      font-family: serif;
+      font-size: 1.5rem;
+      color: #454545;
+      text-transform: uppercase;
+      font-weight: 100;
+      margin-bottom: 1rem;
+    }
+    .main-box > .body > .section > hr {
+      background-color: #d9bd68;
+    }
+  }
+}
+</style>
+

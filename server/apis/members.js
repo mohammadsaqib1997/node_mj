@@ -1652,6 +1652,71 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
     return cb(throw_error)
   }
 
+  // franchise transaction insertion
+  await new Promise(resolve => {
+    // select ref user and apply comissions and set wallet and direct or indirect count increament
+    connection.query('SELECT franchise_id FROM mem_link_franchise WHERE member_id=?', mem_id, async function (error, results, fields) {
+      if (error) {
+        throw_error = error
+        return resolve()
+      } else {
+        if (results.length > 0) {
+          let fr_id = results[0].franchise_id
+          connection.query(
+            `select id, member_id from assign_role_fr where fr_id=${fr_id} and role_status=1`,
+            function (error, results) {
+              if (error) {
+                throw_error = error
+                return resolve()
+              } else {
+                if (results.length > 0) {
+                  let asn_role_fr_mem_id = results[0].member_id,
+                    asn_role_fr_id = results[0].id
+
+                  connection.query('INSERT INTO `assign_roles_trans_fr` SET ?', {
+                    member_id: asn_role_fr_mem_id,
+                    fr_id,
+                    asn_role_fr_id,
+                    linked_member_id: mem_id
+                  }, function (error, results, fields) {
+                    if (error) {
+                      throw_error = error
+                      return resolve()
+                    } else {
+                      // notify query add franchise member to user
+                      connection.query('INSERT INTO `notifications` SET ?', {
+                        from_type: 1,
+                        to_type: 0,
+                        from_id: 1,
+                        to_id: asn_role_fr_mem_id,
+                        from_txt: 'Admin',
+                        message: `Add Member In Your Franchise - User ID ${mem_asn_id}`,
+                        notify_type: 0
+                      }, function (error, results, fields) {
+                        if (error) {
+                          throw_error = error
+                        }
+                        return resolve()
+                      })
+                    }
+                  })
+
+                } else {
+                  return resolve()
+                }
+              }
+            }
+          )
+        } else {
+          return resolve()
+        }
+      }
+    })
+  })
+  if (throw_error) {
+    return cb(throw_error)
+  }
+
   // add amount to company wallet after all commission issued
   await new Promise(resolve => {
     connection.query('SELECT wallet FROM company_var WHERE id=1', function (error, results) {

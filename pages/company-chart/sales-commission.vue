@@ -12,19 +12,29 @@
       </div>
     </div>
 
-    <saleComp v-if="tab_act === 0"></saleComp>
-    <CommComp v-if="tab_act === 1"></CommComp>
+    <template v-if="$store.state['crzb-module']['type'] === 5">
+      <saleComp v-if="tab_act === 0"></saleComp>
+      <CommComp v-if="tab_act === 1"></CommComp>
+    </template>
+    <template v-else>
+      <memSalesComp v-if="tab_act === 0"></memSalesComp>
+      <memCommComp v-if="tab_act === 1"></memCommComp>
+    </template>
   </div>
 </template>
 
 <script>
 import saleComp from "~/components/admin_panel/admin/comapny-chart/sales-comp.vue";
 import CommComp from "~/components/admin_panel/admin/comapny-chart/commission-comp.vue";
+import memSalesComp from "~/components/admin_panel/member/company-chart/sales-comp.vue";
+import memCommComp from "~/components/admin_panel/member/company-chart/commission-comp.vue";
 export default {
   layout: "admin_layout",
   components: {
     saleComp,
-    CommComp
+    CommComp,
+    memSalesComp,
+    memCommComp
   },
   data() {
     return {

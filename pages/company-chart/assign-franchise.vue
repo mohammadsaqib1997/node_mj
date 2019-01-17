@@ -39,40 +39,30 @@
                   ></b-input>
                 </b-field>
               </div>
-              <div class="column">
-                <b-field
-                  class="cus-des-1"
-                  expanded
-                  :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_role')"
-                >
-                  <b-select v-model="f_data.sel_role" expanded @input="ac_crzb=''">
-                    <option value>Select Role</option>
-                    <option v-for="(r, ind) in roles" :value="ind" :key="ind">{{ r }}</option>
-                  </b-select>
-                </b-field>
-              </div>
             </div>
 
-            <div class="columns is-variable is-2" v-if="f_data.sel_role !== ''">
-              <div class="column">
+            <div class="columns is-variable is-2">
+              <div class="column is-4">
                 <b-field
-                  class="cus-des-1"
+                  label="Select Franchise"
+                  class="cus-des-1 select-multi"
                   expanded
-                  :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_crzb_id')"
+                  :type="(validation.hasError('f_data.fr_ids')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.fr_ids')"
                 >
-                  <b-autocomplete
-                    :placeholder="`Enter ${roles[f_data.sel_role]}`"
-                    :data="crzb_list"
-                    v-model="ac_crzb"
-                    field="name"
+                  <b-select
+                    multiple
+                    v-model="f_data.fr_ids"
                     expanded
-                    :keep-first="true"
-                    @select="option => f_data.sel_crzb_id = option ? option.id : null"
-                    @input="loadCRZB"
-                    :loading="isFetching"
-                  ></b-autocomplete>
+                    :loading="isLoadingFrc"
+                    :disabled="isLoadingFrc"
+                  >
+                    <option
+                      v-for="(item, ind) in frc_list"
+                      :value="item.id"
+                      :key="ind"
+                    >{{ item.name }}</option>
+                  </b-select>
                 </b-field>
               </div>
             </div>
@@ -114,24 +104,33 @@
             <template slot="thead">
               <tr>
                 <th>ID</th>
-                <th>Code</th>
                 <th>MJ ID</th>
-                <th>Head Of Depart</th>
-                <th>Name Of Area</th>
-                <th>Name Of Role</th>
+                <th>MJ Name</th>
+                <th>Code</th>
+                <th>Name Of Franchise</th>
+                <th>Name Of Branch</th>
                 <th>Action</th>
               </tr>
             </template>
             <template slot="tbody">
-              <asnRoleRow
-                v-for="(row, ind) in l_data"
-                :key="ind"
-                :row="row"
-                :edit="row.id===row_edit_id"
-                @loading="loading=$event"
-                @loadData="loadData"
-                @row_edit="row_edit_id=$event"
-              ></asnRoleRow>
+              <tr v-for="(row, ind) in l_data" :key="ind">
+                <td>{{ row.id }}</td>
+                <td>{{ row.user_asn_id }}</td>
+                <td>{{ row.full_name }}</td>
+                <td>{{ row.fr_code }}</td>
+                <td>{{ row.fr_name }}</td>
+                <td>{{ row.br_name }}</td>
+                <td>
+                  <b-field grouped>
+                    <p class="control">
+                      <button
+                        @click.prevent="toggleSts(row, !row.role_status)"
+                        :class="['button is-small', {'is-danger': row.role_status === 1, 'is-success': row.role_status === 0}]"
+                      >{{ row.role_status === 0 ? 'Active':'Deactive' }}</button>
+                    </p>
+                  </b-field>
+                </td>
+              </tr>
             </template>
           </tableComp>
         </div>
@@ -146,7 +145,6 @@ import moment from "moment";
 import mxn_tableFilterListing from "~/mixins/table_filter_listing.js";
 import tblTopFilter from "~/components/html_comp/tableTopFilter.vue";
 import tableComp from "~/components/html_comp/tableComp.vue";
-import asnRoleRow from "~/components/forms/assign_role_row.vue";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
 export default {
@@ -154,25 +152,23 @@ export default {
   mixins: [mxn_tableFilterListing],
   components: {
     tableComp,
-    tblTopFilter,
-    asnRoleRow
+    tblTopFilter
+  },
+  async mounted() {
+    const self = this;
+    await this.loadFrnList(self.$store.state["crzb-module"]["hod_id"]);
   },
   data() {
     return {
       loading_form: false,
-      roles: ["Country", "Region", "Zone", "Branch"],
-      row_edit_id: null,
-      isFetching: false,
-      ac_crzb: "",
-      crzb_list: [],
+      isLoadingFrc: false,
+      frc_list: [],
       search_mj_user: "",
       submitted: false,
       s_name: "",
-      s_user_cac_load: false,
       f_data: {
         mem_id: "",
-        sel_role: "",
-        sel_crzb_id: null
+        fr_ids: []
       }
     };
   },
@@ -198,9 +194,8 @@ export default {
           } else {
             return validator.custom(() => {
               if (!Validator.isEmpty(value)) {
-                self.s_user_cac_load = true;
                 return self.$axios
-                  .post("/api/assign-role/get-user-check", {
+                  .post("/api/assign-role-fr/get-user-check", {
                     email: value
                   })
                   .then(res => {
@@ -210,7 +205,6 @@ export default {
                       self.s_name = res.data.result.full_name;
                       self.f_data.mem_id = res.data.result.id;
                     }
-                    self.s_user_cac_load = false;
                   });
               }
             });
@@ -218,38 +212,8 @@ export default {
         }
       }
     },
-    "f_data.sel_role": function(value) {
-      return Validator.value(value)
-        .required()
-        .digit()
-        .lessThanOrEqualTo(3);
-    },
-    "f_data.sel_crzb_id": {
-      cache: false,
-      validator: function(value) {
-        const self = this;
-
-        let validator = Validator.value(value)
-          .required()
-          .digit()
-          .maxLength(11);
-
-        if (validator.hasImmediateError()) {
-          return validator;
-        } else {
-          return validator.custom(() => {
-            if (!Validator.isEmpty(value)) {
-              return self.$axios
-                .get(`/api/assign-role/exist-check/${value}`)
-                .then(res => {
-                  if (res.data.count > 0) {
-                    return "Already assigned.";
-                  }
-                });
-            }
-          });
-        }
-      }
+    "f_data.fr_ids": function(value) {
+      return Validator.value(value).required();
     }
   },
   methods: {
@@ -267,7 +231,7 @@ export default {
       const self = this;
       self.loading = true;
       await self.$axios
-        .get("/api/assign-role/list", {
+        .get(`/api/assign-role-fr/list/${self.$store.state['crzb-module']['hod_id']}`, {
           params: self.load_params
         })
         .then(res => {
@@ -279,40 +243,33 @@ export default {
         });
       self.loading = false;
     },
-    after_f_settle: _.debounce(function(cb) {
-      cb();
-    }, 500),
-    loadCRZB() {
+    after_f_settle: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    loadFrnList(crzb_id) {
       const self = this;
-      self.isFetching = true;
+      self.isLoadingFrc = true;
       self.after_f_settle(function() {
-        if (self.f_data.sel_crzb_id !== null) {
-          self.isFetching = false;
+        if (crzb_id === null) {
+          self.isLoadingFrc = false;
           return;
         }
-        // self.isFetching = true;
-        self.crzb_list = [];
-
-        if (!self.ac_crzb.length) {
-          self.crzb_list = [];
-          self.isFetching = false;
-          return;
-        }
+        self.frc_list = [];
         self.$axios
-          .get(
-            `/api/crzb-list/ac_search_list/${self.f_data.sel_role}/${
-              self.ac_crzb
-            }`
-          )
+          .get(`/api/assign-role-fr/get-fr-list/${crzb_id}`)
           .then(({ data }) => {
-            self.crzb_list = data.result;
+            self.frc_list = data.result;
           })
           .catch(error => {
-            self.crzb_list = [];
+            self.frc_list = [];
             throw error;
           })
           .finally(() => {
-            self.isFetching = false;
+            self.isLoadingFrc = false;
           });
       });
     },
@@ -323,7 +280,7 @@ export default {
       self.$validate().then(function(success) {
         if (success) {
           self.$axios
-            .post("/api/assign-role/assign", self.f_data)
+            .post("/api/assign-role-fr/assign", self.f_data)
             .then(async res => {
               self.reset();
               self.loading_form = false;
@@ -353,17 +310,75 @@ export default {
     reset() {
       this.f_data = {
         mem_id: "",
-        sel_role: "",
-        sel_crzb_id: null
+        fr_ids: []
       };
       this.search_mj_user = "";
       this.s_name = "";
       this.submitted = false;
       this.validation.reset();
+    },
+    toggleSts(row, asn_sts) {
+      const self = this;
+      this.$dialog.confirm({
+        title: `${asn_sts ? "Active" : "Deactive"} assigned member!`,
+        message: `Are you sure you want to <b>${
+          asn_sts ? "active" : "deactive"
+        }</b> assigned member?`,
+        confirmText: `${asn_sts ? "Active" : "Deactive"}`,
+        type: `${asn_sts ? "is-success" : "is-danger"}`,
+        hasIcon: true,
+        onConfirm: async () => {
+          self.loading = true;
+          await self.$axios
+            .post("/api/assign-role-fr/toggle-status", {
+              row_id: row.id,
+              change_sts: asn_sts,
+              fr_id: row.fr_id
+            })
+            .then(async res => {
+              self.$toast.open({
+                duration: 1000,
+                message: `Successfully assigned member ${
+                  asn_sts ? "Active" : "Deactive"
+                }.`,
+                position: "is-bottom",
+                type: "is-success"
+              });
+              self.loadData();
+            })
+            .catch(err => {
+              self.loading = false;
+              console.log(err);
+              self.$toast.open({
+                duration: 1000,
+                message: "Server Error.",
+                position: "is-bottom",
+                type: "is-danger"
+              });
+            });
+        }
+      });
     }
   }
 };
 </script>
 
 <style lang="scss" scoped>
+.wrapper {
+  /deep/ {
+    .form .cus-des-1 {
+      &.select-multi {
+        .select > select {
+          height: auto;
+        }
+      }
+    }
+    // .select-multi {
+    //   background-color: red;
+    //   select {
+    //     height: auto;
+    //   }
+    // }
+  }
+}
 </style>

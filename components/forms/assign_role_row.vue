@@ -2,6 +2,7 @@
   <tr :class="[{form: edit_row.row_id === row.id}, 'ar_row']">
     <td>{{ row.id }}</td>
     <td>{{ row.crzb_code }}</td>
+    <td>{{ row.mj_id }}</td>
     <td>{{ row.full_name }}</td>
     <td :class="{'vc-top': edit_row.row_id === row.id}">
       <template v-if="edit_row.row_id !== row.id">{{ row.name }}</template>

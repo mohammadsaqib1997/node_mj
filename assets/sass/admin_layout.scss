@@ -733,7 +733,8 @@ $primary-light: rgba(217, 189, 104, 0.25);
                 }
             }
 
-            .control.is-loading::after {
+            .control.is-loading::after,
+            .select.is-loading::after {
                 top: 18px;
             }
 
