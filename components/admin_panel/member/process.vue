@@ -54,22 +54,57 @@
         <div class="body">
           <div class="section panel-cont">
             <div class="cus-collapse">
-              <div class="header" @click="collapse_opne_ind=0">Bank</div>
-              <div
-                class="body-content" :style="{'display': collapse_opne_ind === 0 ? 'block': ''}"
-              >After transferring the amount, whats the receipt using whatsapp messenger on below right of your screen or email us the invoice at : info@mj-supreme.com. It may take 24 to 48 hours to activate upon approval.</div>
+              <div class="header" @click="collapse_opne_ind=0">
+                <img src="~/assets/img/payment_opt/MeezanBank.png">
+                Bank
+              </div>
+              <div class="body-content" :style="{'display': collapse_opne_ind === 0 ? 'block': ''}">
+                <p>
+                  <b>Name:</b> Syed Javaid Hassan
+                  <br>
+                  <b>Bank:</b> Meezan Bank Ltd.
+                  <br>
+                  <b>Account Number:</b> 01040100202501
+                </p>
+                <br>
+                <p>
+                  <b>Note:</b> After transferring the amount, whats the receipt using whatsapp messenger on below right of your screen or email us the invoice at : info@mj-supreme.com. It may take 24 to 48 hours to activate upon approval.
+                </p>
+              </div>
             </div>
             <div class="cus-collapse">
-              <div class="header" @click="collapse_opne_ind=1">Jazz Cash</div>
-              <div
-                class="body-content" :style="{'display': collapse_opne_ind === 1 ? 'block': ''}"
-              >After transferring the amount, whats the receipt using whatsapp messenger on below right of your screen or email us the invoice at : info@mj-supreme.com. It may take 24 to 48 hours to activate upon approval.</div>
+              <div class="header" @click="collapse_opne_ind=1">
+                <img src="~/assets/img/payment_opt/jazzCash.png">
+                Jazz Cash
+              </div>
+              <div class="body-content" :style="{'display': collapse_opne_ind === 1 ? 'block': ''}">
+                <p>
+                  <b>Name:</b> Syed Javaid Hassan
+                  <br>
+                  <b>Number:</b> 03008232618
+                </p>
+                <br>
+                <p>
+                  <b>Note:</b> After transferring the amount, whats the receipt using whatsapp messenger on below right of your screen or email us the invoice at : info@mj-supreme.com. It may take 24 to 48 hours to activate upon approval.
+                </p>
+              </div>
             </div>
             <div class="cus-collapse">
-              <div class="header" @click="collapse_opne_ind=2">Easy Paisa</div>
-              <div
-                class="body-content" :style="{'display': collapse_opne_ind === 2 ? 'block': ''}"
-              >After transferring the amount, whats the receipt using whatsapp messenger on below right of your screen or email us the invoice at : info@mj-supreme.com. It may take 24 to 48 hours to activate upon approval.</div>
+              <div class="header" @click="collapse_opne_ind=2">
+                <img src="~/assets/img/payment_opt/easyPaisa.png">
+                Easy Paisa
+              </div>
+              <div class="body-content" :style="{'display': collapse_opne_ind === 2 ? 'block': ''}">
+                <p>
+                  <b>Name:</b> Syed Javaid Hassan
+                  <br>
+                  <b>Number:</b> 03008232618
+                </p>
+                <br>
+                <p>
+                  <b>Note:</b> After transferring the amount, whats the receipt using whatsapp messenger on below right of your screen or email us the invoice at : info@mj-supreme.com. It may take 24 to 48 hours to activate upon approval.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -245,6 +280,11 @@ export default {
           padding: 10px 20px;
           font-weight: 500;
           text-transform: uppercase;
+          display: flex;
+          align-items: center;
+          img {
+            margin-right: 1rem;
+          }
         }
         .body-content {
           display: none;
