@@ -15,14 +15,20 @@
                     span SIDC Card
                 .column(@click="tabActive(2)")
                   .t-card(:class="{active: (tab_header_ind === 2)}")
-                    span SIDC Insurance Card
+                    span SIDC + Insurance Card
 
             .tab-body
               .tab-content(:class="{active: this.cur_step === 1}")
                 user-detail-form(ref="userDetForm")
 
             .tab-footer
-              button.button.btn-des-1(type="submit") SignUp
+              p.discount-txt(v-if="tab_header_ind === 2 && isPromotion")
+                | Promotion 10000 PKR - 20% = 8000 PKR
+                br
+                | This promotion will expire by the end of 20th January 2019.
+              b-field
+                p.control.has-text-centered
+                  button.button.btn-des-1(type="submit") SignUp
             b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
     termAndCondMD(:isSignup="true" :md_active="tc_md_active" @accept_terms_tr="accept_terms=$event;tc_md_active=false;signup();")
 </template>
@@ -30,6 +36,8 @@
 <script>
 import termAndCondMD from "~/components/modals/terms_and_cond.vue";
 import userDetailForm from "~/components/forms/user_details.vue";
+import { DateTime } from "luxon";
+import moment from "moment";
 export default {
   head: {
     script: [
@@ -40,7 +48,9 @@ export default {
     ]
   },
   mounted() {
-    this.$nextTick(function() {
+    const self = this;
+    self.$nextTick(function() {
+      self.promotionCheck();
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
@@ -61,13 +71,51 @@ export default {
         err: "",
         loading: false
       },
+      timeoutInterval: null,
+      isPromotion: false,
+      prom_start_date: DateTime.local()
+        .setZone("UTC+5")
+        .set({
+          year: 2019,
+          month: 1,
+          day: 18,
+          hour: 0,
+          minute: 0,
+          second: 0
+        })
+        .toString(),
+      prom_end_date: DateTime.local()
+        .setZone("UTC+5")
+        .set({
+          year: 2019,
+          month: 1,
+          day: 18,
+          hour: 23,
+          minute: 59,
+          second: 59
+        })
+        .toString(),
       tab_header_ind: 1,
       cur_step: 1,
       tc_md_active: false,
       accept_terms: false
     };
   },
+  destroyed() {
+    clearTimeout(this.timeoutInterval);
+  },
   methods: {
+    promotionCheck() {
+      const self = this;
+      let curr_dt = DateTime.local()
+        .setZone("UTC+5")
+        .toString();
+      self.isPromotion = moment(curr_dt).isBetween(
+        self.prom_start_date,
+        self.prom_end_date
+      );
+      self.timeoutInterval = setTimeout(self.promotionCheck, 1000);
+    },
     tabActive: function(ind) {
       if (this.cur_step === 1) this.tab_header_ind = ind;
     },
@@ -87,7 +135,6 @@ export default {
           self.tc_md_active = true;
           return;
         }
-        // console.log(form_data);
         await self.$axios
           .post("/api/web/signup", {
             member_data: {
@@ -101,7 +148,8 @@ export default {
             ext_data: {
               prd_id: form_data.sel_prd,
               crzb_id: form_data.sel_crzb_id,
-              franchise: form_data.franchise
+              franchise: form_data.franchise,
+              promotion: self.isPromotion
             }
           })
           .then(res => {
@@ -282,6 +330,12 @@ export default {
     .tab-footer {
       padding: 2rem;
       text-align: center;
+      .discount-txt {
+        margin-bottom: 1rem;
+        font-weight: 100;
+        font-size: 20px;
+        color: #47ab15;
+      }
       .btn-des-1 {
         max-width: 100%;
         white-space: pre-wrap;

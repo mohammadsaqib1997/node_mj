@@ -75,10 +75,10 @@ const authRoutes = [{
         name: "system-level-auto-rewards",
         type_allowed: [0]
     },
-    {
-        name: "system-level-self-rewards",
-        type_allowed: [0]
-    },
+    // {
+    //     name: "system-level-self-rewards",
+    //     type_allowed: [0]
+    // },
     {
         name: "withdraw",
         type_allowed: [0]

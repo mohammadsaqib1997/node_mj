@@ -297,13 +297,13 @@ export default {
               title: "Auto Rewards",
               show: [0]
             },
-            {
-              name: "self-rewards",
-              active: false,
-              url: "/system-level/self-rewards",
-              title: "Self Rewards",
-              show: [0]
-            }
+            // {
+            //   name: "self-rewards",
+            //   active: false,
+            //   url: "/system-level/self-rewards",
+            //   title: "Self Rewards",
+            //   show: [0]
+            // }
           ]
         },
         {

@@ -2,6 +2,9 @@ const express = require('express')
 const router = express.Router()
 const _ = require('lodash')
 const moment = require("moment")
+const {
+  DateTime
+} = require('luxon');
 
 const db = require('../db.js')
 const db_util = require('../func/db-util.js')
@@ -298,7 +301,7 @@ router.get('/get_level_info', function (req, res) {
           error: err
         })
       } else {
-        connection.query("SELECT h_childs_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+        connection.query("SELECT h_childs_count, direct_ref_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
           connection.release()
           if (error) {
             res.status(500).json({
@@ -307,7 +310,8 @@ router.get('/get_level_info', function (req, res) {
           } else {
             if (results.length > 0) {
               res.json({
-                child_count: results[0].h_childs_count
+                child_count: results[0].h_childs_count,
+                direct_ref: results[0].direct_ref_count
               })
             } else {
               res.json({
@@ -657,13 +661,40 @@ router.post("/add_referral", function (req, res) {
                 connection.query(
                   `SELECT reg_amount FROM products WHERE id=?`,
                   req.body.ext_data.product_id,
-                  function (error, result) {
+                  async function (error, result) {
                     if (error) {
                       err_hdl(error)
                       resolve()
                     } else {
                       if (result.length > 0) {
                         let prd_reg_amount = result[0].reg_amount
+
+                        let throw_error;
+                        let promotion_id;
+                        await new Promise(promResolve => {
+                          let curr_date = moment(DateTime.local()
+                            .setZone("UTC+5")
+                            .toString()).format("YYYY-MM-DD HH-mm-ss")
+                          connection.query(
+                            `SELECT id, disc_percent FROM disc_promotions WHERE prd_id = ${req.body.ext_data.product_id} AND (start_prom_dt<='${curr_date}' AND end_prom_dt>='${curr_date}') limit 1`,
+                            function (error, result) {
+                              if (error) {
+                                throw_error = error
+                                return promResolve()
+                              } else {
+                                if (result.length > 0) {
+                                  promotion_id = result[0].id
+                                  prd_reg_amount = parseInt(prd_reg_amount) - parseInt((parseInt(prd_reg_amount) * result[0].disc_percent) / 100)
+                                }
+                                return promResolve()
+                              }
+                            }
+                          )
+                        })
+                        if (throw_error) {
+                          err_hdl(throw_error)
+                          resolve()
+                        }
 
                         // deduct amount from wallet
                         connection.query(
@@ -706,12 +737,35 @@ router.post("/add_referral", function (req, res) {
                                             connection.query(
                                               'INSERT INTO members SET ?',
                                               req.body.member_data,
-                                              function (error, results) {
+                                              async function (error, results) {
                                                 if (error) {
                                                   err_hdl(error)
                                                   resolve()
                                                 } else {
                                                   let mem_id = results.insertId
+
+                                                  if (promotion_id) {
+                                                    let throw_error;
+                                                    await new Promise(promResolve => {
+                                                      connection.query(
+                                                        `INSERT INTO mem_in_prom SET ?`, {
+                                                          member_id: mem_id,
+                                                          disc_prom_id: promotion_id
+                                                        },
+                                                        function (error) {
+                                                          if (error) {
+                                                            throw_error = error
+                                                          }
+                                                          return promResolve()
+                                                        }
+                                                      )
+                                                    })
+                                                    if (throw_error) {
+                                                      err_hdl(throw_error)
+                                                      resolve()
+                                                    }
+                                                  }
+
 
                                                   connection.query(
                                                     'INSERT INTO `user_product_details` SET ?', {
@@ -858,12 +912,52 @@ router.post('/add', function (req, res) {
       })
     } else {
       db_util.connectTrans(connection, function (resolve, err_hdl) {
-        connection.query('INSERT INTO `members` SET ?', req.body.member_data, function (error, results, fields) {
+        connection.query('INSERT INTO `members` SET ?', req.body.member_data, async function (error, results, fields) {
           if (error) {
             err_hdl(error)
             resolve()
           } else {
             let mem_id = results.insertId
+
+            let throw_error;
+            let curr_date = moment(DateTime.local()
+              .setZone("UTC+5")
+              .toString()).format("YYYY-MM-DD HH-mm-ss")
+            await new Promise(promResolve => {
+              connection.query(
+                `SELECT id FROM disc_promotions WHERE prd_id = ${req.body.ext_data.prd_id} AND (start_prom_dt<='${curr_date}' AND end_prom_dt>='${curr_date}') limit 1`,
+                function (error, result) {
+                  if (error) {
+                    throw_error = error
+                    return promResolve()
+                  } else {
+                    if (!result.length) {
+                      return promResolve()
+                    } else {
+                      let prom_id = result[0].id
+                      connection.query(
+                        `INSERT INTO mem_in_prom SET ?`, {
+                          member_id: mem_id,
+                          disc_prom_id: prom_id
+                        },
+                        function (error) {
+                          if (error) {
+                            throw_error = error
+                          }
+                          return promResolve()
+                        }
+                      )
+                    }
+                  }
+                }
+              )
+            })
+            if (throw_error) {
+              err_hdl(throw_error)
+              resolve()
+            }
+
+
             connection.query('INSERT INTO `user_product_details` SET ?', {
               product_id: req.body.ext_data.prd_id,
               member_id: mem_id
@@ -1137,7 +1231,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
   let add_to_c_wallet = 0
   await new Promise(resolve => {
     connection.query(
-      `SELECT prd.reg_amount 
+      `SELECT prd.reg_amount, prd.id 
       FROM user_product_details as u_prd_det
       LEFT JOIN products as prd
       ON u_prd_det.product_id = prd.id
@@ -1145,10 +1239,29 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       function (error, result) {
         if (error) {
           throw_error = error
+          return resolve()
         } else {
-          add_to_c_wallet = result[0].reg_amount
+          let prd_det = result[0]
+          add_to_c_wallet = prd_det.reg_amount
+          connection.query(
+            `select 
+                disc_promotions.disc_percent
+              from mem_in_prom
+              join disc_promotions
+              on mem_in_prom.disc_prom_id = disc_promotions.id and disc_promotions.prd_id = ${prd_det.id}
+              where mem_in_prom.member_id=${mem_id}`,
+            function (error, result) {
+              if (error) {
+                throw_error = error
+              } else {
+                if (result.length > 0) {
+                  add_to_c_wallet = parseInt(prd_det.reg_amount) - parseInt((parseInt(prd_det.reg_amount) * result[0].disc_percent) / 100)
+                }
+              }
+              return resolve()
+            }
+          )
         }
-        return resolve()
       })
   })
 

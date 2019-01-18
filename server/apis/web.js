@@ -9,6 +9,9 @@ const trans_email = require('../e-conf.js')
 const jwt = require('jsonwebtoken')
 const _ = require('lodash');
 const moment = require('moment');
+const {
+  DateTime
+} = require('luxon');
 const fs = require('fs');
 const gm = require('gm')
 
@@ -986,6 +989,46 @@ router.post('/signup', (req, res) => {
                 if (throw_error) {
                   return resolve()
                 }
+
+                // check member select promotion and if exist any promotion
+                if (req.body.ext_data.promotion === true) {
+                  let curr_date = moment(DateTime.local()
+                    .setZone("UTC+5")
+                    .toString()).format("YYYY-MM-DD HH-mm-ss")
+                  await new Promise(promResolve => {
+                    connection.query(
+                      `SELECT id FROM disc_promotions WHERE prd_id = ${req.body.ext_data.prd_id} AND (start_prom_dt<='${curr_date}' AND end_prom_dt>='${curr_date}') limit 1`,
+                      function (error, result) {
+                        if (error) {
+                          throw_error = error
+                          return promResolve()
+                        } else {
+                          if (!result.length) {
+                            return promResolve()
+                          } else {
+                            let prom_id = result[0].id
+                            connection.query(
+                              `INSERT INTO mem_in_prom SET ?`, {
+                                member_id: mem_id,
+                                disc_prom_id: prom_id
+                              },
+                              function (error) {
+                                if (error) {
+                                  throw_error = error
+                                }
+                                return promResolve()
+                              }
+                            )
+                          }
+                        }
+                      }
+                    )
+                  })
+                  if (throw_error) {
+                    return resolve()
+                  }
+                }
+
 
                 connection.query(`INSERT INTO terms_accept SET member_id=${mem_id}, accept_sts=1`, function (error, results, fields) {
                   if (error) {

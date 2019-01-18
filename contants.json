@@ -42,9 +42,10 @@
         "seen": "0=unseen|1=seen"
     },
     "claim_rewards": {
+        "__comment": "Self change to Campaign",
         "type": {
             "0": "Auto Rewards",
-            "1": "Self Rewards"
+            "1": "Campaign Rewards"
         },
         "reward_selected": {
             "0": "Level Reward",

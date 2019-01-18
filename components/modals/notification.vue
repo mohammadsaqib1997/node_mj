@@ -93,7 +93,7 @@
                 b-field.cancel_rs_fld(v-if="cancel_fm.is === true")
                   b-input(placeholder="Cancel Reason" v-model="cancel_fm.msg" expanded)
                   p.control
-                    button.button.is-primary.btn-des-1(@click.prevent="claim_ch_sts(2)") Cancel
+                    button.button.is-primary.btn-des-1(@click.prevent="claim_ch_sts(2)" style="margin-top:0;") Cancel
                 template(v-else)
                   button.button.btn-des-1(@click.prevent="cancel_fm.is=true;")
                     | Cancel
