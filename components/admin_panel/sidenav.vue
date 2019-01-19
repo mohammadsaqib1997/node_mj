@@ -2,7 +2,7 @@
   #navbar.navbar-container
     .wrapper
       ul
-        li(v-for="item in menu" v-if="find(item.show, u_type)" :class="{ 'has-dropdown': item.hasOwnProperty('children'), 'is-active': item.active }")
+        li(v-for="item in menu" v-if="find(item.show, u_type) && store_check(item)" :class="{ 'has-dropdown': item.hasOwnProperty('children'), 'is-active': item.active }")
           template(v-if="item.url")
             nuxt-link.nav-item(:to="item.url")
               img.i-img(v-if="item.img !== null" :src="'/img/'+item.img+((item.active) ? '-active': '')+'.png'")
@@ -16,7 +16,7 @@
             template(v-if="item.hasOwnProperty('children')")
               .dropdown
                 ul
-                  li(v-for="d_child in item.children" v-if="find(d_child.show, u_type)" :class="{ 'has-popover': d_child.hasOwnProperty('children'), 'is-active': d_child.active }")
+                  li(v-for="d_child in item.children" v-if="find(d_child.show, u_type) && store_check_eql(d_child)" :class="{ 'has-popover': d_child.hasOwnProperty('children'), 'is-active': d_child.active }")
                     template(v-if="d_child.url")
                       nuxt-link.nav-item(:to="d_child.url")
                         span {{ d_child.title }}
@@ -70,6 +70,67 @@ export default {
           url: "/business-chart",
           title: "Business Chart",
           show: [0, 1, 2]
+        },
+        {
+          name: "company-chart",
+          active: false,
+          img: null,
+          icon: '<i class="fas fa-building"></i>',
+          url: false,
+          title: "Company Chart",
+          show: [0, 2],
+          store_key: "crzb-module.type",
+          children: [
+            {
+              name: "assign-roles",
+              active: false,
+              url: "/company-chart/assign-roles",
+              title: "Assign Roles",
+              show: [2]
+            },
+            {
+              name: "branch-management",
+              active: false,
+              url: "/company-chart/branch-management",
+              title: "Branch Management",
+              show: [2]
+            },
+            {
+              name: "sales-commission",
+              active: false,
+              url: "/company-chart/sales-commission",
+              title: "Sales - Commission",
+              show: [0, 2],
+              store_key: "crzb-module.type",
+              store_eql_val: 4,
+              comp_cond: '!'
+            },
+            {
+              name: "sales",
+              active: false,
+              url: "/company-chart/sales",
+              title: "Sales",
+              show: [0],
+              store_key: "crzb-module.type",
+              store_eql_val: 4
+            },
+            {
+              name: "hierarchy",
+              active: false,
+              url: "/company-chart/hierarchy",
+              title: "Hierarchy",
+              show: [2]
+            },
+            {
+              name: "assign-franchise",
+              active: false,
+              url: "/company-chart/assign-franchise",
+              title: "Assign Franchise",
+              show: [0],
+              store_key: "crzb-module.type",
+              store_eql_val: 3
+            }
+          ]
         },
         {
           name: "fund-manager",
@@ -237,12 +298,19 @@ export default {
               show: [0]
             },
             {
-              name: "self-rewards",
+              name: "campaign",
               active: false,
-              url: "/system-level/self-rewards",
-              title: "Self Rewards",
+              url: "/system-level/campaign",
+              title: "Campaign",
               show: [0]
-            }
+            },
+            // {
+            //   name: "self-rewards",
+            //   active: false,
+            //   url: "/system-level/self-rewards",
+            //   title: "Self Rewards",
+            //   show: [0]
+            // }
           ]
         },
         {
@@ -435,6 +503,30 @@ export default {
 
     find(data, val) {
       return _.indexOf(data, val) > -1;
+    },
+    store_check(item) {
+      if (item.hasOwnProperty("store_key")) {
+        return _.get(this.$store.state, item.store_key, null) !== null;
+      }
+      return true;
+    },
+    store_check_eql(item) {
+      if (
+        item.hasOwnProperty("store_key") &&
+        item.hasOwnProperty("store_eql_val")
+      ) {
+        if (item.hasOwnProperty("comp_cond") && item.comp_cond === "!") {
+          return (
+            _.get(this.$store.state, item.store_key, null) !=
+            item["store_eql_val"]
+          );
+        }
+        return (
+          _.get(this.$store.state, item.store_key, null) ===
+          item["store_eql_val"]
+        );
+      }
+      return true;
     }
   }
 };

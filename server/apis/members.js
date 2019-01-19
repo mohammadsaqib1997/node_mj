@@ -2,8 +2,12 @@ const express = require('express')
 const router = express.Router()
 const _ = require('lodash')
 const moment = require("moment")
+const {
+  DateTime
+} = require('luxon');
 
 const db = require('../db.js')
+const db_util = require('../func/db-util.js')
 
 router.get("/", function (req, res) {
   let offset = 0,
@@ -46,8 +50,12 @@ router.get("/", function (req, res) {
         FROM members as m
         LEFT JOIN info_var_m as u_var
         ON m.id = u_var.member_id
+        LEFT JOIN mem_link_crzb as mem_l_crzb
+        ON m.id=mem_l_crzb.member_id
+        LEFT JOIN crzb_list as crzb_b_l
+        ON mem_l_crzb.crzb_id=crzb_b_l.id
         ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR m.city LIKE ?)' : ''}
+        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_b_l.name LIKE ?)' : ''}
         ${(filter_qry !== '') ? filter_qry:''}
         `,
         ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
@@ -66,19 +74,23 @@ router.get("/", function (req, res) {
                   m.id, 
                   m.user_asn_id, 
                   m.email, 
-                  m.full_name, 
-                  m.city, 
+                  m.full_name,
                   m.active_sts, 
                   m.is_paid_m, 
+                  crzb_b_l.name as crzb_name,
                   u_var.level,
                   COUNT(ur.id) as tot_rcp_up 
                 FROM members as m
+                LEFT JOIN mem_link_crzb as mem_l_crzb
+                ON m.id=mem_l_crzb.member_id
+                LEFT JOIN crzb_list as crzb_b_l
+                ON mem_l_crzb.crzb_id=crzb_b_l.id
                 LEFT JOIN user_receipts as ur
                 ON m.id=ur.ref_id AND ur.type=0 
                 LEFT JOIN info_var_m as u_var
                 ON m.id = u_var.member_id
                 ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR m.city LIKE ?)' : ''}
+                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_b_l.name LIKE ?)' : ''}
                 ${(filter_qry !== '') ? filter_qry:''}
                 GROUP BY m.id
                 ORDER BY m.id DESC
@@ -128,7 +140,6 @@ router.get('/member_info/:id', function (req, res, next) {
               m.id,
               m.active_sts,
               m.address,
-              m.city,
               m.cnic_num,
               m.contact_num,
               m.dob,
@@ -136,10 +147,8 @@ router.get('/member_info/:id', function (req, res, next) {
               m.full_name,
               m.ref_user_asn_id,
               m.user_asn_id,
-              u_prd.product_id,
-              u_prd.buyer_type,
-              u_prd.buyer_qty_prd,
-              u_prd.buyer_pay_type,
+              prd.id as product_id,
+              prd.name as product_name,
               u_var.package_act_date,
               u_var.level,
               u_var.wallet,
@@ -150,10 +159,22 @@ router.get('/member_info/:id', function (req, res, next) {
               u_bank.account_number,
               u_bank.account_title,
               u_bank.iban_number,
-              u_bank.address as bk_address
+              u_bank.address as bk_address,
+              crzb_b_l.name as crzb_name,
+              fr_ls.name as fr_name
             FROM members as m
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            LEFT JOIN crzb_list as crzb_b_l
+            ON mem_l_crzb.crzb_id=crzb_b_l.id
+            LEFT JOIN mem_link_franchise as mem_l_fr
+            ON m.id=mem_l_fr.member_id
+            LEFT JOIN franchises as fr_ls
+            ON mem_l_fr.franchise_id=fr_ls.id
             LEFT JOIN user_product_details as u_prd
             ON m.id = u_prd.member_id
+            LEFT JOIN products as prd
+            ON u_prd.product_id = prd.id
             LEFT JOIN info_var_m as u_var
             ON m.id = u_var.member_id
             LEFT JOIN user_bank_details as u_bank
@@ -280,7 +301,7 @@ router.get('/get_level_info', function (req, res) {
           error: err
         })
       } else {
-        connection.query("SELECT h_childs_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
+        connection.query("SELECT h_childs_count, direct_ref_count FROM info_var_m WHERE member_id=?", req.decoded.data.user_id, function (error, results) {
           connection.release()
           if (error) {
             res.status(500).json({
@@ -289,7 +310,8 @@ router.get('/get_level_info', function (req, res) {
           } else {
             if (results.length > 0) {
               res.json({
-                child_count: results[0].h_childs_count
+                child_count: results[0].h_childs_count,
+                direct_ref: results[0].direct_ref_count
               })
             } else {
               res.json({
@@ -573,13 +595,29 @@ router.get("/:id", function (req, res, next) {
       } else {
         let options = {
           sql: `
-        SELECT m.*, upd.buyer_pay_type, upd.buyer_qty_prd, upd.buyer_type, upd.product_id, upd.id
-        FROM members AS m
-        LEFT JOIN user_product_details as upd
-        ON m.id=upd.member_id
-        WHERE m.id=?
-        `,
-          nestTables: true
+          SELECT m.*, upd.product_id, mem_l_crzb.crzb_id, 
+            (SELECT concat(ls_b.name, ", ", ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as name 
+                FROM crzb_list as ls_b
+                join crzb_list as ls_z
+                on ls_b.parent_id = ls_z.id
+                join crzb_list as ls_r
+                on ls_z.parent_id = ls_r.id
+                join crzb_list as ls_c
+                on ls_r.parent_id = ls_c.id
+              where ls_b.id=mem_l_crzb.crzb_id) as crzb_ac_name,
+              fr_ls.name as fr_name,
+              fr_ls.id as fr_id
+            FROM members AS m
+            LEFT JOIN user_product_details as upd
+            ON m.id=upd.member_id
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            LEFT JOIN mem_link_franchise as mem_l_fr
+            ON m.id=mem_l_fr.member_id
+            LEFT JOIN franchises as fr_ls
+            ON mem_l_fr.franchise_id=fr_ls.id
+            WHERE m.id=?
+        `
         }
 
         connection.query(options, [req.params.id], function (error, results, fields) {
@@ -610,148 +648,230 @@ router.post("/add_referral", function (req, res) {
         err
       })
     } else {
-      connection.beginTransaction(async function (err) {
-        if (err) {
-          connection.release()
-          res.status(500).json({
-            err
-          })
-        } else {
-          let throw_error = null
-          await new Promise(resolve => {
-            connection.query('SELECT COUNT(*) as count FROM members WHERE id=? AND user_asn_id=?', [req.decoded.data.user_id, req.body.member_data.ref_user_asn_id], function (error, results, fields) {
-              if (error) {
-                throw_error = error
-                resolve()
-              } else {
-                if (results[0].count > 0) {
-
-                  // deduct amount from wallet
-                  connection.query('SELECT wallet FROM `info_var_m` WHERE member_id=?', req.decoded.data.user_id, function (error, results, fields) {
+      db_util.connectTrans(connection, function (resolve, err_hdl) {
+        connection.query(
+          'SELECT COUNT(*) as count FROM members WHERE id=? AND user_asn_id=?',
+          [req.decoded.data.user_id, req.body.member_data.ref_user_asn_id],
+          function (error, results) {
+            if (error) {
+              err_hdl(error)
+              resolve()
+            } else {
+              if (results[0].count > 0) {
+                connection.query(
+                  `SELECT reg_amount FROM products WHERE id=?`,
+                  req.body.ext_data.product_id,
+                  async function (error, result) {
                     if (error) {
-                      throw_error = error
-                      return resolve()
+                      err_hdl(error)
+                      resolve()
                     } else {
+                      if (result.length > 0) {
+                        let prd_reg_amount = result[0].reg_amount
 
-                      if (results.length > 0 && parseInt(results[0].wallet) >= 5000) {
-
-                        let set_w_params = {
-                          wallet: parseInt(results[0].wallet) - 5000
-                        }
-                        connection.query('UPDATE info_var_m SET ? WHERE member_id=?', [set_w_params, req.decoded.data.user_id], function (error, results, fields) {
-                          if (error) {
-                            throw_error = error
-                            return resolve()
-                          } else {
-
-                            // grab last user asn id
-                            connection.query('SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1', function (error, results, fields) {
+                        let throw_error;
+                        let promotion_id;
+                        await new Promise(promResolve => {
+                          let curr_date = moment(DateTime.local()
+                            .setZone("UTC+5")
+                            .toString()).format("YYYY-MM-DD HH-mm-ss")
+                          connection.query(
+                            `SELECT id, disc_percent FROM disc_promotions WHERE prd_id = ${req.body.ext_data.product_id} AND (start_prom_dt<='${curr_date}' AND end_prom_dt>='${curr_date}') limit 1`,
+                            function (error, result) {
                               if (error) {
                                 throw_error = error
-                                return resolve()
+                                return promResolve()
                               } else {
-                                req.body.member_data['is_paid_m'] = 1
-                                req.body.member_data['active_sts'] = 1
+                                if (result.length > 0) {
+                                  promotion_id = result[0].id
+                                  prd_reg_amount = parseInt(prd_reg_amount) - parseInt((parseInt(prd_reg_amount) * result[0].disc_percent) / 100)
+                                }
+                                return promResolve()
+                              }
+                            }
+                          )
+                        })
+                        if (throw_error) {
+                          err_hdl(throw_error)
+                          resolve()
+                        }
 
-                                // id increament with last id
-                                let new_inc = (parseInt(results[0].user_asn_id) + 1).toString()
-                                new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
-                                req.body.member_data['user_asn_id'] = new_inc
-
-                                // insert member for new data
-                                connection.query('INSERT INTO members SET ?', req.body.member_data, function (error, results, fields) {
-                                  if (error) {
-                                    throw_error = error
-                                    return resolve()
-                                  } else {
-                                    let mem_id = results.insertId
-                                    req.body.prd_data['member_id'] = mem_id
-                                    connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
-                                      if (error) {
-                                        throw_error = error
-                                        return resolve()
-                                      } else {
-
-                                        connection.query('INSERT INTO `transactions_m` SET ?', {
-                                          member_id: req.decoded.data.user_id,
-                                          remarks: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
-                                          credit: 5000
-                                        }, function (error, results, fields) {
+                        // deduct amount from wallet
+                        connection.query(
+                          'SELECT wallet FROM `info_var_m` WHERE member_id=?',
+                          req.decoded.data.user_id,
+                          function (error, results) {
+                            if (error) {
+                              err_hdl(error)
+                              resolve()
+                            } else {
+                              if (results.length > 0 && parseInt(results[0].wallet) >= prd_reg_amount) {
+                                let set_w_params = {
+                                  wallet: parseInt(results[0].wallet) - prd_reg_amount
+                                }
+                                connection.query(
+                                  'UPDATE info_var_m SET ? WHERE member_id=?',
+                                  [set_w_params, req.decoded.data.user_id],
+                                  function (error, results) {
+                                    if (error) {
+                                      err_hdl(error)
+                                      resolve()
+                                    } else {
+                                      // grab last user asn id
+                                      connection.query(
+                                        'SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1',
+                                        function (error, results) {
                                           if (error) {
-                                            throw_error = error
-                                            return resolve()
+                                            err_hdl(error)
+                                            resolve()
                                           } else {
+                                            req.body.member_data['is_paid_m'] = 1
+                                            req.body.member_data['active_sts'] = 1
 
-                                            connection.query('INSERT INTO `notifications` SET ?', {
-                                              from_type: 1,
-                                              to_type: 0,
-                                              from_id: 1,
-                                              to_id: req.decoded.data.user_id,
-                                              message: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
-                                              notify_type: 0
-                                            }, function (error, results, fields) {
-                                              if (error) {
-                                                throw_error = error
-                                                return resolve()
-                                              } else {
-                                                after_paid_member(connection, mem_id, req.body.member_data['user_asn_id'], function (err) {
-                                                  if (err) {
-                                                    throw_error = err
-                                                  }
+                                            // id increament with last id
+                                            let new_inc = (parseInt(results[0].user_asn_id) + 1).toString()
+                                            new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
+                                            req.body.member_data['user_asn_id'] = new_inc
+
+                                            // insert member for new data
+                                            connection.query(
+                                              'INSERT INTO members SET ?',
+                                              req.body.member_data,
+                                              async function (error, results) {
+                                                if (error) {
+                                                  err_hdl(error)
                                                   resolve()
-                                                })
-                                              }
+                                                } else {
+                                                  let mem_id = results.insertId
 
-                                            })
+                                                  if (promotion_id) {
+                                                    let throw_error;
+                                                    await new Promise(promResolve => {
+                                                      connection.query(
+                                                        `INSERT INTO mem_in_prom SET ?`, {
+                                                          member_id: mem_id,
+                                                          disc_prom_id: promotion_id
+                                                        },
+                                                        function (error) {
+                                                          if (error) {
+                                                            throw_error = error
+                                                          }
+                                                          return promResolve()
+                                                        }
+                                                      )
+                                                    })
+                                                    if (throw_error) {
+                                                      err_hdl(throw_error)
+                                                      resolve()
+                                                    }
+                                                  }
+
+
+                                                  connection.query(
+                                                    'INSERT INTO `user_product_details` SET ?', {
+                                                      product_id: req.body.ext_data.product_id,
+                                                      member_id: mem_id
+                                                    },
+                                                    function (error, results) {
+                                                      if (error) {
+                                                        err_hdl(error)
+                                                        resolve()
+                                                      } else {
+                                                        connection.query(
+                                                          'INSERT INTO `mem_link_crzb` SET ?', {
+                                                            member_id: mem_id,
+                                                            crzb_id: req.body.ext_data.crzb_id,
+                                                            linked_type: 1
+                                                          },
+                                                          function (error, results) {
+                                                            if (error) {
+                                                              err_hdl(error)
+                                                              resolve()
+                                                            } else {
+                                                              connection.query(
+                                                                'INSERT INTO `mem_link_franchise` SET ?', {
+                                                                  member_id: mem_id,
+                                                                  franchise_id: req.body.ext_data.fr_id,
+                                                                  linked_type: 1
+                                                                },
+                                                                function (error, results) {
+                                                                  if (error) {
+                                                                    err_hdl(error)
+                                                                    resolve()
+                                                                  } else {
+                                                                    connection.query(
+                                                                      'INSERT INTO `transactions_m` SET ?', {
+                                                                        member_id: req.decoded.data.user_id,
+                                                                        remarks: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
+                                                                        credit: prd_reg_amount
+                                                                      },
+                                                                      function (error, results) {
+                                                                        if (error) {
+                                                                          err_hdl(error)
+                                                                          resolve()
+                                                                        } else {
+                                                                          connection.query('INSERT INTO `notifications` SET ?', {
+                                                                            from_type: 1,
+                                                                            to_type: 0,
+                                                                            from_id: 1,
+                                                                            to_id: req.decoded.data.user_id,
+                                                                            message: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
+                                                                            notify_type: 0
+                                                                          }, function (error, results) {
+                                                                            if (error) {
+                                                                              err_hdl(error)
+                                                                              resolve()
+                                                                            } else {
+                                                                              after_paid_member(connection, mem_id, req.body.member_data['user_asn_id'], function (err) {
+                                                                                if (err) {
+                                                                                  err_hdl(err)
+                                                                                }
+                                                                                resolve()
+                                                                              })
+                                                                            }
+                                                                          })
+                                                                        }
+                                                                      })
+                                                                  }
+                                                                })
+                                                            }
+                                                          })
+                                                      }
+                                                    })
+                                                }
+                                              })
                                           }
                                         })
-                                      }
-                                    })
-                                  }
-                                })
+                                    }
+                                  })
+                              } else {
+                                err_hdl(`You have not Rs. ${prd_reg_amount}/- in your wallet!`)
+                                resolve()
                               }
-                            })
-                          }
-                        })
+                            }
+                          })
                       } else {
-                        throw_error = "You have not Rs. 5000/- in your wallet!"
-                        return resolve()
+                        err_hdl("Invalid Product Selected!")
+                        resolve()
                       }
                     }
-                  })
-                } else {
-                  throw_error = "Not valid user!"
-                  resolve()
-                }
-              }
-            })
-          })
-
-          if (throw_error) {
-            return connection.rollback(function () {
-              connection.release()
-              res.status(500).json({
-                throw_error
-              })
-            });
-          } else {
-            connection.commit(function (err) {
-              if (err) {
-                return connection.rollback(function () {
-                  connection.release()
-                  res.status(500).json({
-                    err
-                  })
-                });
+                  }
+                )
               } else {
-                connection.release()
-                res.json({
-                  status: true
-                })
+                err_hdl("Invalid User!")
+                resolve()
               }
-            })
-          }
-
+            }
+          })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
         }
       })
     }
@@ -791,87 +911,108 @@ router.post('/add', function (req, res) {
         err
       })
     } else {
-      connection.beginTransaction(function (err) {
-        if (err) {
-          connection.release()
-          res.status(500).json({
-            err
-          })
-        } else {
-          connection.query('INSERT INTO `members` SET ?', req.body.member_data, function (error, results, fields) {
-            if (error) {
-              return connection.rollback(function () {
-                connection.release()
-                res.status(500).json({
-                  error
-                })
-              })
-            } else {
-              let mem_id = results.insertId
-              req.body.prd_data['member_id'] = mem_id
-              connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
-                if (error) {
-                  return connection.rollback(function () {
-                    connection.release()
-                    res.status(500).json({
-                      error
-                    })
-                  })
-                } else {
+      db_util.connectTrans(connection, function (resolve, err_hdl) {
+        connection.query('INSERT INTO `members` SET ?', req.body.member_data, async function (error, results, fields) {
+          if (error) {
+            err_hdl(error)
+            resolve()
+          } else {
+            let mem_id = results.insertId
 
-                  if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
-
-                    after_paid_member(connection, mem_id, req.body.member_data.user_asn_id, function (err) {
-                      if (err) {
-                        return connection.rollback(function () {
-                          connection.release()
-                          res.status(500).json({
-                            err
-                          })
-                        });
-                      } else {
-                        connection.commit(function (err) {
-                          if (err) {
-                            return connection.rollback(function () {
-                              connection.release()
-                              res.status(500).json({
-                                err
-                              })
-                            });
-                          } else {
-                            connection.release()
-                            res.json({
-                              status: true
-                            })
-                          }
-                        })
-                      }
-                    })
-
+            let throw_error;
+            let curr_date = moment(DateTime.local()
+              .setZone("UTC+5")
+              .toString()).format("YYYY-MM-DD HH-mm-ss")
+            await new Promise(promResolve => {
+              connection.query(
+                `SELECT id FROM disc_promotions WHERE prd_id = ${req.body.ext_data.prd_id} AND (start_prom_dt<='${curr_date}' AND end_prom_dt>='${curr_date}') limit 1`,
+                function (error, result) {
+                  if (error) {
+                    throw_error = error
+                    return promResolve()
                   } else {
-                    connection.commit(function (err) {
-                      if (err) {
-                        return connection.rollback(function () {
-                          connection.release()
-                          res.status(500).json({
-                            err
-                          })
-                        });
+                    if (!result.length) {
+                      return promResolve()
+                    } else {
+                      let prom_id = result[0].id
+                      connection.query(
+                        `INSERT INTO mem_in_prom SET ?`, {
+                          member_id: mem_id,
+                          disc_prom_id: prom_id
+                        },
+                        function (error) {
+                          if (error) {
+                            throw_error = error
+                          }
+                          return promResolve()
+                        }
+                      )
+                    }
+                  }
+                }
+              )
+            })
+            if (throw_error) {
+              err_hdl(throw_error)
+              resolve()
+            }
+
+
+            connection.query('INSERT INTO `user_product_details` SET ?', {
+              product_id: req.body.ext_data.prd_id,
+              member_id: mem_id
+            }, function (error, results, fields) {
+              if (error) {
+                err_hdl(error)
+                resolve()
+              } else {
+                connection.query('INSERT INTO `mem_link_crzb` SET ?', {
+                  member_id: mem_id,
+                  crzb_id: req.body.ext_data.crzb_id,
+                  linked_type: 1
+                }, function (error, results, fields) {
+                  if (error) {
+                    err_hdl(error)
+                    resolve()
+                  } else {
+                    connection.query('INSERT INTO `mem_link_franchise` SET ?', {
+                      member_id: mem_id,
+                      franchise_id: req.body.ext_data.fr_id,
+                      linked_type: 1
+                    }, function (error, results, fields) {
+                      if (error) {
+                        err_hdl(error)
+                        resolve()
                       } else {
-                        connection.release()
-                        res.json({
-                          status: true
-                        })
+                        if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
+                          after_paid_member(connection, mem_id, req.body.member_data.user_asn_id, function (err) {
+                            if (err) {
+                              err_hdl(err)
+                            }
+                            return resolve()
+                          })
+                        } else {
+                          resolve()
+                        }
                       }
                     })
                   }
-                }
-              })
-            }
-          });
+                })
+              }
+            })
+          }
+        })
+      }, function (error) {
+        if (error) {
+          res.status(500).json({
+            error
+          })
+        } else {
+          res.json({
+            status: true
+          })
         }
       })
-
     }
   })
 
@@ -885,106 +1026,129 @@ router.post('/update', function (req, res) {
         err
       })
     } else {
-      connection.beginTransaction(function (err) {
-        if (err) {
-          connection.release()
+      db_util.connectTrans(connection, function (resolve, err_hdl) {
+        connection.query('UPDATE `members` SET ? WHERE id=?', [req.body.member_data, req.body.update_id], function (error, results, fields) {
+          if (error) {
+            err_hdl(error)
+            resolve()
+          } else {
+            connection.query('SELECT member_id FROM user_product_details WHERE member_id=?', [req.body.update_id], function (error, results, fields) {
+              if (error) {
+                err_hdl(error)
+                resolve()
+              } else {
+                let query = 'UPDATE `user_product_details` SET ? WHERE member_id=?'
+                let params = [{
+                  product_id: req.body.ext_data.product_id
+                }, req.body.update_id]
+
+                if (results.length < 1) {
+                  query = 'INSERT INTO `user_product_details` SET ?'
+                  params = [{
+                    product_id: req.body.ext_data.product_id,
+                    member_id: req.body.update_id
+                  }]
+                }
+                connection.query(query, params, function (error, results, fields) {
+                  if (error) {
+                    err_hdl(error)
+                    resolve()
+                  } else {
+                    connection.query(
+                      `SELECT link_mem.member_id, m.is_paid_m FROM members as m
+                      LEFT JOIN mem_link_crzb as link_mem
+                      ON m.id = link_mem.member_id
+                      WHERE m.id=?`,
+                      [req.body.update_id],
+                      function (error, results, fields) {
+                        if (error) {
+                          err_hdl(error)
+                          resolve()
+                        } else {
+                          let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
+                          let params = [{
+                            crzb_id: req.body.ext_data.crzb_id
+                          }, req.body.update_id]
+
+                          if (results.length && results[0].member_id == null) {
+                            query = 'INSERT INTO `mem_link_crzb` SET ?'
+                            params = [{
+                              crzb_id: req.body.ext_data.crzb_id,
+                              member_id: req.body.update_id,
+                              linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                            }]
+                          }
+                          connection.query(query, params, function (error, results, fields) {
+                            if (error) {
+                              err_hdl(error)
+                              resolve()
+                            } else {
+
+                              connection.query(
+                                `SELECT mem_lk.member_id, m.is_paid_m
+                                FROM mem_link_franchise as mem_lk
+                                right join members as m
+                                on mem_lk.member_id = m.id
+                                WHERE m.id=?`,
+                                req.body.update_id,
+                                function (error, results, fields) {
+                                  if (error) {
+                                    err_hdl(error)
+                                    resolve()
+                                  } else {
+                                    let query = 'UPDATE `mem_link_franchise` SET ? WHERE member_id=?'
+                                    let params = [{
+                                      franchise_id: req.body.ext_data.fr_id
+                                    }, req.body.update_id]
+
+                                    if (results.length && results[0].member_id == null) {
+                                      query = 'INSERT INTO `mem_link_franchise` SET ?'
+                                      params = [{
+                                        franchise_id: req.body.ext_data.fr_id,
+                                        member_id: req.body.update_id,
+                                        linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                                      }]
+                                    }
+                                    connection.query(query, params, function (error, results, fields) {
+                                      if (error) {
+                                        err_hdl(error)
+                                        resolve()
+                                      } else {
+                                        if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
+                                          after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
+                                            if (err) {
+                                              err_hdl(err)
+                                            }
+                                            resolve()
+                                          })
+                                        } else {
+                                          resolve()
+                                        }
+                                      }
+                                    })
+                                  }
+                                })
+                            }
+                          })
+                        }
+                      })
+                  }
+                })
+              }
+            })
+          }
+        })
+      }, function (error) {
+        if (error) {
           res.status(500).json({
-            err
+            error
           })
         } else {
-          connection.query('UPDATE `members` SET ? WHERE id=?', [req.body.member_data, req.body.update_id], function (error, results, fields) {
-            if (error) {
-              return connection.rollback(function () {
-                connection.release()
-                res.status(500).json({
-                  error
-                })
-              })
-            } else {
-
-              connection.query('SELECT id FROM user_product_details WHERE member_id=?', [req.body.update_id], function (error, results, fields) {
-                if (error) {
-                  return connection.rollback(function () {
-                    connection.release()
-                    res.status(500).json({
-                      error
-                    })
-                  })
-                } else {
-                  let query = 'UPDATE `user_product_details` SET ? WHERE member_id=?'
-                  let params = [req.body.prd_data, req.body.update_id]
-
-                  if (results.length < 1) {
-                    query = 'INSERT INTO `user_product_details` SET ?'
-                    params = [req.body.prd_data]
-                  }
-
-                  connection.query(query, params, function (error, results, fields) {
-                    if (error) {
-                      return connection.rollback(function () {
-                        connection.release()
-                        res.status(500).json({
-                          error
-                        })
-                      })
-                    } else {
-
-                      if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
-
-                        after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
-                          if (err) {
-                            return connection.rollback(function () {
-                              connection.release()
-                              res.status(500).json({
-                                err
-                              })
-                            });
-                          } else {
-                            connection.commit(function (err) {
-                              if (err) {
-                                return connection.rollback(function () {
-                                  connection.release()
-                                  res.status(500).json({
-                                    err
-                                  })
-                                });
-                              } else {
-                                connection.release()
-                                res.json({
-                                  status: true
-                                })
-                              }
-                            })
-                          }
-                        })
-
-                      } else {
-                        connection.commit(function (err) {
-                          if (err) {
-                            return connection.rollback(function () {
-                              connection.release()
-                              res.status(500).json({
-                                err
-                              })
-                            });
-                          } else {
-                            connection.release()
-                            res.json({
-                              status: true
-                            })
-                          }
-                        })
-                      }
-
-                    }
-                  })
-                }
-              })
-            }
-          });
+          res.json({
+            status: true
+          })
         }
       })
-
     }
   })
 
@@ -1001,78 +1165,50 @@ router.post('/pay_user', function (req, res) {
       } else {
         let mem_id = req.body.id
 
-        connection.beginTransaction(async function (err) {
-          if (err) {
-            connection.release()
+        db_util.connectTrans(connection, function (resolve, err_hdl) {
+          connection.query('SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1', function (error, result) {
+            if (error) {
+              err_hdl(error)
+              resolve()
+            } else {
+              let params_set = {
+                is_paid_m: 1
+              }
+              // if not find it first id assign
+              if (result[0].user_asn_id === null) {
+                params_set['user_asn_id'] = '000010001'
+              } else {
+                // id increament with last id
+                let new_inc = (parseInt(result[0].user_asn_id) + 1).toString()
+                new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
+                params_set['user_asn_id'] = new_inc
+              }
+
+              // first change status is_paid_m=1 and assign id
+              connection.query('UPDATE `members` SET ? WHERE id=?', [params_set, mem_id], function (error, result) {
+                if (error) {
+                  err_hdl(error)
+                  return resolve()
+                } else {
+                  after_paid_member(connection, mem_id, params_set['user_asn_id'], function (err) {
+                    if (err) {
+                      err_hdl(err)
+                    }
+                    return resolve()
+                  })
+                }
+              })
+
+            }
+          })
+        }, function (error) {
+          if (error) {
             res.status(500).json({
-              err
+              error
             })
           } else {
-
-            // grab last user asn id
-            connection.query('SELECT user_asn_id FROM `members` ORDER BY user_asn_id DESC LIMIT 1', function (error, results, fields) {
-              if (error) {
-                return connection.rollback(function () {
-                  connection.release()
-                  res.status(500).json({
-                    error
-                  })
-                })
-              } else {
-
-                let params_set = {
-                  is_paid_m: 1
-                }
-                // if not find it first id assign
-                if (results[0].user_asn_id === null) {
-                  params_set['user_asn_id'] = '000010001'
-                } else {
-                  // id increament with last id
-                  let new_inc = (parseInt(results[0].user_asn_id) + 1).toString()
-                  new_inc = (new_inc.length < 9) ? ("000000000" + new_inc).substr(-9, 9) : new_inc
-                  params_set['user_asn_id'] = new_inc
-                }
-
-                // first change status is_paid_m=1 and assign id
-                connection.query('UPDATE `members` SET ? WHERE id=?', [params_set, mem_id], function (error, results, fields) {
-                  if (error) {
-                    return connection.rollback(function () {
-                      connection.release()
-                      res.status(500).json({
-                        error
-                      })
-                    })
-                  } else {
-
-                    after_paid_member(connection, mem_id, params_set['user_asn_id'], function (err) {
-                      if (err) {
-                        return connection.rollback(function () {
-                          connection.release()
-                          res.status(500).json({
-                            err
-                          })
-                        });
-                      } else {
-                        connection.commit(function (err) {
-                          if (err) {
-                            return connection.rollback(function () {
-                              connection.release()
-                              res.status(500).json({
-                                err
-                              })
-                            });
-                          } else {
-                            connection.release()
-                            res.json({
-                              status: true
-                            })
-                          }
-                        })
-                      }
-                    })
-                  }
-                })
-              }
+            res.json({
+              status: true
             })
           }
         })
@@ -1091,11 +1227,50 @@ module.exports = router
 
 async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
   let throw_error = null
-  // initial amount wallet company
-  let add_to_c_wallet = 5000
-
+  // initial product amount member which was registered in it
+  let add_to_c_wallet = 0
   await new Promise(resolve => {
-    // apply fees - transaction
+    connection.query(
+      `SELECT prd.reg_amount, prd.id 
+      FROM user_product_details as u_prd_det
+      LEFT JOIN products as prd
+      ON u_prd_det.product_id = prd.id
+      WHERE u_prd_det.member_id=${mem_id}`,
+      function (error, result) {
+        if (error) {
+          throw_error = error
+          return resolve()
+        } else {
+          let prd_det = result[0]
+          add_to_c_wallet = prd_det.reg_amount
+          connection.query(
+            `select 
+                disc_promotions.disc_percent
+              from mem_in_prom
+              join disc_promotions
+              on mem_in_prom.disc_prom_id = disc_promotions.id and disc_promotions.prd_id = ${prd_det.id}
+              where mem_in_prom.member_id=${mem_id}`,
+            function (error, result) {
+              if (error) {
+                throw_error = error
+              } else {
+                if (result.length > 0) {
+                  add_to_c_wallet = parseInt(prd_det.reg_amount) - parseInt((parseInt(prd_det.reg_amount) * result[0].disc_percent) / 100)
+                }
+              }
+              return resolve()
+            }
+          )
+        }
+      })
+  })
+
+  if (throw_error) {
+    return cb(throw_error)
+  }
+
+  // apply fees - transaction into company wallet
+  await new Promise(resolve => {
     connection.query('INSERT INTO `transactions_comp` SET ?', {
       remarks: "Activation Fees From User ID " + mem_asn_id,
       debit: add_to_c_wallet
@@ -1120,13 +1295,12 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       }
     })
   })
-
   if (throw_error) {
     return cb(throw_error)
   }
 
+  // insert member variable
   await new Promise(resolve => {
-    // insert member variable
     connection.query('INSERT INTO `info_var_m` SET ?', {
       member_id: mem_id
     }, async function (error, results, fields) {
@@ -1136,13 +1310,12 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       return resolve()
     })
   })
-
   if (throw_error) {
     return cb(throw_error)
   }
 
+  // count and add in hierarchy and assign parent id here
   await new Promise(resolve => {
-    // count and add in hierarchy and assign parent id here
     connection.query('SELECT COUNT(*) AS total_rows FROM `hierarchy_m`', function (error, results, fields) {
       if (error) {
         throw_error = error
@@ -1244,11 +1417,9 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       }
     })
   })
-
   if (throw_error) {
     return cb(throw_error)
   }
-
 
   // now finance goes here
   await new Promise(resolve => {
@@ -1258,6 +1429,28 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
         throw_error = error
         return resolve()
       } else {
+
+        if (results[0].ref_user_asn_id == null) {
+          results[0].ref_user_asn_id = '000000272'
+          await new Promise(resolve2 => {
+            connection.query(
+              `UPDATE members SET ? WHERE id=?`,
+              [{
+                ref_user_asn_id: '000000272'
+              }, mem_id],
+              function (error, result) {
+                if (error) {
+                  throw_error = error
+                }
+                return resolve2()
+              }
+            )
+          })
+          if (throw_error) {
+            return resolve()
+          }
+        }
+
         if (results[0].ref_user_asn_id !== null) {
           let grab_ref_usr_ids = [results[0].ref_user_asn_id]
 
@@ -1272,7 +1465,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                 ON m.id = iv.member_id
                 WHERE user_asn_id=?`,
                 ref_usr_asn_id,
-                function (error, results, fields) {
+                async function (error, results, fields) {
                   if (error) {
                     throw_error = error
                     return resolve2()
@@ -1282,6 +1475,73 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                     }
 
                     let ref_mem_id = results[0].id
+
+                    // campaign process goes here -- start
+                    await new Promise(resolveCamp => {
+                      let curr_date = DateTime.local()
+                        .setZone("UTC+5")
+                        .toFormat("yyyy-LL-dd HH:mm:ss")
+                      connection.query(
+                        `select id from campaigns where start_date <= '${curr_date}' and end_date >= '${curr_date}' limit 1`,
+                        function (error, result) {
+                          if (error) {
+                            throw_error = error
+                            return resolveCamp()
+                          } else {
+                            if (result.length > 0) {
+                              let camp_id = result[0].id
+                              connection.query(
+                                `select id, total_ref from mem_in_campaign where member_id=${ref_mem_id} and campaign_id=${camp_id}`,
+                                async function (error, result) {
+                                  if (error) {
+                                    throw_error = error
+                                    return resolveCamp()
+                                  } else {
+                                    let mem_in_camp_id, mem_tot_ref = 1
+                                    if (result.length > 0) {
+                                      mem_in_camp_id = result[0].id
+                                      mem_tot_ref = parseInt(result[0].total_ref) + 1
+                                      connection.query(
+                                        `update mem_in_campaign set ? where id=${mem_in_camp_id}`, {
+                                          total_ref: mem_tot_ref
+                                        },
+                                        function (error) {
+                                          if (error) {
+                                            throw_error = error
+                                          }
+                                          return resolveCamp()
+                                        }
+                                      )
+                                    } else {
+                                      connection.query(
+                                        `insert into mem_in_campaign set ?`, {
+                                          member_id: ref_mem_id,
+                                          campaign_id: camp_id,
+                                          total_ref: mem_tot_ref
+                                        },
+                                        function (error) {
+                                          if (error) {
+                                            throw_error = error
+                                          }
+                                          return resolveCamp()
+                                        }
+                                      )
+                                    }
+
+                                  }
+                                }
+                              )
+                            } else {
+                              return resolveCamp()
+                            }
+                          }
+                        }
+                      )
+                    })
+                    if (throw_error) {
+                      return resolve2()
+                    }
+                    // campaign process goes here -- end
 
                     direct_inc++
                     let set_param = {}
@@ -1300,7 +1560,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                     } else if (direct_inc <= 9) {
                       set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
                       commission_amount = 200
-                      set_param['wallet'] = parseInt(results[0].wallet) + 200
+                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
                     }
                     //  else {
                     //   set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
@@ -1410,7 +1670,229 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       }
     })
   })
+  if (throw_error) {
+    return cb(throw_error)
+  }
 
+  // Country Region Zone and Branch commission goes here
+  await new Promise(resolve => {
+    // select ref user and apply comissions and set wallet and direct or indirect count increament
+    connection.query('SELECT crzb_id FROM mem_link_crzb WHERE member_id=?', mem_id, async function (error, results, fields) {
+      if (error) {
+        throw_error = error
+        return resolve()
+      } else {
+        if (results.length > 0 && results[0].crzb_id !== null) {
+          let grab_crzb_ids = [results[0].crzb_id]
+
+          let crzb_inc = 0
+          for (crzb_id of grab_crzb_ids) {
+            await new Promise(resolve2 => {
+
+              connection.query(
+                `SELECT crzb_l.id, crzb_l.parent_id, crzb_l.type as crzb_type, asn_role.id as asn_role_id, asn_role.member_id, iv_mem.wallet, m.user_asn_id
+                FROM crzb_list as crzb_l
+                LEFT JOIN assign_roles as asn_role
+                ON crzb_l.id = asn_role.crzb_id AND asn_role.role_status=1
+                LEFT JOIN info_var_m as iv_mem
+                ON asn_role.member_id = iv_mem.member_id
+                LEFT JOIN members as m
+                ON asn_role.member_id = m.id
+                WHERE crzb_l.id=?`,
+                crzb_id,
+                function (error, results) {
+                  if (error) {
+                    throw_error = error
+                    return resolve2()
+                  } else {
+                    if (results[0].parent_id > 0 && results[0].parent_id !== null) {
+                      grab_crzb_ids.push(results[0].parent_id)
+                    }
+                    crzb_inc++
+
+                    let asn_role_id = results[0].asn_role_id
+                    let asn_role_mem_id = results[0].member_id
+                    let asn_role_mem_wallet = parseInt(results[0].wallet)
+                    let asn_role_mem_asn_id = results[0].user_asn_id
+                    let crzb_type = results[0].crzb_type
+
+                    if (asn_role_mem_id !== null) {
+                      let set_param = {}
+                      let commission_amount = 0
+
+                      if (crzb_inc === 1) {
+                        commission_amount = 200
+                      } else if (crzb_inc === 2) {
+                        commission_amount = 60
+                      } else if (crzb_inc === 3) {
+                        commission_amount = 75
+                      } else if (crzb_inc === 4) {
+                        commission_amount = 25
+                      }
+                      set_param['wallet'] = asn_role_mem_wallet + commission_amount
+
+                      add_to_c_wallet = add_to_c_wallet - commission_amount
+
+                      let crzb_names = ['Country', 'Region', 'Zone', 'Branch']
+
+                      connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, asn_role_mem_id], function (error, results) {
+                        if (error) {
+                          throw_error = error
+                          return resolve2()
+                        } else {
+
+                          // save commission - transaction in assign role transaction
+                          connection.query('INSERT INTO `assign_roles_trans` SET ?', {
+                            member_id: asn_role_mem_id,
+                            crzb_id,
+                            asn_role_id,
+                            linked_member_id: mem_id,
+                            amount: commission_amount
+                          }, function (error, results, fields) {
+                            if (error) {
+                              throw_error = error
+                              return resolve2()
+                            } else {
+                              // apply commission - transaction
+                              connection.query('INSERT INTO `transactions_m` SET ?', {
+                                member_id: asn_role_mem_id,
+                                remarks: `Issued Commission For ${crzb_names[crzb_type]} From User ID ${mem_asn_id}`,
+                                debit: commission_amount
+                              }, function (error, results, fields) {
+                                if (error) {
+                                  throw_error = error
+                                  return resolve2()
+                                } else {
+                                  // notify query issued commission to user
+                                  connection.query('INSERT INTO `notifications` SET ?', {
+                                    from_type: 1,
+                                    to_type: 0,
+                                    from_id: 1,
+                                    to_id: asn_role_mem_id,
+                                    from_txt: 'Admin',
+                                    message: `Issued Commission For ${crzb_names[crzb_type]} From User ID ${mem_asn_id} Amount Rs.${commission_amount}/-`,
+                                    notify_type: 0
+                                  }, function (error, results, fields) {
+                                    if (error) {
+                                      throw_error = error
+                                      return resolve2()
+                                    } else {
+                                      // transaction insert in company
+                                      connection.query('INSERT INTO `transactions_comp` SET ?', {
+                                        remarks: `Issued Commission For ${crzb_names[crzb_type]} To User ID ${asn_role_mem_asn_id}`,
+                                        credit: commission_amount
+                                      }, function (error, results, fields) {
+                                        if (error) {
+                                          throw_error = error
+                                          return resolve2()
+                                        } else {
+                                          // notify admin issued commission to user
+                                          connection.query('INSERT INTO `notifications` SET ?', {
+                                            from_type: 0,
+                                            to_type: 1,
+                                            from_id: asn_role_mem_id,
+                                            to_id: 1,
+                                            message: `Issued Commission For ${crzb_names[crzb_type]} To User ID ${asn_role_mem_asn_id} Amount Rs.${commission_amount}/-`,
+                                            notify_type: 0
+                                          }, function (error, results, fields) {
+                                            if (error) {
+                                              throw_error = error
+                                            }
+                                            return resolve2()
+                                          })
+                                        }
+                                      })
+                                    }
+                                  })
+                                }
+                              })
+                            }
+                          })
+                        }
+                      })
+
+                    } else {
+                      return resolve2()
+                    }
+                  }
+                }
+              )
+            })
+            if (throw_error) break
+          }
+          return resolve()
+
+        } else {
+          return resolve()
+        }
+      }
+    })
+  })
+  if (throw_error) {
+    return cb(throw_error)
+  }
+
+  // franchise transaction insertion
+  await new Promise(resolve => {
+    // select ref user and apply comissions and set wallet and direct or indirect count increament
+    connection.query('SELECT franchise_id FROM mem_link_franchise WHERE member_id=?', mem_id, async function (error, results, fields) {
+      if (error) {
+        throw_error = error
+        return resolve()
+      } else {
+        if (results.length > 0) {
+          let fr_id = results[0].franchise_id
+          connection.query(
+            `select id, member_id from assign_role_fr where fr_id=${fr_id} and role_status=1`,
+            function (error, results) {
+              if (error) {
+                throw_error = error
+                return resolve()
+              } else {
+                if (results.length > 0) {
+                  let asn_role_fr_mem_id = results[0].member_id,
+                    asn_role_fr_id = results[0].id
+
+                  connection.query('INSERT INTO `assign_roles_trans_fr` SET ?', {
+                    member_id: asn_role_fr_mem_id,
+                    fr_id,
+                    asn_role_fr_id,
+                    linked_member_id: mem_id
+                  }, function (error, results, fields) {
+                    if (error) {
+                      throw_error = error
+                      return resolve()
+                    } else {
+                      // notify query add franchise member to user
+                      connection.query('INSERT INTO `notifications` SET ?', {
+                        from_type: 1,
+                        to_type: 0,
+                        from_id: 1,
+                        to_id: asn_role_fr_mem_id,
+                        from_txt: 'Admin',
+                        message: `Add Member In Your Franchise - User ID ${mem_asn_id}`,
+                        notify_type: 0
+                      }, function (error, results, fields) {
+                        if (error) {
+                          throw_error = error
+                        }
+                        return resolve()
+                      })
+                    }
+                  })
+
+                } else {
+                  return resolve()
+                }
+              }
+            }
+          )
+        } else {
+          return resolve()
+        }
+      }
+    })
+  })
   if (throw_error) {
     return cb(throw_error)
   }
@@ -1437,7 +1919,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                 to_type: 1,
                 from_id: mem_id,
                 to_id: 1,
-                message: `${(is_add) ? "Add" : "Deduct"} Amount Rs.${add_to_c_wallet}/- From Wallet After Paid Member.`,
+                message: `${(is_add) ? "Add" : "Deduct"} Amount Rs.${add_to_c_wallet}/- From Wallet After Paid Member`,
                 notify_type: 0
               }, function (error, results, fields) {
                 if (error) {
@@ -1453,7 +1935,6 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       }
     })
   })
-
   if (throw_error) {
     return cb(throw_error)
   }
@@ -1475,7 +1956,6 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       return resolve()
     })
   })
-
   return cb(throw_error)
 }
 

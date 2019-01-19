@@ -2,29 +2,30 @@ import _ from 'lodash'
 
 export default {
     data() {
-        let auto_rewards_data = [
-            {
+        let auto_rewards_data = [{
                 lvl_id: 0,
-                lvl: "0 Level"
+                lvl: "You",
+                rwds: ['Business Kit']
             },
             {
                 lvl_id: 1,
                 lvl: "1st Level",
+                rwds: ['Watch']
             },
             {
                 lvl_id: 2,
                 lvl: "2nd Level",
-                rwds: ['Laptop', 'Rs. 25,000/-'],
+                rwds: ['Travelling bag']
             },
             {
                 lvl_id: 3,
                 lvl: "3rd Level",
-                rwds: ['Laptop', 'Rs. 25,000/-'],
+                rwds: ['Mobile', 'Rs. 25,000/-'],
             },
             {
                 lvl_id: 4,
                 lvl: "4th Level",
-                rwds: ['Mobile', 'Rs. 50,000/-'],
+                rwds: ['Laptop', 'Rs. 50,000/-'],
             },
             {
                 lvl_id: 5,

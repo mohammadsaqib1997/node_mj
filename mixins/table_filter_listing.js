@@ -5,10 +5,12 @@ export default {
         this.loadData()
     },
     computed: {
-        filter_val: function() {
-          return _.find(this.tbl_list_filters, { value: this.load_params.filter }).title;
+        filter_val: function () {
+            return _.find(this.tbl_list_filters, {
+                value: this.load_params.filter
+            }).title;
         }
-      },
+    },
     data() {
         return {
             loading: false,
@@ -24,6 +26,14 @@ export default {
         }
     },
     methods: {
+        resetParams() {
+            this.load_params = {
+                limit: "10",
+                search: "",
+                page: 1,
+                filter: ''
+            }
+        },
         change_filter_tr: function (val) {
             this.update_params("filter", _.find(this.tbl_list_filters, {
                 title: val

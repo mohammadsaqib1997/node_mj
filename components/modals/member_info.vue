@@ -82,15 +82,21 @@
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
-                  <div class="column"><label>Address</label></div>
+                  <div class="column"><label>Mailing Address</label></div>
                   <div class="column">
                     <h2>{{ mem_info.address }}</h2>
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
-                  <div class="column"><label>City</label></div>
+                  <div class="column"><label>Branch</label></div>
                   <div class="column">
-                    <h2>{{ mem_info.city }}</h2>
+                    <h2>{{ mem_info.crzb_name }}</h2>
+                  </div>
+                </div>
+                <div class="columns is-variable is-1">
+                  <div class="column"><label>Franchise</label></div>
+                  <div class="column">
+                    <h2>{{ mem_info.fr_name }}</h2>
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
@@ -112,42 +118,16 @@
                   <div class="column is-6"><label>Product Selected</label></div>
                   <div class="column is-6">
                     <div class="img-cont">
-                      <img v-if="mem_info.product_id && mem_info.product_id === 1" src="~/assets/img/credit-card-active.png" />
-                      <img v-else-if="mem_info.product_id && mem_info.product_id === 2" src="~/assets/img/motorcycle-active.png" />
+                      <img src="~/assets/img/credit-card-active.png" />
                     </div>
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
                   <div class="column is-6"><label>Product Name</label></div>
                   <div class="column is-6">
-                    <h2 v-if="mem_info.product_id && mem_info.product_id === 1">Supreme Card</h2>
-                    <h2 v-else-if="mem_info.product_id && mem_info.product_id === 2">Motorcycle</h2>
+                    <h2>{{ mem_info.product_name }}</h2>
                   </div>
                 </div>
-                <template v-if="mem_info.product_id && mem_info.product_id === 2">
-                  <div class="columns is-variable is-1">
-                    <div class="column is-6"><label>Buyer Type</label></div>
-                    <div class="column is-6">
-                      <h2 v-if="mem_info.buyer_type && mem_info.buyer_type === 1">Individual</h2>
-                      <h2 v-else-if="mem_info.buyer_type && mem_info.buyer_type === 2">Reseller</h2>
-                    </div>
-                  </div>
-                  <template v-if="mem_info.buyer_type && mem_info.buyer_type === 2">
-                    <div class="columns is-variable is-1">
-                      <div class="column is-6"><label>Quantity Of Bikes</label></div>
-                      <div class="column is-6">
-                        <h2 v-if="mem_info.buyer_qty_prd">{{ mem_info.buyer_qty_prd }}</h2>
-                      </div>
-                    </div>
-                  </template>
-                  <div class="columns is-variable is-1">
-                    <div class="column is-6"><label>Payment Type</label></div>
-                    <div class="column is-6">
-                      <h2 v-if="mem_info.buyer_pay_type && mem_info.buyer_pay_type === 1">On Cash</h2>
-                      <h2 v-else-if="mem_info.buyer_pay_type && mem_info.buyer_pay_type === 2">On Installment</h2>
-                    </div>
-                  </div>
-                </template>
                 <div class="columns is-variable is-1">
                   <div class="column is-6"><label>Package Activation</label></div>
                   <div class="column is-6">
@@ -282,7 +262,8 @@ export default {
         { name: "Email", value: mem_info.email },
         { name: "Contact Number", value: mem_info.contact_num },
         { name: "Address", value: mem_info.address },
-        { name: "City", value: mem_info.city },
+        { name: "Branch", value: mem_info.crzb_name },
+        { name: "Franchise", value: mem_info.fr_name },
         { name: "Referral ID", value: mem_info.ref_user_asn_id },
         {
           name: "Status",
@@ -291,39 +272,9 @@ export default {
         { name: "Product Detail", value: "" },
         {
           name: "Product Name",
-          value: mem_info.product_id
-            ? mem_info.product_id === 1
-              ? "Supreme Card"
-              : "Motorcycle"
-            : ""
+          value: mem_info.product_name
         }
       ];
-
-      if (mem_info.product_id && mem_info.product_id === 2) {
-        send_data.push({
-          name: "Buyer Type",
-          value: mem_info.buyer_type
-            ? mem_info.buyer_type === 1
-              ? "Individual"
-              : "Reseller"
-            : ""
-        });
-        if (mem_info.buyer_type && mem_info.buyer_type === 2) {
-          send_data.push({
-            name: "Quantity Of Bikes",
-            value: mem_info.buyer_qty_prd ? mem_info.buyer_qty_prd : ""
-          });
-        }
-
-        send_data.push({
-          name: "Payment Type",
-          value: mem_info.buyer_pay_type
-            ? mem_info.buyer_pay_type === 1
-              ? "On Cash"
-              : "On Installment"
-            : ""
-        });
-      }
 
       send_data.push(
         {

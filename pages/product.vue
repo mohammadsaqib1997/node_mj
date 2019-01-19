@@ -15,41 +15,31 @@
                     label Product Selected
                   .column.is-6
                     .img-cont
-                      img(v-if="result.product_id && result.product_id === 1" src="~/assets/img/credit-card-active.png")
-                      img(v-else-if="result.product_id && result.product_id === 2" src="~/assets/img/motorcycle-active.png")
+                      img(src="~/assets/img/credit-card-active.png")
                       
                   .column.is-6
                     label Product Name
                   .column.is-6
-                    h2(v-if="result.product_id && result.product_id === 1") Supreme Card
-                    h2(v-else-if="result.product_id && result.product_id === 2") Motorcycle
-
-                  template(v-if="result.product_id && result.product_id === 2")
-                    .column.is-6
-                      label Buyer Type
-                    .column.is-6
-                      h2(v-if="result.buyer_type && result.buyer_type === 1") Individual
-                      h2(v-else-if="result.buyer_type && result.buyer_type === 2") Reseller
-
-                    template(v-if="result.buyer_type && result.buyer_type === 2")
-                      .column.is-6
-                        label Quantity Of Bikes
-                      .column.is-6
-                        h2(v-if="result.buyer_qty_prd") {{ result.buyer_qty_prd }}
-
-                    .column.is-6
-                      label Payment Type
-                    .column.is-6
-                      h2(v-if="result.buyer_pay_type && result.buyer_pay_type === 1") On Cash
-                      h2(v-else-if="result.buyer_pay_type && result.buyer_pay_type === 2") On Installment
+                    h2 {{ result.name }}
 
                   .column.is-6
-                    label Package Activation
+                    label Registration Amount
                   .column.is-6
-                    h2(v-if="result.package_act_date")
-                      | Start: {{ gen_date(result.package_act_date, 0) }}
-                      br
-                      | End: {{ gen_date(result.package_act_date, 1) }}
+                    h2 {{ diff_prev_reg(result.sel_prd_date) < 0 ? 5000: result.reg_amount }}/-
+
+                  template(v-if="result.package_act_date")
+                    .column.is-6
+                      label Package Activation
+                    .column.is-6
+                      h2(v-if="result.package_act_date")
+                        | Start: {{ gen_date(result.package_act_date, 0) }}
+                        br
+                        | End: {{ gen_date(result.package_act_date, 1) }}
+                  template(v-else)
+                    .column.is-6
+                      b-field
+                        p.control
+                          button.button.btn-des-1 Change Product
           b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
 
@@ -79,6 +69,10 @@ export default {
       return moment(new Date(str))
         .add(addYear, "year")
         .format("DD MMM YYYY");
+    },
+    diff_prev_reg(date) {
+      let g_date = moment(new Date(date));
+      return g_date.diff(moment(new Date("2018-12-31 23:59:59")), "d");
     }
   }
 };

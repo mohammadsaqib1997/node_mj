@@ -17,7 +17,10 @@ router.use((req, res, next) => {
   if (token) {
     jwt.verify(token, config.secret, function (err, decoded) {
       if (err) {
-        return res.status(403).json({ status: false, message: err.message });
+        return res.status(403).json({
+          status: false,
+          message: err.message
+        });
       } else {
         req.decoded = decoded;
         // res.json(decoded)
@@ -52,11 +55,20 @@ router.use("/gen_excel", cors(corsOptions), require('./gen_excels.js'))
 router.use("/email", cors(corsOptions), require('./emails.js'))
 router.use("/c_subsidiary", cors(corsOptions), require('./c_subsidiary.js'))
 router.use("/voucher", cors(corsOptions), require('./vouchers.js'))
+router.use("/crzb-list", cors(corsOptions), require('./crzb_list.js'))
+router.use("/assign-role", cors(corsOptions), require('./assign-role.js'))
+router.use("/assign-role-trans", cors(corsOptions), require('./assign-role-trans.js'))
+router.use("/company-hierarchy", cors(corsOptions), require('./company-hierarchy.js'))
+router.use("/hod", cors(corsOptions), require('./hod.js'))
+router.use("/franchise", cors(corsOptions), require('./franchise.js'))
+router.use("/assign-role-fr", cors(corsOptions), require('./assign-role-fr.js'))
+router.use("/assign-role-trans-fr", cors(corsOptions), require('./assign-role-trans-fr.js'))
+router.use("/campaign", cors(corsOptions), require('./campaign.js'))
 
 router.all("*", function (req, res) {
-  res.status(403).json({ error: 'Invalid Request!' })
+  res.status(403).json({
+    error: 'Invalid Request!'
+  })
 })
 
 module.exports = router
-
-

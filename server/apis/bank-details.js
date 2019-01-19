@@ -58,10 +58,10 @@ router.post("/update", function (req, res) {
             await new Promise(resolve => {
               connection.query(
                 `SELECT u_bk.id, m.email 
-                FROM \`user_bank_details\` as u_bk
-                JOIN \`members\` as m
-                ON u_bk.member_id=m.id
-                WHERE u_bk.member_id=?`,
+                FROM \`members\` as m
+                LEFT JOIN \`user_bank_details\` as u_bk
+                ON m.id=u_bk.member_id
+                WHERE m.id=?`,
                 req.decoded.data.user_id,
                 function (error, results, fields) {
                   if (error) {

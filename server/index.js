@@ -6,8 +6,8 @@ const {
 const secret = require("./config").secret
 const app = require('express')()
 // const server = require('http').Server(app)
-const port_http = 3000
-const port_https = 443
+const port_http = 3042
+// const port_https = 443
 const path = require('path');
 // const fs = require('fs')
 const http = require('http')
@@ -65,7 +65,7 @@ if (config.dev) {
 // Listen the server
 // server.listen(port, () => console.log('Start Nuxt Project!'))
 httpServer.listen(port_http, () => {
-	console.log('HTTP Server running on port 3000');
+  console.log('HTTP Server running on port ' + port_http);
 });
 
 // httpsServer.listen(port_https, () => {

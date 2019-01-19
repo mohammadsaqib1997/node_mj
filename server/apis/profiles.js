@@ -113,7 +113,37 @@ router.get("/", function (req, res) {
       } else {
         let query = ''
         if (req.decoded.data.type === 0) {
-          query = "SELECT user_asn_id, email, full_name, contact_num, cnic_num, dob, address, city, ref_user_asn_id, active_sts FROM members WHERE id=?"
+          query = `
+              SELECT 
+              m.user_asn_id, 
+              m.email, 
+              m.full_name, 
+              m.contact_num, 
+              m.cnic_num, 
+              m.dob, 
+              m.address, 
+              m.ref_user_asn_id, 
+              m.active_sts, 
+              mem_l_crzb.crzb_id,
+              (SELECT concat(ls_b.name, ", ", ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as name 
+                FROM crzb_list as ls_b
+                join crzb_list as ls_z
+                on ls_b.parent_id = ls_z.id
+                join crzb_list as ls_r
+                on ls_z.parent_id = ls_r.id
+                join crzb_list as ls_c
+                on ls_r.parent_id = ls_c.id
+              where ls_b.id=mem_l_crzb.crzb_id) as crzb_name,
+              mem_l_fr.franchise_id as fr_id,
+              (SELECT fr.name
+                FROM franchises as fr
+              where fr.id=mem_l_fr.franchise_id) as fr_name
+            FROM members as m
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            LEFT JOIN mem_link_franchise as mem_l_fr
+            ON m.id=mem_l_fr.member_id
+            WHERE m.id=?`
         } else if (req.decoded.data.type === 1) {
           query = "SELECT email, full_name, contact_num, cnic_num, address, active_sts FROM moderators WHERE id=?"
         } else {
@@ -308,11 +338,13 @@ router.get("/get_prd_detail", function (req, res) {
         })
       } else {
         connection.query(
-          `SELECT p_d.product_id, p_d.buyer_type, p_d.buyer_pay_type, p_d.buyer_qty_prd, iv_m.package_act_date
-                    FROM user_product_details as p_d
-                    LEFT JOIN info_var_m as iv_m
-                    ON p_d.member_id = iv_m.member_id
-                    WHERE p_d.member_id=?`,
+          `SELECT p_d.product_id, p.name, p.reg_amount, iv_m.package_act_date, p_d.created_at as sel_prd_date
+            FROM user_product_details as p_d
+            LEFT JOIN products as p
+            ON p_d.product_id = p.id
+            LEFT JOIN info_var_m as iv_m
+            ON p_d.member_id = iv_m.member_id
+            WHERE p_d.member_id=?`,
           req.decoded.data.user_id,
           function (err, result) {
             connection.release()
@@ -351,146 +383,227 @@ router.post("/update", function (req, res) {
           error
         })
       } else {
-        let query = '',
-          params = {
-            "address": req.body.data.address,
-            "cnic_num": req.body.data.cnic_num,
-            "contact_num": req.body.data.cont_num,
-            "email": req.body.data.email,
-            "full_name": req.body.data.full_name,
-            "password": req.body.data.password
-          },
-          secure_form = {},
-          send_email = null
-        if (req.decoded.data.type === 0) {
-          query = "UPDATE members SET ? WHERE id=?"
-          params["dob"] = req.body.data.dob
-          params["city"] = req.body.data.city
-          delete params['password']
+        let str_err = null
+        db_utils.connectTrans(connection, async function (resolve, err_hdl) {
+            let query = '',
+              params = {
+                "address": req.body.data.address,
+                "cnic_num": req.body.data.cnic_num,
+                "contact_num": req.body.data.cont_num,
+                "email": req.body.data.email,
+                "full_name": req.body.data.full_name,
+                "password": req.body.data.password
+              },
+              secure_form = {},
+              send_email = null
 
-          // if any pincode and verified pin than this work
-          if (req.body.data.secure === true) {
-            delete params['contact_num']
-            delete params['email']
-          }
+            if (req.decoded.data.type === 0) {
+              query = "UPDATE members SET ? WHERE id=?"
+              params["dob"] = req.body.data.dob
+              delete params['password']
 
-          let throw_error = null
-          await new Promise(resolve => {
-            connection.query(
-              `SELECT is_paid_m, email, contact_num FROM members WHERE id=?`,
-              req.decoded.data.user_id,
-              function (error, result) {
-                if (error) {
-                  throw_error = error
-                  return resolve()
-                } else {
-                  if (req.body.data.secure === true) {
-                    if (req.body.data.cont_num !== result[0].contact_num) {
-                      secure_form['contact_num'] = req.body.data.cont_num
+              // if any pincode and verified pin than this work
+              if (req.body.data.secure === true) {
+                delete params['contact_num']
+                delete params['email']
+              }
+
+              let throw_error = null
+              await new Promise(inner_resolve => {
+                connection.query(
+                  `SELECT is_paid_m, email, contact_num FROM members WHERE id=?`,
+                  req.decoded.data.user_id,
+                  function (error, result) {
+                    if (error) {
+                      throw_error = error
+                      return inner_resolve()
+                    } else {
+                      if (req.body.data.secure === true) {
+                        if (req.body.data.cont_num !== result[0].contact_num) {
+                          secure_form['contact_num'] = req.body.data.cont_num
+                        }
+                        if (req.body.data.email !== result[0].email) {
+                          secure_form['email'] = req.body.data.email
+                        }
+                        if (result[0].email && result[0].email !== null && result[0].email !== '') {
+                          send_email = result[0].email
+                        }
+                      }
+                      if (req.body.data.secure !== true && result[0].email !== params['email']) {
+                        params["email_v_sts"] = 0
+                      }
+                      if (result[0].is_paid_m === 0) {
+                        params["ref_user_asn_id"] = req.body.data.ref_code
+                      }
+                      return inner_resolve()
                     }
-                    if (req.body.data.email !== result[0].email) {
-                      secure_form['email'] = req.body.data.email
-                    }
-                    if (result[0].email && result[0].email !== null && result[0].email !== '') {
-                      send_email = result[0].email
-                    }
-                  }
-                  if (req.body.data.secure !== true && result[0].email !== params['email']) {
-                    params["email_v_sts"] = 0
-                  }
-                  if (result[0].is_paid_m === 0) {
-                    params["ref_user_asn_id"] = req.body.data.ref_code
-                  }
-                  return resolve()
-                }
+                  })
               })
-          })
-          if (throw_error) {
-            connection.release();
-            return res.status(500).json({
-              throw_error
-            })
-          }
+              if (throw_error) {
+                err_hdl(throw_error)
+                resolve()
+              }
 
-        } else if (req.decoded.data.type === 1) {
-          query = "UPDATE moderators SET ? WHERE id=?"
-        } else {
-          query = "UPDATE admins SET ? WHERE id=?"
-        }
+            } else if (req.decoded.data.type === 1) {
+              query = "UPDATE moderators SET ? WHERE id=?"
+            } else {
+              query = "UPDATE admins SET ? WHERE id=?"
+            }
 
-        connection.query(query, [params, req.decoded.data.user_id], function (error, results, fields) {
-          if (error) {
-            connection.release();
-            res.status(500).json({
-              error
-            })
-          } else {
-            if (req.body.data.secure === true && send_email !== null) {
+            connection.query(query, [params, req.decoded.data.user_id], async function (error, results, fields) {
+              if (error) {
+                err_hdl(error)
+                resolve()
+              } else {
+                if (req.decoded.data.type === 0) {
+                  let throw_error = null
+                  await new Promise(inner_resolve => {
+                    connection.query(
+                      `SELECT mem_lk.member_id, m.is_paid_m
+                      FROM mem_link_crzb as mem_lk
+                      right join members as m
+                      on mem_lk.member_id = m.id
+                      WHERE m.id=?`,
+                      req.decoded.data.user_id,
+                      function (error, results, fields) {
+                        if (error) {
+                          throw_error = error
+                          inner_resolve()
+                        } else {
+                          let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
+                          let params = [{
+                            crzb_id: req.body.ext_data.crzb_id
+                          }, req.decoded.data.user_id]
 
-              let token = jwt.sign({
-                data: {
-                  user_id: req.decoded.data.user_id,
-                  form_data: secure_form,
-                  type: 3
+                          if (results.length && results[0].member_id == null) {
+                            query = 'INSERT INTO `mem_link_crzb` SET ?'
+                            params = [{
+                              crzb_id: req.body.ext_data.crzb_id,
+                              member_id: req.decoded.data.user_id,
+                              linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                            }]
+                          }
+                          connection.query(query, params, function (error, results, fields) {
+                            if (error) {
+                              throw_error = error
+                              inner_resolve()
+                            } else {
+                              connection.query(
+                                `SELECT mem_lk.member_id, m.is_paid_m
+                                FROM mem_link_franchise as mem_lk
+                                right join members as m
+                                on mem_lk.member_id = m.id
+                                WHERE m.id=?`,
+                                req.decoded.data.user_id,
+                                function (error, results, fields) {
+                                  if (error) {
+                                    throw_error = error
+                                    inner_resolve()
+                                  } else {
+                                    let query = 'UPDATE `mem_link_franchise` SET ? WHERE member_id=?'
+                                    let params = [{
+                                      franchise_id: req.body.ext_data.fr_id
+                                    }, req.decoded.data.user_id]
+
+                                    if (results.length && results[0].member_id == null) {
+                                      query = 'INSERT INTO `mem_link_franchise` SET ?'
+                                      params = [{
+                                        franchise_id: req.body.ext_data.fr_id,
+                                        member_id: req.decoded.data.user_id,
+                                        linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                                      }]
+                                    }
+                                    connection.query(query, params, function (error, results, fields) {
+                                      if (error) {
+                                        throw_error = error
+                                      }
+                                      inner_resolve()
+                                    })
+                                  }
+                                })
+                            }
+                          })
+                        }
+                      })
+                  })
+                  if (throw_error) {
+                    err_hdl(throw_error)
+                    resolve()
+                  }
                 }
-              }, config.secret, {
-                expiresIn: "1 day"
-              })
-              connection.query(
-                `INSERT INTO tokens SET ?`, {
-                  type: 3,
-                  member_id: req.decoded.data.user_id,
-                  token: token
-                },
-                function (error, results) {
-                  connection.release();
-                  if (error) {
-                    return res.status(500).json({
-                      error
-                    })
-                  } else {
-                    res.render("verify-token", {
-                      host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
-                      name: "Member",
+
+                if (req.body.data.secure === true && send_email !== null) {
+
+                  let token = jwt.sign({
+                    data: {
+                      user_id: req.decoded.data.user_id,
+                      form_data: secure_form,
+                      type: 3
+                    }
+                  }, config.secret, {
+                    expiresIn: "1 day"
+                  })
+                  connection.query(
+                    `INSERT INTO tokens SET ?`, {
+                      type: 3,
+                      member_id: req.decoded.data.user_id,
                       token: token
-                    }, function (errPug, html) {
-                      if (errPug) {
-                        res.json({
-                          status: false,
-                          message: "Error render in pug file!"
-                        })
+                    },
+                    function (error, results) {
+                      if (error) {
+                        err_hdl(error)
+                        resolve()
                       } else {
-                        trans_email.sendMail({
-                          from: '"MJ Supreme" <info@mj-supreme.com>',
-                          to: send_email,
-                          subject: 'Verification Token',
-                          html: html
-                        }, function (err, info) {
-                          if (err) {
-                            res.json({
-                              status: false,
-                              message: "Error in sending an email!"
-                            })
+                        res.render("verify-token", {
+                          host: config.dev ? 'http://127.0.0.1:3000' : 'https://mj-supreme.com',
+                          name: "Member",
+                          token: token
+                        }, function (errPug, html) {
+                          if (errPug) {
+                            str_err = "Error render in pug file!"
+                            err_hdl(true)
+                            resolve()
                           } else {
-                            res.json({
-                              status: true
+                            trans_email.sendMail({
+                              from: '"MJ Supreme" <info@mj-supreme.com>',
+                              to: send_email,
+                              subject: 'Verification Token',
+                              html: html
+                            }, function (err, info) {
+                              if (err) {
+                                str_err = "Error in sending an email!"
+                                err_hdl(true)
+                                resolve()
+                              } else {
+                                resolve()
+                              }
                             })
                           }
                         })
                       }
                     })
-                  }
-                })
+                } else {
+                  resolve()
+                }
+              }
+            })
 
+          },
+          function (error) {
+            if (str_err) {
+              res.status(500).json({
+                message: str_err
+              })
+            } else if (error) {
+              res.status(500).json({
+                error
+              })
             } else {
-              connection.release();
               res.json({
                 status: true
               })
             }
-          }
-
-        });
+          })
       }
     })
   } else {
@@ -1065,6 +1178,61 @@ router.post('/update_password', function (req, res) {
         res.json({
           status: true
         })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "No User Found!"
+    })
+  }
+})
+
+router.get('/get-process-detail', function (req, res) {
+  if (req.decoded.data.user_id && req.decoded.data.type === 0) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `SELECT 
+            m.email, 
+            m.full_name, 
+            m.contact_num, 
+            m.cnic_num, 
+            m.dob, 
+            m.address, 
+            m.is_paid_m, 
+            bk.id as bk_id, 
+            bk.bank_name, 
+            bk.branch_code, 
+            bk.account_title, 
+            bk.account_number, 
+            prd.reg_amount as prd_reg_amount
+          FROM members as m
+          LEFT JOIN user_bank_details as bk
+          ON m.id = bk.member_id
+          LEFT JOIN user_product_details as prd_det
+          ON m.id = prd_det.member_id
+          LEFT JOIN products as prd
+          ON prd_det.product_id = prd.id
+          WHERE m.id=${req.decoded.data.user_id}`,
+          function (error, result) {
+            connection.release();
+
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result: result[0]
+              })
+            }
+          }
+        )
       }
     })
   } else {

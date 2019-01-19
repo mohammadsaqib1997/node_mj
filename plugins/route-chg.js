@@ -75,10 +75,10 @@ const authRoutes = [{
         name: "system-level-auto-rewards",
         type_allowed: [0]
     },
-    {
-        name: "system-level-self-rewards",
-        type_allowed: [0]
-    },
+    // {
+    //     name: "system-level-self-rewards",
+    //     type_allowed: [0]
+    // },
     {
         name: "withdraw",
         type_allowed: [0]
@@ -99,10 +99,38 @@ const authRoutes = [{
         name: "account-vouchers",
         type_allowed: [2]
     },
-    // {
-    //     name: "campaign-create",
-    //     type_allowed: [2]
-    // }
+    {
+        name: "company-chart-assign-roles",
+        type_allowed: [2]
+    },
+    {
+        name: "company-chart-branch-management",
+        type_allowed: [2]
+    },
+    {
+        name: "company-chart-sales-commission",
+        type_allowed: [0, 2]
+    },
+    {
+        name: "company-chart-hierarchy",
+        type_allowed: [2]
+    },
+    {
+        name: "company-chart-assign-franchise",
+        type_allowed: [0]
+    },
+    {
+        name: "company-chart-sales",
+        type_allowed: [0]
+    },
+    {
+        name: "campaign-create",
+        type_allowed: [2]
+    },
+    {
+        name: "system-level-campaign",
+        type_allowed: [0]
+    }
 ]
 
 const un_paid_routes = [{
@@ -110,7 +138,26 @@ const un_paid_routes = [{
     },
     {
         name: 'user-bank-details'
+    },
+    {
+        name: 'product'
+    },
+    {
+        name: 'dashboard'
     }
+]
+
+const crzbRoutes = [
+    'company-chart-sales-commission',
+    'company-chart-hierarchy'
+]
+
+const franchiseRoutes = [
+    'company-chart-sales'
+]
+
+const branchRoutes = [
+    'company-chart-assign-franchise'
 ]
 
 const unAuthRoutes = [
@@ -154,6 +201,10 @@ export default ({
                 await app.store.dispatch("initAuthCheck")
             }
 
+            if (app.store.state['crzb-module']['init'] === false && app.store.state.user) {
+                await app.store.dispatch("crzb-module/loadHeadInfo")
+            }
+
             next()
         }, 500)
     })
@@ -178,17 +229,34 @@ export default ({
             }
         } else {
             if (_.indexOf(unAuthRoutes, to.name) > -1) {
-                if (app.store.state.user.data.type === 0 && app.store.state.user.data.is_paid === 0) {
-                    app.router.push('/user/profile')
-                } else {
-                    app.router.push('/dashboard')
-                }
+                app.router.push('/dashboard')
+                // if (app.store.state.user.data.type === 0 && app.store.state.user.data.is_paid === 0) {
+                //     app.router.push('/user/profile')
+                // } else {
+                //     app.router.push('/dashboard')
+                // }
             } else {
                 let findAuthR = _.find(authRoutes, o => {
                     return o.name === to.name
                 })
                 if (findAuthR) {
-                    if (_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) {
+                    if (
+                        (_.indexOf(findAuthR.type_allowed, app.store.state.user.data.type) < 0) ||
+                        (
+                            _.indexOf(crzbRoutes, to.name) > -1 &&
+                            !app.store.state['crzb-module']['hod_id']
+                        ) ||
+                        (
+                            _.indexOf(franchiseRoutes, to.name) > -1 &&
+                            (!app.store.state['crzb-module']['type'] ||
+                                app.store.state['crzb-module']['type'] != 4)
+                        ) ||
+                        (
+                            _.indexOf(branchRoutes, to.name) > -1 &&
+                            (!app.store.state['crzb-module']['type'] ||
+                                app.store.state['crzb-module']['type'] != 3 || app.store.state['crzb-module']['role_status'] === 0)
+                        )
+                    ) {
                         error({
                             statusCode: 403,
                             message: "Not permission on this page!"

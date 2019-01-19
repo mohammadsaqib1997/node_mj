@@ -1,10 +1,16 @@
 <template lang="pug">
     .footer
-        h1 Copyright © 2018 MJ-Supreme.
+        h1 Copyright © {{ year }} - MJ Supreme.
 </template>
 
 <script>
-export default {};
+export default {
+  data() {
+    return {
+      year: new Date().getFullYear()
+    };
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -20,8 +26,8 @@ export default {};
   color: #bebebe;
   font-size: 14px;
   h1 > a {
-      color: #bebebe;
-      text-decoration: underline;
+    color: #bebebe;
+    text-decoration: underline;
   }
   @media screen and (max-width: 425px) {
     font-size: 3vw;

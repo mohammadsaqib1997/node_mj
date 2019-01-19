@@ -9,14 +9,11 @@ const trans_email = require('../e-conf.js')
 const jwt = require('jsonwebtoken')
 const _ = require('lodash');
 const moment = require('moment');
+const {
+  DateTime
+} = require('luxon');
 const fs = require('fs');
 const gm = require('gm')
-
-router.get("/server-time", function (req, res) {
-  res.json({
-    datetime: new Date()
-  })
-})
 
 router.get("/pk", function (req, res) {
   let data = JSON.parse(fs.readFileSync(__dirname + '/../files/pk.json', 'utf8'))
@@ -139,6 +136,84 @@ router.use((req, res, next) => {
       status: false,
       message: 'No token provided.'
     });
+  }
+})
+
+router.get('/ac_branch/:search', (req, res) => {
+  if (req.params.search) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `select 
+                crzb_var.*
+            from crzb_list as main_l
+            join (
+              select 
+                crzb_l.id,
+                get_crzb_with_p_name(crzb_l.id) as name
+              from crzb_list as crzb_l
+            ) as crzb_var
+            on main_l.id = crzb_var.id
+            
+            where main_l.type=3 AND main_l.active=1 AND (
+              crzb_var.name collate utf8mb4_general_ci like '%${req.params.search}%'
+            )
+            limit 10`,
+          function (error, result) {
+            connection.release();
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result
+              })
+            }
+          })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Parameters!"
+    })
+  }
+})
+
+router.get('/ls_franchise/:crzb_id', (req, res) => {
+  if (req.params.crzb_id && /^[0-9]*$/.test(req.params.crzb_id)) {
+    db.getConnection(function (err, connection) {
+      if (err) {
+        res.status(500).json({
+          err
+        })
+      } else {
+        connection.query(
+          `SELECT id, name FROM franchises where branch_id=${req.params.crzb_id} and active=1;`,
+          function (error, result) {
+            connection.release();
+            if (error) {
+              res.status(500).json({
+                error
+              })
+            } else {
+              res.json({
+                result
+              })
+            }
+          })
+      }
+    })
+  } else {
+    res.json({
+      status: false,
+      message: "Invalid Parameters!"
+    })
   }
 })
 
@@ -862,6 +937,7 @@ router.post('/signup', (req, res) => {
           sendDBError(res, err)
         } else {
           let throw_error = null
+          let mem_id = null
           let email_grab_data = {
             template_data: {},
             email: null,
@@ -875,9 +951,9 @@ router.post('/signup', (req, res) => {
                 throw_error = error
                 return resolve()
               } else {
-                let mem_id = results.insertId
-                req.body.prd_data['member_id'] = mem_id
-                req.body.bank_data['member_id'] = mem_id
+                mem_id = results.insertId
+                // req.body.prd_data['member_id'] = mem_id
+                // req.body.bank_data['member_id'] = mem_id
 
                 email_grab_data['email'] = req.body.member_data.email
                 email_grab_data['template_data']['name'] = req.body.member_data.full_name
@@ -914,33 +990,91 @@ router.post('/signup', (req, res) => {
                   return resolve()
                 }
 
+                // check member select promotion and if exist any promotion
+                if (req.body.ext_data.promotion === true) {
+                  let curr_date = moment(DateTime.local()
+                    .setZone("UTC+5")
+                    .toString()).format("YYYY-MM-DD HH-mm-ss")
+                  await new Promise(promResolve => {
+                    connection.query(
+                      `SELECT id FROM disc_promotions WHERE prd_id = ${req.body.ext_data.prd_id} AND (start_prom_dt<='${curr_date}' AND end_prom_dt>='${curr_date}') limit 1`,
+                      function (error, result) {
+                        if (error) {
+                          throw_error = error
+                          return promResolve()
+                        } else {
+                          if (!result.length) {
+                            return promResolve()
+                          } else {
+                            let prom_id = result[0].id
+                            connection.query(
+                              `INSERT INTO mem_in_prom SET ?`, {
+                                member_id: mem_id,
+                                disc_prom_id: prom_id
+                              },
+                              function (error) {
+                                if (error) {
+                                  throw_error = error
+                                }
+                                return promResolve()
+                              }
+                            )
+                          }
+                        }
+                      }
+                    )
+                  })
+                  if (throw_error) {
+                    return resolve()
+                  }
+                }
+
+
                 connection.query(`INSERT INTO terms_accept SET member_id=${mem_id}, accept_sts=1`, function (error, results, fields) {
                   if (error) {
                     throw_error = error
                     return resolve()
                   } else {
-                    connection.query('INSERT INTO `user_product_details` SET ?', req.body.prd_data, function (error, results, fields) {
+                    connection.query('INSERT INTO `user_product_details` SET ?', {
+                      product_id: req.body.ext_data.prd_id,
+                      member_id: mem_id
+                    }, function (error, results, fields) {
                       if (error) {
                         throw_error = error
                         return resolve()
                       } else {
-                        connection.query('INSERT INTO `user_bank_details` SET ?', req.body.bank_data, function (error, results, fields) {
+                        connection.query('INSERT INTO `mem_link_crzb` SET ?', {
+                          member_id: mem_id,
+                          crzb_id: req.body.ext_data.crzb_id,
+                          linked_type: 1
+                        }, function (error, results, fields) {
                           if (error) {
                             throw_error = error
                             return resolve()
                           } else {
-                            connection.query('INSERT INTO `notifications` SET ?', {
-                              from_type: 0,
-                              to_type: 1,
-                              from_id: mem_id,
-                              to_id: 1, // admin id
-                              message: "New member added in members list. Approve it.",
-                              notify_type: 1
+                            connection.query('INSERT INTO `mem_link_franchise` SET ?', {
+                              member_id: mem_id,
+                              franchise_id: req.body.ext_data.franchise,
+                              linked_type: 1
                             }, function (error, results, fields) {
                               if (error) {
                                 throw_error = error
+                                return resolve()
+                              } else {
+                                connection.query('INSERT INTO `notifications` SET ?', {
+                                  from_type: 0,
+                                  to_type: 1,
+                                  from_id: mem_id,
+                                  to_id: 1, // admin id
+                                  message: "New member added in members list. Approve it.",
+                                  notify_type: 1
+                                }, function (error, results, fields) {
+                                  if (error) {
+                                    throw_error = error
+                                  }
+                                  return resolve()
+                                })
                               }
-                              return resolve()
                             })
                           }
                         })
@@ -995,7 +1129,18 @@ router.post('/signup', (req, res) => {
                         })
                       } else {
                         res.json({
-                          status: true
+                          status: true,
+                          token: tokenGen({
+                            email: email_grab_data['email'],
+                            type: 0,
+                            id: mem_id,
+                          }, 0),
+                          user: {
+                            email: email_grab_data['email'],
+                            type: 0,
+                            user_id: mem_id,
+                            is_paid: 0
+                          }
                         })
                       }
                     })

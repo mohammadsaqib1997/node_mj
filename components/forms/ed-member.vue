@@ -24,15 +24,21 @@
           b-datepicker(placeholder="DD/MM/YYYY" v-model="f_data.dob" expanded)
 
         b-field(label="Contact Number" :type="(validation.hasError('f_data.cont_num')) ? 'is-danger':''" :message="validation.firstError('f_data.cont_num')")
-          b-input(type="tel" placeholder="92-xxx-xxx-xxxx" v-model="f_data.cont_num" v-mask="'92-###-###-####'")
+          b-input(type="tel" placeholder="03xx-xxx-xxxx" v-model="f_data.cont_num" v-mask="'03##-###-####'")
 
-        b-field(label="Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
+        b-field(label="Mailing Address" :type="(validation.hasError('f_data.address')) ? 'is-danger':''" :message="validation.firstError('f_data.address')")
           b-input(type="text" placeholder="House No. #, Street Name, Area, City, Province, Country" v-model="f_data.address")
 
-        b-field(label="City" :type="(validation.hasError('f_data.city')) ? 'is-danger':''" :message="validation.firstError('f_data.city')")
-          b-autocomplete(placeholder="Enter City Name" ref="autocomplete" v-model="ac_city" :data="filteredCityArray" @select="option => f_data.city = option" :keep-first="true" :open-on-focus="true")
-            template(slot="empty") No results for {{ac_city}}
+        b-field(label="Branch" :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_crzb_id')")
+          b-input(v-if="is_paid_user === true && fet_m_data.crzb_id !== null" type="text" placeholder="(example: Baldia Town)" readonly v-bind:value="ac_crzb")
+          b-autocomplete(v-else :data="crzb_list" v-model="ac_crzb" field="name" expanded :keep-first="true" @select="option => f_data.sel_crzb_id = option ? option.id : null" @input="loadCRZB" :loading="isFetching" placeholder="(example: Baldia Town)")
           
+        b-field.cus-des-1(label="Franchise" :type="(validation.hasError('f_data.franchise')) ? 'is-danger':''" :message="validation.firstError('f_data.franchise')")
+          b-input(v-if="is_paid_user === true && fet_m_data.fr_id !== null" type="text" placeholder="Select Franchise" readonly v-bind:value="fet_m_data.fr_name")
+          b-select(v-else v-model="f_data.franchise" :loading="isLoadingFrc" :disabled="isLoadingFrc" expanded)
+            option(value="") Select Franchise
+            option(v-for="(fr, ind) in frc_list" :value="fr.id" :key="ind") {{ fr.name }}
+        
         b-field(label="Referral ID" :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
           b-input(v-if="is_paid_user === true" type="text" placeholder="000000000" readonly v-bind:value="f_data.ref_code")
           b-input(v-else type="text" placeholder="000000000" v-model="f_data.ref_code")
@@ -43,17 +49,10 @@
             option(v-for="sts in sts_list" v-bind:value="sts.code") {{ sts.name }}
               
         b-field.cus-des-1(label="Product" :type="(validation.hasError('prd_data.prd')) ? 'is-danger':''" :message="validation.firstError('prd_data.prd')")
-          b-select(v-model="prd_data.prd" expanded)
+          b-input(v-if="is_paid_user === true" type="text" placeholder="Select Product" readonly v-bind:value="getPrdName(prd_data.prd)")
+          b-select(v-else v-model="prd_data.prd" expanded)
             option(value="") Select Product
             option(v-for="prd in prd_list" v-bind:value="prd.id") {{ prd.name }}
-          
-        template(v-if="prd_data.prd === 2")
-          .field
-            b-radio(v-for="bt in b_type_list" v-model="prd_data.b_type" :native-value="bt.code" :key="bt.code") {{ bt.name }}
-          b-field(v-if="prd_data.b_type === 2" label="Quantity Of Bikes" :type="(validation.hasError('prd_data.qnt_bikes')) ? 'is-danger':''" :message="validation.firstError('prd_data.qnt_bikes')")
-            b-input(type="tel" placeholder="Quantity Of Bikes" v-model="prd_data.qnt_bikes" v-mask="'###'")
-          .field
-            b-radio(v-for="pt in p_type_list" v-model="prd_data.p_type" :native-value="pt.code" :key="pt.code") {{ pt.name }}
 
         .d-flex
           button.button.btn-des-1(type="submit")
@@ -78,13 +77,12 @@
 </template>
 
 <script>
+import _ from "lodash";
 import moment from "moment";
 import { mask } from "vue-the-mask";
 import SimpleVueValidation from "simple-vue-validator";
 const Validator = SimpleVueValidation.Validator;
-import mxn_cityAC from "~/mixins/city-ac.js";
 export default {
-  mixins: [mxn_cityAC],
   props: {
     edit_id: {
       type: Number,
@@ -95,10 +93,9 @@ export default {
     this.form.loading = true;
     const list_pds = await this.$axios.$get("/api/product/");
     const load_data = await this.$axios.$get("/api/member/" + this.edit_id);
-    this.fet_m_data = load_data.data[0].m;
-    this.setFData(load_data.data[0].m);
-    this.setPrdData(load_data.data[0].upd);
+    this.fet_m_data = load_data.data[0];
     this.prd_list = list_pds.data;
+    this.setFData(load_data.data[0]);
     this.form.loading = false;
   },
   data() {
@@ -106,16 +103,14 @@ export default {
       modalAct: false,
       is_paid_user: false,
       prd_list: [],
-      b_type_list: [
-        { code: 1, name: "Individual" },
-        { code: 2, name: "Reseller" }
-      ],
-      p_type_list: [
-        { code: 1, name: "On Cash" },
-        { code: 2, name: "On Installment" }
-      ],
       sts_list: [{ code: 1, name: "Approved" }, { code: 0, name: "Suspended" }],
       fet_m_data: null,
+      ac_crzb: "",
+      crzb_list: [],
+      frc_list: [],
+      isFetching: false,
+      isLoadingFrc: false,
+      is_auto_crzb: false,
       f_data: {
         user_asn_id: "",
         full_name: "",
@@ -125,15 +120,13 @@ export default {
         dob: null,
         cont_num: "",
         address: "",
-        city: "",
         ref_code: "",
-        status: ""
+        status: "",
+        sel_crzb_id: null,
+        franchise: ""
       },
       prd_data: {
-        prd: "",
-        b_type: 1,
-        qnt_bikes: 5,
-        p_type: 1
+        prd: ""
       },
       form: {
         suc: "",
@@ -141,6 +134,19 @@ export default {
         loading: false
       }
     };
+  },
+  watch: {
+    "f_data.sel_crzb_id": function(val) {
+      this.frc_list = [];
+      if (this.validation.isTouched("f_data.sel_crzb_id")) {
+        this.f_data.franchise = "";
+      }
+      if (val !== null) {
+        this.loadFrnList(val);
+      } else {
+        this.isLoadingFrc = false;
+      }
+    }
   },
   validators: {
     "f_data.user_asn_id": {
@@ -231,8 +237,8 @@ export default {
       return Validator.value(value)
         .required()
         .regex(
-          /^\92-\d{3}-\d{3}-\d{4}$/,
-          "Invalid Contact Number(e.g 92-000-000-0000)"
+          /^(03)+\d{2}-\d{3}-\d{4}$/,
+          "Invalid Contact Number(e.g 0300-000-0000)"
         );
     },
     "f_data.address": function(value) {
@@ -241,8 +247,17 @@ export default {
         .minLength(6)
         .maxLength(100);
     },
-    "f_data.city": function(value) {
-      return Validator.value(value).required();
+    "f_data.sel_crzb_id": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
+    "f_data.franchise": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
     },
     "f_data.ref_code": {
       cache: false,
@@ -287,33 +302,88 @@ export default {
     },
     "prd_data.prd": function(value) {
       return Validator.value(value).required();
-    },
-    "prd_data.qnt_bikes": function(value) {
-      const self = this;
-      return Validator.value(value).custom(() => {
-        if (self.prd_data.b_type === 2) {
-          if (value === "") {
-            return "Required.";
-          } else if (!/^[0-9]*$/.test(value)) {
-            return "Must be a digit.";
-          } else if (/^[0-9]*$/.test(value)) {
-            if (value < 5) {
-              return "Minimum number of bikes selected 5";
-            } else if (value > 100) {
-              return "Maximum number of bikes selected 100";
-            }
-          }
-        }
-      });
     }
   },
   directives: {
     mask
   },
   methods: {
+    after_f_settle: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    loadCRZB(event) {
+      const self = this;
+      self.isFetching = true;
+      if (self.is_auto_crzb && event !== self.fet_m_data.crzb_ac_name) {
+        self.f_data.sel_crzb_id = null;
+        self.is_auto_crzb = false;
+      }
+      self.after_f_settle(function() {
+        if (self.f_data.sel_crzb_id !== null) {
+          self.isFetching = false;
+          return;
+        }
+        self.crzb_list = [];
+
+        if (self.ac_crzb === null || !self.ac_crzb.length) {
+          self.crzb_list = [];
+          self.isFetching = false;
+          return;
+        }
+        self.$axios
+          .get(`/api/web/ac_branch/${self.ac_crzb}`)
+          .then(({ data }) => {
+            self.crzb_list = data.result;
+          })
+          .catch(error => {
+            self.crzb_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isFetching = false;
+          });
+      });
+    },
+    loadFrnList(crzb_id) {
+      const self = this;
+      self.isLoadingFrc = true;
+      self.after_f_settle2(function() {
+        if (crzb_id === null) {
+          self.isLoadingFrc = false;
+          return;
+        }
+        self.frc_list = [];
+        self.$axios
+          .get(`/api/web/ls_franchise/${crzb_id}`)
+          .then(({ data }) => {
+            self.frc_list = data.result;
+          })
+          .catch(error => {
+            self.frc_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingFrc = false;
+          });
+      });
+    },
+    getPrdName(f_id) {
+      return _.get(_.find(this.prd_list, { id: f_id }), "name", null);
+    },
     setFData: function(data) {
       this.is_paid_user = data.is_paid_m === 1 ? true : false;
-      this.ac_city = data.city !== null ? data.city : "";
+      this.is_auto_crzb = true;
       this.f_data = {
         user_asn_id: data.user_asn_id === null ? "" : data.user_asn_id,
         full_name: data.full_name,
@@ -323,18 +393,15 @@ export default {
         dob: data.dob ? new Date(moment(data.dob)) : null,
         cont_num: data.contact_num,
         address: data.address,
-        city: data.city,
         ref_code: data.ref_user_asn_id,
-        status: data.active_sts
+        status: data.active_sts,
+        sel_crzb_id: data.crzb_id,
+        franchise: data.fr_id ? data.fr_id : ""
       };
-    },
-    setPrdData: function(data) {
       this.prd_data = {
-        prd: data.product_id ? data.product_id : "",
-        b_type: data.buyer_type ? data.buyer_type : 1,
-        qnt_bikes: data.buyer_qty_prd ? data.buyer_qty_prd : 5,
-        p_type: data.buyer_pay_type ? data.buyer_pay_type : 1
+        prd: data.product_id ? data.product_id : ""
       };
+      this.ac_crzb = data.crzb_ac_name;
     },
     update: function() {
       const self = this;
@@ -360,7 +427,6 @@ export default {
             dob: moment(self.f_data.dob).format("YYYY-MM-DD"),
             contact_num: self.f_data.cont_num,
             address: self.f_data.address,
-            city: self.f_data.city,
             ref_user_asn_id:
               self.f_data.ref_code !== "" ? self.f_data.ref_code : null,
             active_sts: self.f_data.status
@@ -381,16 +447,10 @@ export default {
             .post("/api/member/update", {
               update_id: self.fet_m_data.id,
               member_data: mem_data,
-              prd_data: {
+              ext_data: {
                 product_id: self.prd_data.prd,
-                buyer_type:
-                  self.prd_data.prd === 1 ? null : self.prd_data.b_type,
-                buyer_pay_type:
-                  self.prd_data.prd === 1 ? null : self.prd_data.p_type,
-                buyer_qty_prd:
-                  self.prd_data.prd === 1 || self.prd_data.b_type !== 2
-                    ? 0
-                    : parseInt(self.prd_data.qnt_bikes)
+                crzb_id: self.f_data.sel_crzb_id,
+                fr_id: self.f_data.franchise
               }
             })
             .then(res => {

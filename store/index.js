@@ -166,6 +166,7 @@ export const actions = {
   }) {
     // dispatch('socket_io/user_logout_emit', state.user.token)
     localStorage.removeItem("user")
+    commit('crzb-module/resetData')
     commit('pincode/resetData')
     commit('showMsgs/resetData')
     commit('initAuthSet', false)

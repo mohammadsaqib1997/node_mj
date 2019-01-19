@@ -10,8 +10,9 @@
           //- th Commission
           th Rewards
           th(width="300px") Total No. People Possible
+          th(width="300px") Total DIRECT REFERRAL
       tbody
-        tr(v-for="row in gen_data" :class="{ passed: (row.passed === true), active: (row.active === true) }")
+        tr(v-for="(row, ind) in gen_data" :key="ind" :class="{ passed: (row.passed === true), active: (row.active === true) }")
           td 
             b-icon(v-if="row.active === true" pack="fas" icon="caret-right")
             | {{ row.lvl }}
@@ -19,12 +20,15 @@
           td {{ row.rwd }}
           td 
             | {{ row.pp }}
-            button.button.is-small.claim-btn(v-if="row.claim_rwds && row.claim_rwds.can_claim === true && !isSubmited(row)" @click.prevent="setItemMD(row.lvl_id)") Claim Reward
-            button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 0") In Process
-            button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 1") Claimed
+          td
+            .flex
+              p {{ row.dr }}
+              button.button.is-small.claim-btn(v-if="row.claim_rwds && row.claim_rwds.can_claim === true && !isSubmited(row)" @click.prevent="setItemMD(row.lvl_id)") Claim Reward
+              button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 0") In Process
+              button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 1") Claimed
 
-            b-tooltip(v-if="row.active === true" :label="row.comp_prg+'%'" position="is-top" type="is-light" animated)
-              progress.progress.is-warning(:value="row.comp_prg" max="100")
+              b-tooltip(v-if="row.active === true && ind>0" :label="row.comp_prg+'%'" position="is-top" type="is-light" animated)
+                progress.progress.is-warning(:value="row.comp_prg" max="100")
     b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 
     b-modal.modal-des-1.md-claim(:active.sync="md_active" :has-modal-card="true" :canCancel="md_close_btn" @close="closeMDTrg")
@@ -32,12 +36,13 @@
         .modal-card-body
           .section(v-if="active_item_md != null")
             .columns
-              .column
+              .column(v-if="active_item_md.rwd")
                 .prd-cont(:class="{ active: sel_c_rwd === 0 }" @click.prevent="sel_c_rwd=0")
-                  span.icon(v-html="active_item_md.rwd.icon")
+                  span.icon(v-if="active_item_md.rwd.icon" v-html="active_item_md.rwd.icon")
+                  img(v-else-if="active_item_md.rwd.img" :src="active_item_md.rwd.img")
                   .title {{ active_item_md.rwd.title }}
 
-              .column
+              .column(v-if="active_item_md.cash")
                 .prd-cont(:class="{ active: sel_c_rwd === 1 }" @click.prevent="sel_c_rwd=1")
                   span.icon
                     i.fas.fa-money-bill-alt
@@ -62,6 +67,12 @@ export default {
           let c_tot = parseInt(res.data.child_count);
           for (let ind in self.gen_data) {
             let g_data = self.gen_data[ind];
+            // check index 0 and 1 refferal found so claim reward
+            if (ind == 0 && parseInt(res.data.direct_ref) >= g_data.dr_total) {
+              if (_.hasIn(self.gen_data[ind], "claim_rwds")) {
+                self.gen_data[ind].claim_rwds.can_claim = true;
+              }
+            }
             if (g_data.pp >= res.data.child_count) {
               self.gen_data[ind]["active"] = true;
               let pend_per = Math.round(
@@ -70,7 +81,7 @@ export default {
               self.gen_data[ind]["comp_prg"] = 100 - pend_per;
               break;
             } else {
-              if (_.hasIn(self.gen_data[ind], "claim_rwds")) {
+              if (_.hasIn(self.gen_data[ind], "claim_rwds") && parseInt(res.data.direct_ref) >= g_data.dr_total) {
                 self.gen_data[ind].claim_rwds.can_claim = true;
               }
               self.gen_data[ind]["passed"] = true;
@@ -93,37 +104,69 @@ export default {
         lvl_id: 0,
         lvl: "You",
         cm: "None",
-        rwd: "None",
-        pp: 1
+        rwd: "Business Kit",
+        pp: 1,
+        dr: 1,
+        dr_total: 1,
+        claim_rwds: {
+          can_claim: false,
+          rwd: {
+            title: "Business Kit",
+            icon: null,
+            img: "/img/rewards-icon/baggage.png"
+          }
+        }
       },
       {
         lvl_id: 1,
         lvl: "1st Level",
         cm: "None",
-        rwd: "None",
-        pp: 1
+        rwd: "Watch",
+        pp: 1,
+        dr: 2,
+        dr_total: 2,
+        claim_rwds: {
+          can_claim: false,
+          rwd: {
+            title: "Watch",
+            icon: null,
+            img: "/img/rewards-icon/wristwatch.png"
+          }
+        }
       },
       {
         lvl_id: 2,
         lvl: "2nd Level",
         cm: "None",
-        rwd: "None",
-        pp: 1
+        rwd: "Travelling bag",
+        pp: 1,
+        dr: 3,
+        dr_total: 3,
+        claim_rwds: {
+          can_claim: false,
+          rwd: {
+            title: "Travelling bag",
+            icon: null,
+            img: "/img/rewards-icon/backpack.png"
+          }
+        }
       },
       {
         lvl_id: 3,
         lvl: "3rd Level",
         cm: "None",
-        rwd: "Laptop OR 25,000 Cash",
+        rwd: "Mobile OR 25,000 Cash",
         pp: 1,
+        dr: 4,
+        dr_total: 4,
         claim_rwds: {
           can_claim: false,
           cash: {
             title: "Rs. 25,000/-"
           },
           rwd: {
-            title: "Laptop",
-            icon: '<i class="fas fa-laptop"></i>'
+            title: "Mobile",
+            icon: '<i class="fas fa-mobile-alt"></i>'
           }
         }
       },
@@ -131,16 +174,18 @@ export default {
         lvl_id: 4,
         lvl: "4th Level",
         cm: "None",
-        rwd: "Mobile OR 50,000 Cash",
+        rwd: "Laptop OR 50,000 Cash",
         pp: 1,
+        dr: 4,
+        dr_total: 1,
         claim_rwds: {
           can_claim: false,
           cash: {
             title: "Rs. 50,000/-"
           },
           rwd: {
-            title: "Mobile",
-            icon: '<i class="fas fa-mobile-alt"></i>'
+            title: "Laptop",
+            icon: '<i class="fas fa-laptop"></i>'
           }
         }
       },
@@ -150,6 +195,8 @@ export default {
         cm: "None",
         rwd: "CG-125 Motorcycle OR 100,000 Cash",
         pp: 1,
+        dr: 4,
+        dr_total: 1,
         claim_rwds: {
           can_claim: false,
           cash: {
@@ -167,6 +214,8 @@ export default {
         cm: "None",
         rwd: "Ummrah With Dubai Tour OR 200,000 Cash",
         pp: 1,
+        dr: 4,
+        dr_total: 1,
         claim_rwds: {
           can_claim: false,
           cash: {
@@ -184,6 +233,8 @@ export default {
         cm: "None",
         rwd: "Malaysia Tour Or 300,000 Cash",
         pp: 1,
+        dr: 4,
+        dr_total: 1,
         claim_rwds: {
           can_claim: false,
           cash: {
@@ -201,6 +252,8 @@ export default {
         cm: "None",
         rwd: "Gli New Model Current Year OR 18,000 $",
         pp: 1,
+        dr: 4,
+        dr_total: 1,
         claim_rwds: {
           can_claim: false,
           cash: {
@@ -218,6 +271,8 @@ export default {
         cm: "None",
         rwd: "Toyota Fortuner 2018 OR 50,000 $",
         pp: 1,
+        dr: 4,
+        dr_total: 1,
         claim_rwds: {
           can_claim: false,
           cash: {
@@ -240,6 +295,9 @@ export default {
     for (let ind in gen_data) {
       if (ind > 0) {
         gen_data[ind].pp = gen_data[ind - 1].pp * 4;
+      }
+      if(ind > 3) {
+        gen_data[ind].dr_total = gen_data[ind - 1].dr_total + 4;
       }
     }
     return {
@@ -312,7 +370,7 @@ export default {
       self.form.loading = true;
       self.md_close_btn = false;
       await self.$axios
-        .post('/api/reward/claim', {
+        .post("/api/reward/claim", {
           reward_selected: self.sel_c_rwd,
           level: self.active_item_md.lvl_id
         })
@@ -331,6 +389,7 @@ export default {
         });
       self.form.loading = false;
       self.md_active = false;
+      self.closeMDTrg();
       self.$toast.open({
         duration: 3000,
         message: msg,
@@ -376,34 +435,40 @@ export default {
           padding: 12px 20px;
           font-weight: 300;
           color: #737373;
+          .claim-btn {
+            float: right;
+            background-color: #3f3d5c;
+            border: 2px solid #d3c05c;
+            text-transform: uppercase;
+            color: white;
+            font-weight: 500;
+            padding: 5px 10px;
+            height: auto;
+
+            &.disabled {
+              background-color: #8886a0;
+              &:focus {
+                box-shadow: none;
+              }
+            }
+
+            &:focus {
+              box-shadow: 0 0 3px 0px #d3c05c;
+            }
+          }
+          .flex {
+            display: flex;
+            align-items: center;
+            p {
+              flex-grow: 1;
+            }
+          }
         }
         &.passed {
           td {
             border-bottom-color: white;
             background-color: #f6f6f6;
             color: #9a9a9a;
-
-            .claim-btn {
-              float: right;
-              background-color: #3f3d5c;
-              border: 2px solid #d3c05c;
-              text-transform: uppercase;
-              color: white;
-              font-weight: 500;
-              padding: 5px 10px;
-              height: auto;
-
-              &.disabled {
-                background-color: #8886a0;
-                &:focus {
-                  box-shadow: none;
-                }
-              }
-
-              &:focus {
-                box-shadow: 0 0 3px 0px #d3c05c;
-              }
-            }
           }
         }
         &.active {
@@ -411,6 +476,7 @@ export default {
             color: white;
             font-weight: 400;
             background-color: #3d3e5a;
+            vertical-align: middle;
             .icon {
               position: absolute;
               left: 0;
@@ -451,6 +517,8 @@ export default {
       padding: 1rem;
       border-radius: 5px;
       border: 2px solid transparent;
+      margin: 0 auto;
+      max-width: 300px;
       cursor: pointer;
       &.active,
       &:hover {
@@ -461,6 +529,9 @@ export default {
         width: auto;
         height: auto;
         color: #f1f1f1;
+      }
+      img {
+        max-width: 60px;
       }
       .title {
         color: #f1f1f1;

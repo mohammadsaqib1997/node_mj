@@ -332,7 +332,7 @@ router.post('/claim', function (req, res) {
                                                     to_type: 1,
                                                     from_id: req.decoded.data.user_id,
                                                     to_id: 1,
-                                                    message: `${(params.type) ? 'Self': 'Auto'} Reward Request From User ID ${result[0].user_asn_id} Reward Level -> ${req.body.level}`,
+                                                    message: `${(params.type) ? 'Self': 'Auto'} Reward Request From User ID ${result[0].user_asn_id} Reward Level -> ${req.body.level == 0 ? 'You': req.body.level}`,
                                                     notify_type: 3,
                                                     ref_id: insert_clm_id
                                                 }, function (error, results, fields) {
@@ -414,7 +414,7 @@ router.post("/sts_change", function (req, res) {
                                     } else {
                                         let rwd_type = results[0].type
                                         let member_id = results[0].member_id
-                                        let notify_msg = `Your ${rwd_type==1 ? 'Self':'Auto'} Reward Request has been ${req.body.sts === 1 ? 'Accepted' : 'Canceled'} Reward Level -> ${results[0].level}.`,
+                                        let notify_msg = `Your ${rwd_type==1 ? 'Self':'Auto'} Reward Request has been ${req.body.sts === 1 ? 'Accepted' : 'Canceled'} Reward Level -> ${results[0].level == 0 ? 'You': results[0].level}.`,
                                             params = {
                                                 status: req.body.sts
                                             }
