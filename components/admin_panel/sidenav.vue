@@ -297,6 +297,13 @@ export default {
               title: "Auto Rewards",
               show: [0]
             },
+            {
+              name: "campaign",
+              active: false,
+              url: "/system-level/campaign",
+              title: "Campaign",
+              show: [0]
+            },
             // {
             //   name: "self-rewards",
             //   active: false,
