@@ -6,7 +6,7 @@
 
 <script>
 import mxn_modal from "~/mixins/modal.js";
-import mdContent from "~/components/modals/promotions/new_price.vue";
+import mdContent from "~/components/modals/promotions/mega_pm_20jan_31mar.vue";
 export default {
   mixins: [mxn_modal],
   components: {

@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import slideComp from "~/components/slides/new_price_slide.vue";
+import slideComp from "~/components/slides/mega_prm_20jan_31mar.vue";
 export default {
   components: {
     slideComp
@@ -137,7 +137,6 @@ export default {
       .sld-2 {
         position: relative;
         overflow: hidden;
-        background-image: url("/img/prm-ass-2/banner-bg.jpg");
         @media screen and (max-width: 1087px) {
           padding: 1rem 5rem;
         }
