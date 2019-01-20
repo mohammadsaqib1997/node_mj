@@ -59,19 +59,43 @@
       .body
         .section
           .columns
-            .column.is-4
-              .content-des-1
-                h1 Paid
-                p {{ tot_paid_r }}
-              .content-des-1
-                h1 Pending
-                p {{ tot_pend_r }}
-              .content-des-1
-                h1 Total
-                p {{ tot_paid_r + tot_pend_r }}
-            .column
-              bar-chart(:height="300" :ren_data="bar_data")
-          b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
+            .column.is-6
+              .columns
+                .column.is-narrow
+                  .content-des-1
+                    h1 Paid
+                    p {{ tot_paid_r }}
+                  .content-des-1
+                    h1 Pending
+                    p {{ tot_pend_r }}
+                  .content-des-1
+                    h1 Total
+                    p {{ tot_paid_r + tot_pend_r }}
+                .column
+                  bar-chart(:height="300" :ren_data="bar_data")
+                b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
+            .column.is-6
+              .box.bal-cont
+                table.table.is-fullwidth
+                  thead
+                    tr
+                      th.has-text-centered(colspan='2')
+                        | Finance
+                  tbody
+                    tr
+                      td Available Balance:
+                      td.has-text-right 0 PKR
+                    tr
+                      td Pending Balance:
+                      td.has-text-right 0 PKR
+                    tr
+                      td Additional Fees:
+                      td.has-text-right 0 PKR
+                    tr
+                      td
+                        nuxt-link(to="/fund-manager/finance-details") Account Summary
+                      td.has-text-right
+                        nuxt-link(to="/withdraw") Withdraw
 </template>
 
 <script>
@@ -128,8 +152,8 @@ export default {
             .format("MMMM");
           labels.push(m_text);
 
-          self.tot_paid_r += _.get(data, month + ".paid", 0)
-          self.tot_pend_r += _.get(data, month + ".un_paid", 0)
+          self.tot_paid_r += _.get(data, month + ".paid", 0);
+          self.tot_pend_r += _.get(data, month + ".un_paid", 0);
 
           datasets[0].data.push(_.get(data, month + ".paid", 0));
           datasets[1].data.push(_.get(data, month + ".un_paid", 0));
@@ -167,8 +191,31 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
-.box.counter-box
-  position: relative
+<style scoped lang="scss">
+.box.counter-box {
+  position: relative;
+}
+.box.bal-cont {
+  height: 100%;
+  /deep/ {
+    table.table {
+      height: 100%;
+      thead {
+        th {
+          text-transform: uppercase;
+          font-size: 18px;
+          font-weight: 500;
+        }
+      }
+      td {
+        vertical-align: middle;
+        text-transform: uppercase;
+        a {
+          color: #d9bd68;
+        }
+      }
+    }
+  }
+}
 </style>
 
