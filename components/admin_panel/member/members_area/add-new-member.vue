@@ -279,7 +279,7 @@ export default {
     },
     "f_data.franchise": function(value) {
       return Validator.value(value)
-        .required()
+        // .required()
         .digit()
         .maxLength(11);
     },

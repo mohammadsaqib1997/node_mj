@@ -488,6 +488,9 @@ router.post("/update", function (req, res) {
                               throw_error = error
                               inner_resolve()
                             } else {
+                              if(!req.body.ext_data.fr_id) {
+                                return inner_resolve()
+                              }
                               connection.query(
                                 `SELECT mem_lk.member_id, m.is_paid_m
                                 FROM mem_link_franchise as mem_lk

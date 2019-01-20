@@ -1047,35 +1047,43 @@ router.post('/signup', (req, res) => {
                           member_id: mem_id,
                           crzb_id: req.body.ext_data.crzb_id,
                           linked_type: 1
-                        }, function (error, results, fields) {
+                        }, async function (error, results, fields) {
                           if (error) {
                             throw_error = error
                             return resolve()
                           } else {
-                            connection.query('INSERT INTO `mem_link_franchise` SET ?', {
-                              member_id: mem_id,
-                              franchise_id: req.body.ext_data.franchise,
-                              linked_type: 1
-                            }, function (error, results, fields) {
-                              if (error) {
-                                throw_error = error
-                                return resolve()
-                              } else {
-                                connection.query('INSERT INTO `notifications` SET ?', {
-                                  from_type: 0,
-                                  to_type: 1,
-                                  from_id: mem_id,
-                                  to_id: 1, // admin id
-                                  message: "New member added in members list. Approve it.",
-                                  notify_type: 1
+                            if (req.body.ext_data.franchise) {
+                              await new Promise(resolveFr => {
+                                connection.query('INSERT INTO `mem_link_franchise` SET ?', {
+                                  member_id: mem_id,
+                                  franchise_id: req.body.ext_data.franchise,
+                                  linked_type: 1
                                 }, function (error, results, fields) {
                                   if (error) {
                                     throw_error = error
                                   }
-                                  return resolve()
+                                  return resolveFr()
                                 })
+                              })
+                              if (throw_error) {
+                                return resolve()
                               }
+                            }
+
+                            connection.query('INSERT INTO `notifications` SET ?', {
+                              from_type: 0,
+                              to_type: 1,
+                              from_id: mem_id,
+                              to_id: 1, // admin id
+                              message: "New member added in members list. Approve it.",
+                              notify_type: 1
+                            }, function (error, results, fields) {
+                              if (error) {
+                                throw_error = error
+                              }
+                              return resolve()
                             })
+
                           }
                         })
                       }

@@ -207,7 +207,6 @@ export default {
     },
     "form.franchise": function(value) {
       return Validator.value(value)
-        .required()
         .digit()
         .maxLength(11);
     },

@@ -783,55 +783,63 @@ router.post("/add_referral", function (req, res) {
                                                             crzb_id: req.body.ext_data.crzb_id,
                                                             linked_type: 1
                                                           },
-                                                          function (error, results) {
+                                                          async function (error, results) {
                                                             if (error) {
                                                               err_hdl(error)
                                                               resolve()
                                                             } else {
+                                                              if (req.body.ext_data.fr_id) {
+                                                                let throw_error;
+                                                                await new Promise(resolveFr => {
+                                                                  connection.query(
+                                                                    'INSERT INTO `mem_link_franchise` SET ?', {
+                                                                      member_id: mem_id,
+                                                                      franchise_id: req.body.ext_data.fr_id,
+                                                                      linked_type: 1
+                                                                    },
+                                                                    function (error, results) {
+                                                                      if (error) {
+                                                                        throw_error = error
+                                                                      }
+                                                                      return resolveFr()
+                                                                    })
+                                                                })
+                                                                if (throw_error) {
+                                                                  err_hdl(throw_error)
+                                                                  return resolve()
+                                                                }
+                                                              }
                                                               connection.query(
-                                                                'INSERT INTO `mem_link_franchise` SET ?', {
-                                                                  member_id: mem_id,
-                                                                  franchise_id: req.body.ext_data.fr_id,
-                                                                  linked_type: 1
+                                                                'INSERT INTO `transactions_m` SET ?', {
+                                                                  member_id: req.decoded.data.user_id,
+                                                                  remarks: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
+                                                                  credit: prd_reg_amount
                                                                 },
                                                                 function (error, results) {
                                                                   if (error) {
                                                                     err_hdl(error)
                                                                     resolve()
                                                                   } else {
-                                                                    connection.query(
-                                                                      'INSERT INTO `transactions_m` SET ?', {
-                                                                        member_id: req.decoded.data.user_id,
-                                                                        remarks: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
-                                                                        credit: prd_reg_amount
-                                                                      },
-                                                                      function (error, results) {
-                                                                        if (error) {
-                                                                          err_hdl(error)
+                                                                    connection.query('INSERT INTO `notifications` SET ?', {
+                                                                      from_type: 1,
+                                                                      to_type: 0,
+                                                                      from_id: 1,
+                                                                      to_id: req.decoded.data.user_id,
+                                                                      message: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
+                                                                      notify_type: 0
+                                                                    }, function (error, results) {
+                                                                      if (error) {
+                                                                        err_hdl(error)
+                                                                        resolve()
+                                                                      } else {
+                                                                        after_paid_member(connection, mem_id, req.body.member_data['user_asn_id'], function (err) {
+                                                                          if (err) {
+                                                                            err_hdl(err)
+                                                                          }
                                                                           resolve()
-                                                                        } else {
-                                                                          connection.query('INSERT INTO `notifications` SET ?', {
-                                                                            from_type: 1,
-                                                                            to_type: 0,
-                                                                            from_id: 1,
-                                                                            to_id: req.decoded.data.user_id,
-                                                                            message: "Create New Referral Fees Deduct Amount In Your Wallet - User ID " + req.body.member_data['user_asn_id'],
-                                                                            notify_type: 0
-                                                                          }, function (error, results) {
-                                                                            if (error) {
-                                                                              err_hdl(error)
-                                                                              resolve()
-                                                                            } else {
-                                                                              after_paid_member(connection, mem_id, req.body.member_data['user_asn_id'], function (err) {
-                                                                                if (err) {
-                                                                                  err_hdl(err)
-                                                                                }
-                                                                                resolve()
-                                                                              })
-                                                                            }
-                                                                          })
-                                                                        }
-                                                                      })
+                                                                        })
+                                                                      }
+                                                                    })
                                                                   }
                                                                 })
                                                             }
@@ -970,32 +978,42 @@ router.post('/add', function (req, res) {
                   member_id: mem_id,
                   crzb_id: req.body.ext_data.crzb_id,
                   linked_type: 1
-                }, function (error, results, fields) {
+                }, async function (error, results, fields) {
                   if (error) {
                     err_hdl(error)
                     resolve()
                   } else {
-                    connection.query('INSERT INTO `mem_link_franchise` SET ?', {
-                      member_id: mem_id,
-                      franchise_id: req.body.ext_data.fr_id,
-                      linked_type: 1
-                    }, function (error, results, fields) {
-                      if (error) {
-                        err_hdl(error)
-                        resolve()
-                      } else {
-                        if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
-                          after_paid_member(connection, mem_id, req.body.member_data.user_asn_id, function (err) {
-                            if (err) {
-                              err_hdl(err)
-                            }
-                            return resolve()
-                          })
-                        } else {
-                          resolve()
-                        }
+                    if (req.body.ext_data.fr_id) {
+                      let throw_error;
+                      await new Promise(resolveFr => {
+                        connection.query('INSERT INTO `mem_link_franchise` SET ?', {
+                          member_id: mem_id,
+                          franchise_id: req.body.ext_data.fr_id,
+                          linked_type: 1
+                        }, function (error, results, fields) {
+                          if (error) {
+                            throw_error = error
+                          }
+                          resolveFr()
+                        })
+                      })
+                      if (throw_error) {
+                        err_hdl(throw_error)
+                        return resolve()
                       }
-                    })
+                    }
+
+                    if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
+                      after_paid_member(connection, mem_id, req.body.member_data.user_asn_id, function (err) {
+                        if (err) {
+                          err_hdl(err)
+                        }
+                        return resolve()
+                      })
+                    } else {
+                      resolve()
+                    }
+
                   }
                 })
               }
@@ -1078,56 +1096,64 @@ router.post('/update', function (req, res) {
                               linked_type: results[0].is_paid_m == 0 ? 1 : 0
                             }]
                           }
-                          connection.query(query, params, function (error, results, fields) {
+                          connection.query(query, params, async function (error, results, fields) {
                             if (error) {
                               err_hdl(error)
                               resolve()
                             } else {
 
-                              connection.query(
-                                `SELECT mem_lk.member_id, m.is_paid_m
-                                FROM mem_link_franchise as mem_lk
-                                right join members as m
-                                on mem_lk.member_id = m.id
-                                WHERE m.id=?`,
-                                req.body.update_id,
-                                function (error, results, fields) {
-                                  if (error) {
-                                    err_hdl(error)
-                                    resolve()
-                                  } else {
-                                    let query = 'UPDATE `mem_link_franchise` SET ? WHERE member_id=?'
-                                    let params = [{
-                                      franchise_id: req.body.ext_data.fr_id
-                                    }, req.body.update_id]
-
-                                    if (results.length && results[0].member_id == null) {
-                                      query = 'INSERT INTO `mem_link_franchise` SET ?'
-                                      params = [{
-                                        franchise_id: req.body.ext_data.fr_id,
-                                        member_id: req.body.update_id,
-                                        linked_type: results[0].is_paid_m == 0 ? 1 : 0
-                                      }]
-                                    }
-                                    connection.query(query, params, function (error, results, fields) {
+                              if (req.body.ext_data.fr_id) {
+                                let throw_error
+                                await new Promise(resolveFr => {
+                                  connection.query(
+                                    `SELECT mem_lk.member_id, m.is_paid_m
+                                    FROM mem_link_franchise as mem_lk
+                                    right join members as m
+                                    on mem_lk.member_id = m.id
+                                    WHERE m.id=?`,
+                                    req.body.update_id,
+                                    function (error, results, fields) {
                                       if (error) {
-                                        err_hdl(error)
-                                        resolve()
+                                        throw_error = error
+                                        resolveFr()
                                       } else {
-                                        if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
-                                          after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
-                                            if (err) {
-                                              err_hdl(err)
-                                            }
-                                            resolve()
-                                          })
-                                        } else {
-                                          resolve()
+                                        let query = 'UPDATE `mem_link_franchise` SET ? WHERE member_id=?'
+                                        let params = [{
+                                          franchise_id: req.body.ext_data.fr_id
+                                        }, req.body.update_id]
+
+                                        if (results.length && results[0].member_id == null) {
+                                          query = 'INSERT INTO `mem_link_franchise` SET ?'
+                                          params = [{
+                                            franchise_id: req.body.ext_data.fr_id,
+                                            member_id: req.body.update_id,
+                                            linked_type: results[0].is_paid_m == 0 ? 1 : 0
+                                          }]
                                         }
+                                        connection.query(query, params, function (error, results, fields) {
+                                          if (error) {
+                                            throw_error = error
+                                          }
+                                          resolveFr()
+                                        })
                                       }
                                     })
-                                  }
                                 })
+                                if (throw_error) {
+                                  err_hdl(throw_error)
+                                  return resolve()
+                                }
+                              }
+                              if (_.get(req.body.member_data, 'is_paid_m', 0) === 1) {
+                                after_paid_member(connection, req.body.update_id, req.body.member_data.user_asn_id, function (err) {
+                                  if (err) {
+                                    err_hdl(err)
+                                  }
+                                  resolve()
+                                })
+                              } else {
+                                resolve()
+                              }
                             }
                           })
                         }

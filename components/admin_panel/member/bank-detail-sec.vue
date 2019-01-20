@@ -124,7 +124,7 @@ export default {
     },
     "f_data.branch_code": function(value) {
       return Validator.value(value)
-        .minLength(6)
+        .minLength(4)
         .maxLength(50);
     },
     "f_data.account_title": function(value) {

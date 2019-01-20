@@ -6,18 +6,29 @@
                     h1 Withdraw Amount
             .body
                 .section
+                  .columns.is-gapless
+                    .column.is-narrow
+                      h2.title Wallet
+                      .wallet-sc
+                        img(src="~/assets/img/wallet.png")
+                        .amount
+                          span.placeholder Rs.
+                          span {{ $store.state.member.wallet }}
+                    .column
+                      bankDetComp(:has_header="true")
+                    
+                  hr
                   .columns
                     .column.is-6
-                      .columns.is-gapless
-                        .column.is-narrow
-                          h2.title Wallet
-                          .wallet-sc
-                            img(src="~/assets/img/wallet.png")
-                            .amount
-                              span.placeholder Rs.
-                              span {{ $store.state.member.wallet }}
-                        .column
-                          bankDetComp(:has_header="true")
+                      template(v-if="form.loading !== true")
+                        template(v-if="w_is_err === true")
+                          h2.title Please Complete Your Profile And Bank Details
+                          ul.errors
+                            li.item(v-for="err in w_errors") {{ err.message }}
+
+                        template(v-else)
+                          b-message.cus-msg(type="is-danger" has-icon)
+                            | You cannot withdraw any amount until shows in Available Balance.
                     .column.is-6
                       .box.bal-cont
                         table.table.is-fullwidth
@@ -38,19 +49,7 @@
                             tr
                               td
                                 nuxt-link(to="/fund-manager/finance-details") Account Summary
-                              
-                  hr
-                  template(v-if="form.loading !== true")
-                    template(v-if="w_is_err === true")
-                      h2.title Please Complete Your Profile And Bank Details
-                      ul.errors
-                        li.item(v-for="err in w_errors") {{ err.message }}
-
-                    template(v-else)
-                      b-message.cus-msg(type="is-danger" has-icon)
-                        | You cannot withdraw any amount until shows in Available Balance.
-
-
+                  
                       //- form.form(v-else @submit.prevent="withdraw")
                       //-     .columns.is-variable.is-1
                       //-         .column.is-3
