@@ -25,7 +25,7 @@
               p.discount-txt(v-if="tab_header_ind === 2 && isPromotion")
                 | Promotion 10000 PKR - 20% = 8000 PKR
                 br
-                | This promotion will expire by the end of 20th January 2019.
+                | This promotion will expire by the end of 21st January 2019.
               b-field
                 p.control.has-text-centered
                   button.button.btn-des-1(type="submit") SignUp

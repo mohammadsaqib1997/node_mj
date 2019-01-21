@@ -17,9 +17,9 @@ export default {
 
 <style lang="scss" scoped>
 .promotion /deep/ {
-  .modal-content {
-    width: 820px;
-    max-width: 100% !important;
+  > .modal-content {
+    width: 100%;
+    max-width: 820px !important;
   }
 }
 </style>

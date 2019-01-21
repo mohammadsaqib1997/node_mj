@@ -2,7 +2,7 @@
   <div class="section">
     <div id="slider-hm" class="slider-cont">
       <div class="item sld-2">
-        <slideComp></slideComp>
+        <slideComp @popup_open="md_act=$event"></slideComp>
       </div>
 
       <div class="item sld-1">
@@ -19,14 +19,18 @@
         </div>
       </div>
     </div>
+
+    <mdPromTermCond :md_act="md_act" @closed="md_act=false"></mdPromTermCond>
   </div>
 </template>
 
 <script>
+import mdPromTermCond from "~/components/modals/prm-term-cond/term-cond.vue";
 import slideComp from "~/components/slides/mega_prm_20jan_31mar.vue";
 export default {
   components: {
-    slideComp
+    slideComp,
+    mdPromTermCond
   },
   mounted() {
     jQuery(function() {
@@ -44,6 +48,11 @@ export default {
     diff_sec_check: function() {
       return this.$store.state["timer-counter"]["diffInSec"];
     }
+  },
+  data() {
+    return {
+      md_act: false
+    };
   }
   // watch: {
   //   diff_sec_check: function(val) {
@@ -136,26 +145,14 @@ export default {
 
       .sld-2 {
         position: relative;
+        background-image: url("/img/prm-ass-3/bg-pattern-banner.png");
         overflow: hidden;
         @media screen and (max-width: 1087px) {
           padding: 1rem 5rem;
         }
 
-        @media screen and (max-width: 1024px) {
-          background-position: 75% center !important;
-        }
-
-        @media screen and (max-width: 425px) {
-          height: 700px;
-        }
-        @media screen and (min-width: 426px) and (max-width: 768px) {
-          height: 700px !important;
-        }
-        @media screen and (min-width: 769px) and (max-width: 1024px) {
-          height: 600px !important;
-        }
-        @media screen and (min-width: 1025px) and (max-width: 1526px) {
-          height: 550px !important;
+        @media screen and (min-width: 1055px) {
+          height: 445px;
         }
       }
 
