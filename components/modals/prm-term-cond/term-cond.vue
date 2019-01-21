@@ -12,7 +12,7 @@
               <li>Promotion will be starting from 20th January and will be ended by 31st March 2019.</li>
               <li>Winner and reward will be announced after the completion of the promotion.</li>
               <li>Total of paid direct and indirect team members should be 150 with minimum two teams working simultaneously.</li>
-              <li>There should be minimum of 2 teams working and among the number of teams, one team should have minimum 50 paid signups.</li>
+              <li>Every team should have minimum 20 new signups from their line.</li>
               <li>MJ Supreme reserves the right to change these terms and conditions whenever required.</li>
             </ol>
           </div>
