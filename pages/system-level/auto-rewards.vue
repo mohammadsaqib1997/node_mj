@@ -20,15 +20,14 @@
           td {{ row.rwd }}
           td 
             | {{ row.pp }}
+            b-tooltip(v-if="row.active === true && ind>0" :label="row.comp_prg+'%'" position="is-top" type="is-light" animated)
+              progress.progress.is-warning(:value="row.comp_prg" max="100")
           td
             .flex
               p {{ row.dr }}
               button.button.is-small.claim-btn(v-if="row.claim_rwds && row.claim_rwds.can_claim === true && !isSubmited(row)" @click.prevent="setItemMD(row.lvl_id)") Claim Reward
               button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 0") In Process
               button.button.is-small.claim-btn.disabled(v-else-if="row.claim_rwds && row.claim_rwds.can_claim === true && isSubmited(row) && getSbtSts(row) === 1") Claimed
-
-              b-tooltip(v-if="row.active === true && ind>0" :label="row.comp_prg+'%'" position="is-top" type="is-light" animated)
-                progress.progress.is-warning(:value="row.comp_prg" max="100")
     b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 
     b-modal.modal-des-1.md-claim(:active.sync="md_active" :has-modal-card="true" :canCancel="md_close_btn" @close="closeMDTrg")
@@ -73,7 +72,11 @@ export default {
                 self.gen_data[ind].claim_rwds.can_claim = true;
               }
             }
-            if (g_data.pp >= res.data.child_count) {
+
+            if (
+              !isNaN(parseInt(g_data.pp)) &&
+              g_data.pp >= res.data.child_count
+            ) {
               self.gen_data[ind]["active"] = true;
               let pend_per = Math.round(
                 ((g_data.pp - c_tot) / g_data.pp) * 100
@@ -81,7 +84,10 @@ export default {
               self.gen_data[ind]["comp_prg"] = 100 - pend_per;
               break;
             } else {
-              if (_.hasIn(self.gen_data[ind], "claim_rwds") && parseInt(res.data.direct_ref) >= g_data.dr_total) {
+              if (
+                _.hasIn(self.gen_data[ind], "claim_rwds") &&
+                parseInt(res.data.direct_ref) >= g_data.dr_total
+              ) {
                 self.gen_data[ind].claim_rwds.can_claim = true;
               }
               self.gen_data[ind]["passed"] = true;
@@ -105,8 +111,8 @@ export default {
         lvl: "You",
         cm: "None",
         rwd: "Business Kit",
-        pp: 1,
-        dr: 1,
+        pp: "You",
+        dr: "1",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -123,7 +129,7 @@ export default {
         cm: "None",
         rwd: "Watch",
         pp: 1,
-        dr: 2,
+        dr: "1 + 1",
         dr_total: 2,
         claim_rwds: {
           can_claim: false,
@@ -140,7 +146,7 @@ export default {
         cm: "None",
         rwd: "Travelling bag",
         pp: 1,
-        dr: 3,
+        dr: "1 + 1 + 1",
         dr_total: 3,
         claim_rwds: {
           can_claim: false,
@@ -157,8 +163,8 @@ export default {
         cm: "None",
         rwd: "Mobile OR 25,000 Cash",
         pp: 1,
-        dr: 4,
-        dr_total: 4,
+        dr: "1 + 1 + 1 + 4",
+        dr_total: 7,
         claim_rwds: {
           can_claim: false,
           cash: {
@@ -176,7 +182,7 @@ export default {
         cm: "None",
         rwd: "Laptop OR 50,000 Cash",
         pp: 1,
-        dr: 4,
+        dr: "7 old + 4 new",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -195,7 +201,7 @@ export default {
         cm: "None",
         rwd: "CG-125 Motorcycle OR 100,000 Cash",
         pp: 1,
-        dr: 4,
+        dr: "11 old + 4 new",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -214,7 +220,7 @@ export default {
         cm: "None",
         rwd: "Ummrah With Dubai Tour OR 200,000 Cash",
         pp: 1,
-        dr: 4,
+        dr: "15 old + 4 new",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -233,7 +239,7 @@ export default {
         cm: "None",
         rwd: "Malaysia Tour Or 300,000 Cash",
         pp: 1,
-        dr: 4,
+        dr: "19 old + 4 new",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -252,7 +258,7 @@ export default {
         cm: "None",
         rwd: "Gli New Model Current Year OR 18,000 $",
         pp: 1,
-        dr: 4,
+        dr: "23 old + 4 new",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -271,7 +277,7 @@ export default {
         cm: "None",
         rwd: "Toyota Fortuner 2018 OR 50,000 $",
         pp: 1,
-        dr: 4,
+        dr: "27 old + 4 new",
         dr_total: 1,
         claim_rwds: {
           can_claim: false,
@@ -294,9 +300,9 @@ export default {
     let dir_inc = 0;
     for (let ind in gen_data) {
       if (ind > 0) {
-        gen_data[ind].pp = gen_data[ind - 1].pp * 4;
+        gen_data[ind].pp = (ind > 1 ? gen_data[ind - 1].pp : 1) * 4;
       }
-      if(ind > 3) {
+      if (ind > 3) {
         gen_data[ind].dr_total = gen_data[ind - 1].dr_total + 4;
       }
     }

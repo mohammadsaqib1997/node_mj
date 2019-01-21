@@ -25,13 +25,7 @@
 <script>
 import mxn_modal from "~/mixins/modal.js";
 export default {
-  mixins: [mxn_modal],
-  props: {
-    type: {
-      required: true,
-      type: Number
-    }
-  }
+  mixins: [mxn_modal]
 };
 </script>
 

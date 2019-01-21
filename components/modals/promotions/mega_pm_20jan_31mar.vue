@@ -55,7 +55,7 @@
         <p class="content-cont">
           <span class="bold">
             <a href="#" @click.prevent="md_act=true">
-              <span class="hl">*</span> terms & conditions apply.
+              <span class="hl">*</span> Terms & conditions apply.
             </a>
             <br>For further information mail us at:
             <span class="hl">info@mj-supreme.com</span>
