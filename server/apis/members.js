@@ -1500,76 +1500,79 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                       grab_ref_usr_ids.push(results[0].ref_user_asn_id)
                     }
 
+                    direct_inc++
                     let ref_mem_id = results[0].id
-
+                    
                     // campaign process goes here -- start
-                    await new Promise(resolveCamp => {
-                      let curr_date = DateTime.local()
-                        .setZone("UTC+5")
-                        .toFormat("yyyy-LL-dd HH:mm:ss")
-                      connection.query(
-                        `select id from campaigns where start_date <= '${curr_date}' and end_date >= '${curr_date}' limit 1`,
-                        function (error, result) {
-                          if (error) {
-                            throw_error = error
-                            return resolveCamp()
-                          } else {
-                            if (result.length > 0) {
-                              let camp_id = result[0].id
-                              connection.query(
-                                `select id, total_ref from mem_in_campaign where member_id=${ref_mem_id} and campaign_id=${camp_id}`,
-                                async function (error, result) {
-                                  if (error) {
-                                    throw_error = error
-                                    return resolveCamp()
-                                  } else {
-                                    let mem_in_camp_id, mem_tot_ref = 1
-                                    if (result.length > 0) {
-                                      mem_in_camp_id = result[0].id
-                                      mem_tot_ref = parseInt(result[0].total_ref) + 1
-                                      connection.query(
-                                        `update mem_in_campaign set ? where id=${mem_in_camp_id}`, {
-                                          total_ref: mem_tot_ref
-                                        },
-                                        function (error) {
-                                          if (error) {
-                                            throw_error = error
-                                          }
-                                          return resolveCamp()
-                                        }
-                                      )
-                                    } else {
-                                      connection.query(
-                                        `insert into mem_in_campaign set ?`, {
-                                          member_id: ref_mem_id,
-                                          campaign_id: camp_id,
-                                          total_ref: mem_tot_ref
-                                        },
-                                        function (error) {
-                                          if (error) {
-                                            throw_error = error
-                                          }
-                                          return resolveCamp()
-                                        }
-                                      )
-                                    }
-
-                                  }
-                                }
-                              )
-                            } else {
+                    if (direct_inc <= 9) {
+                      await new Promise(resolveCamp => {
+                        let curr_date = DateTime.local()
+                          .setZone("UTC+5")
+                          .toFormat("yyyy-LL-dd HH:mm:ss")
+                        connection.query(
+                          `select id from campaigns where start_date <= '${curr_date}' and end_date >= '${curr_date}' limit 1`,
+                          function (error, result) {
+                            if (error) {
+                              throw_error = error
                               return resolveCamp()
+                            } else {
+                              if (result.length > 0) {
+                                let camp_id = result[0].id
+                                connection.query(
+                                  `select id, total_ref from mem_in_campaign where member_id=${ref_mem_id} and campaign_id=${camp_id}`,
+                                  async function (error, result) {
+                                    if (error) {
+                                      throw_error = error
+                                      return resolveCamp()
+                                    } else {
+                                      let mem_in_camp_id, mem_tot_ref = 1
+                                      if (result.length > 0) {
+                                        mem_in_camp_id = result[0].id
+                                        mem_tot_ref = parseInt(result[0].total_ref) + 1
+                                        connection.query(
+                                          `update mem_in_campaign set ? where id=${mem_in_camp_id}`, {
+                                            total_ref: mem_tot_ref
+                                          },
+                                          function (error) {
+                                            if (error) {
+                                              throw_error = error
+                                            }
+                                            return resolveCamp()
+                                          }
+                                        )
+                                      } else {
+                                        connection.query(
+                                          `insert into mem_in_campaign set ?`, {
+                                            member_id: ref_mem_id,
+                                            campaign_id: camp_id,
+                                            total_ref: mem_tot_ref
+                                          },
+                                          function (error) {
+                                            if (error) {
+                                              throw_error = error
+                                            }
+                                            return resolveCamp()
+                                          }
+                                        )
+                                      }
+
+                                    }
+                                  }
+                                )
+                              } else {
+                                return resolveCamp()
+                              }
                             }
                           }
-                        }
-                      )
-                    })
-                    if (throw_error) {
-                      return resolve2()
+                        )
+                      })
+                      if (throw_error) {
+                        return resolve2()
+                      }
                     }
                     // campaign process goes here -- end
 
-                    direct_inc++
+
                     let set_param = {}
                     let commission_amount = 0
 
