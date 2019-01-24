@@ -16,7 +16,7 @@ router.get('/member/:start/:end', function (req, res) {
       })
     } else {
       connection.query(
-        `SELECT m.created_at, m.user_asn_id, m.full_name, m.ref_user_asn_id, m.email, m.cnic_num, m.contact_num, m.dob, m.address, get_crzbf_name_type(mem_lk_fr.franchise_id, 4) as fr_name, prd.name as prd_name, iv.level, iv.wallet
+        `SELECT m.created_at, m.user_asn_id, m.full_name, m.ref_user_asn_id, m.email, m.cnic_num, m.contact_num, m.dob, m.address, get_crzbf_name_type(ifnull(mem_lk_fr.franchise_id, mem_lk_crzb.crzb_id), if(mem_lk_fr.franchise_id is null, 3, 4)) as fr_name, prd.name as prd_name, iv.level, iv.wallet
                 FROM members as m
                 LEFT JOIN info_var_m as iv
                 ON m.id = iv.member_id
@@ -26,6 +26,8 @@ router.get('/member/:start/:end', function (req, res) {
                 on u_prd.product_id = prd.id
                 left join mem_link_franchise as mem_lk_fr
                 on m.id = mem_lk_fr.member_id
+                left join mem_link_crzb as mem_lk_crzb
+                on m.id = mem_lk_crzb.member_id
                 WHERE m.created_at >= '${start_at}' AND m.created_at <= '${end_at}'`,
         function (err, result) {
           connection.release()
