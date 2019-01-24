@@ -130,6 +130,10 @@ const authRoutes = [{
     {
         name: "system-level-campaign",
         type_allowed: [0]
+    },
+    {
+        name: "user-nomination",
+        type_allowed: [0]
     }
 ]
 

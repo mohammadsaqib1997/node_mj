@@ -6,9 +6,23 @@
       </div>
       <div class="body">
         <div class="section">
-          <tblTopFilter :f_list="tbl_list_filters" @change_filter="change_filter_tr($event)" :filter_set="filter_val" :act_view="load_params.limit" :s_txt="load_params.search" @change_act_view="update_params('limit', $event)" @change_s_txt="update_params('search', $event)"></tblTopFilter>
-          <tableComp :arr="l_data" :loading="loading" :total_record="num_rows" :per_page="parseInt(load_params.limit)"
-            :page_set="load_params.page" @page_change="update_params('page', $event)">
+          <tblTopFilter
+            :f_list="tbl_list_filters"
+            @change_filter="change_filter_tr($event)"
+            :filter_set="filter_val"
+            :act_view="load_params.limit"
+            :s_txt="load_params.search"
+            @change_act_view="update_params('limit', $event)"
+            @change_s_txt="update_params('search', $event)"
+          ></tblTopFilter>
+          <tableComp
+            :arr="l_data"
+            :loading="loading"
+            :total_record="num_rows"
+            :per_page="parseInt(load_params.limit)"
+            :page_set="load_params.page"
+            @page_change="update_params('page', $event)"
+          >
             <template slot="thead">
               <tr>
                 <th>ID</th>
@@ -31,10 +45,16 @@
                 <td>
                   <b-field grouped>
                     <p class="control">
-                      <button class="button is-small is-info" @click.prevent="approveRwd(row.id)">Approve</button>
+                      <button
+                        class="button is-small is-info"
+                        @click.prevent="approveRwd(row.id)"
+                      >Approve</button>
                     </p>
                     <p class="control">
-                      <button class="button is-small is-danger" @click.prevent="md_act=true;clm_sel_id=row.id">Cancel</button>
+                      <button
+                        class="button is-small is-danger"
+                        @click.prevent="md_act=true;clm_sel_id=row.id"
+                      >Cancel</button>
                     </p>
                   </b-field>
                 </td>
@@ -44,7 +64,12 @@
         </div>
       </div>
     </div>
-    <modelCancelRwd :md_act="md_act" :clm_id="clm_sel_id" @closed="md_act=false;rwd_sel_id=null" @updated="loadData"></modelCancelRwd>
+    <modelCancelRwd
+      :md_act="md_act"
+      :clm_id="clm_sel_id"
+      @closed="md_act=false;rwd_sel_id=null"
+      @updated="loadData"
+    ></modelCancelRwd>
   </div>
 </template>
 
@@ -69,8 +94,17 @@ export default {
       clm_sel_id: null,
       tbl_list_filters: [
         { title: "Filter", value: "" },
-        { title: "Auto Rewards", value: "0" },
-        { title: "Self Rewards", value: "1" }
+        { title: "Auto Rewards", value: "auto" },
+        { title: "Level You", value: 0 },
+        { title: "Level 1", value: 1 },
+        { title: "Level 2", value: 2 },
+        { title: "Level 3", value: 3 },
+        { title: "Level 4", value: 4 },
+        { title: "Level 5", value: 5 },
+        { title: "Level 6", value: 6 },
+        { title: "Level 7", value: 7 },
+        { title: "Level 8", value: 8 },
+        { title: "Level 9", value: 9 }
       ]
     };
   },

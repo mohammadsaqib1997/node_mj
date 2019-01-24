@@ -343,6 +343,13 @@ export default {
               url: "/user/bank-details",
               title: "Bank Details",
               show: [0]
+            },
+            {
+              name: "nomination",
+              active: false,
+              url: "/user/nomination",
+              title: "Nomination",
+              show: [0]
             }
           ]
         },
