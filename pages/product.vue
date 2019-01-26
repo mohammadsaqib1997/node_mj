@@ -35,11 +35,11 @@
                         | Start: {{ gen_date(result.package_act_date, 0) }}
                         br
                         | End: {{ gen_date(result.package_act_date, 1) }}
-                  template(v-else)
-                    .column.is-6
-                      b-field
-                        p.control
-                          button.button.btn-des-1 Change Product
+                  //- template(v-else)
+                  //-   .column.is-6
+                  //-     b-field
+                  //-       p.control
+                  //-         button.button.btn-des-1 Change Product
           b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
 </template>
 

@@ -1457,12 +1457,12 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
       } else {
 
         if (results[0].ref_user_asn_id == null) {
-          results[0].ref_user_asn_id = '000000272'
+          results[0].ref_user_asn_id = '000000022'
           await new Promise(resolve2 => {
             connection.query(
               `UPDATE members SET ? WHERE id=?`,
               [{
-                ref_user_asn_id: '000000272'
+                ref_user_asn_id: '000000022'
               }, mem_id],
               function (error, result) {
                 if (error) {
