@@ -37,7 +37,7 @@
                 .tile.is-child
                   .li
                     a(@click.prevent="vid_mdl.is_video=false;vid_mdl.active=true;vid_mdl.src=benefits_urls[2]")
-                      | SELF REWARDS
+                      | CAMPAIGN
                 .tile.is-child
                   .li
                     a(@click.prevent="vid_mdl.is_video=false;vid_mdl.active=true;vid_mdl.src=benefits_urls[3]")
@@ -86,10 +86,10 @@ export default {
   data() {
     return {
       benefits_urls: [
-        '/img/GENERATION BONUS.jpg',
-        '/img/AUTO REWARDS.jpg',
-        '/img/SELF REWARDS.jpg',
-        '/img/GLOBAL BONUS.jpg',
+        '/img/rewards/GENERATION BONUS.png',
+        '/img/rewards/AUTO REWARDS.png',
+        '/img/rewards/CAMPAIGN REWARDS.png',
+        '/img/rewards/GLOBAL BONUS.png',
       ],
       prs_slides: [
         {

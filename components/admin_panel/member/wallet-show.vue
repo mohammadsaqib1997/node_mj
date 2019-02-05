@@ -2,9 +2,15 @@
     div
         .level.wl-top-level
             .level-left
+              .level-item
+                .wallet-cont
+                    | Shopping Wallet:
+                    span.amount Rs, {{ $store.state.member.wallet }}/-
+            .level-right
+              .level-item
                 .wallet-cont
                     | Wallet:
-                    span.amount Rs, {{ $store.state.member.wallet }}/-
+                    span.amount Rs, 0/-
             //- .level-right
             //-     button.button.tr-btn(@click.prevent="trnsModalAct = true") Transfer Funds
             //-     nuxt-link.button.wd-btn(to="/withdraw") Withdraw

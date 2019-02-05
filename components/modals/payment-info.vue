@@ -25,7 +25,7 @@
           </p>
           <br>
           <p>
-            <b>Note:</b> After payment, mail us at infor@mj-supreme.com or whatsapp us the invoice after logging into your account.
+            <b>Note:</b> After payment, mail us at info@mj-supreme.com or whatsapp us the invoice after logging into your account.
           </p>
         </div>
       </div>

@@ -134,7 +134,11 @@ const authRoutes = [{
     {
         name: "user-nomination",
         type_allowed: [0]
-    }
+    },
+    // {
+    //     name: "messages",
+    //     type_allowed: [0, 2]
+    // }
 ]
 
 const un_paid_routes = [{

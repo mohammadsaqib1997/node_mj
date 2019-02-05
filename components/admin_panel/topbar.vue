@@ -2,7 +2,7 @@
   .topbar
     .navbar
       .navbar-brand
-        a.navbar-burger.main-menu(role="button" aria-label="menu" aria-expanded="false" v-on:click.prevet="navbarActToggle")
+        a.navbar-burger.main-menu(v-if="$route.name !== 'messages'" role="button" aria-label="menu" aria-expanded="false" v-on:click.prevet="navbarActToggle")
           span(aria-hidden="true")
           span(aria-hidden="true")
           span(aria-hidden="true")
@@ -14,10 +14,19 @@
           span(aria-hidden="true")
       #navTopMenu.navbar-menu
         .navbar-end
-          .navbar-item(v-if="$store.state.user.data.type === 0")
-            topBarCompMem
-          .navbar-item(v-else-if="$store.state.user.data.type === 2")
-            topBarCompAdmin
+          template(v-if="$route.name !== 'messages'")
+            .navbar-item(v-if="$store.state.user.data.type === 0")
+              topBarCompMem
+            .navbar-item(v-else-if="$store.state.user.data.type === 2")
+              topBarCompAdmin
+          //- .navbar-item.has-dropdown.is-hoverable
+          //-   .navbar-item
+          //-     .count-unread-msg(v-if="0 > 0")
+          //-       | 0
+          //-     img(src="~/assets/img/mail.png")
+          //-   .navbar-dropdown.notify_cont
+          //-     .navbar-item
+          //-       nuxt-link.navbar-item.view-all(to="/messages") View all...
           .navbar-item.has-dropdown.is-hoverable
             .navbar-item
               .count-unread-msg(v-if="$store.state.notification.total_unread > 0")

@@ -103,7 +103,7 @@ export default {
               show: [0, 2],
               store_key: "crzb-module.type",
               store_eql_val: 4,
-              comp_cond: '!'
+              comp_cond: "!"
             },
             {
               name: "sales",
@@ -303,7 +303,7 @@ export default {
               url: "/system-level/campaign",
               title: "Campaign",
               show: [0]
-            },
+            }
             // {
             //   name: "self-rewards",
             //   active: false,
@@ -361,6 +361,15 @@ export default {
           title: "Notifications",
           show: [0, 1, 2]
         },
+        // {
+        //   name: "messages",
+        //   active: false,
+        //   img: null,
+        //   icon: '<i class="far fa-envelope"></i>',
+        //   url: "/messages",
+        //   title: "Message Box",
+        //   show: [0, 2]
+        // },
         {
           name: "account",
           active: false,
