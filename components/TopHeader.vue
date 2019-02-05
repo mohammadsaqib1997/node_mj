@@ -4,9 +4,32 @@
             nav.navbar.is-transparent
                 .navbar-menu.is-active
                     .navbar-start
-                        a.navbar-item(href='#')
-                            b-icon.flip-y(icon="phone" size="is-small")
-                            span.fs-14 &nbsp;+92 213 4835 054
+                        //- a.navbar-item(href='#')
+                        //-     b-icon.flip-y(icon="phone" size="is-small")
+                        //-     span.fs-14 &nbsp;+92 213 4835 054
+                        .navbar-item
+                            ul.social_icons
+                                li.sc_icon
+                                    a(href="https://www.facebook.com/mjsupremeofficial/" target="_blank")
+                                        b-icon(icon="facebook-f" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://www.instagram.com/mjsupremeofficial/" target="_blank")
+                                        b-icon(icon="instagram" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://twitter.com/MjSupreme5?lang=en" target="_blank")
+                                        b-icon(icon="twitter" size="is-small" pack="fab")
+                                //- li.sc_icon
+                                //-     a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
+                                //-         b-icon(icon="google-plus-g" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://www.pinterest.com/mjsupremeofficial" target="_blank")
+                                        b-icon(icon="pinterest-p" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://www.youtube.com/channel/UC0rvk78JHBZ2rPEkgf2iJlg" target="_blank")
+                                        b-icon(icon="youtube" size="is-small" pack="fab")
+                                li.sc_icon
+                                    a(href="https://mjsupremeofficial.wixsite.com/home" target="_blank")
+                                        b-icon(icon="wix" size="is-small" pack="fab")
                         .navbar-item.px-0.hidden-tablet
                             span.sm-line
                         a.navbar-item(href='#')
@@ -22,29 +45,29 @@
                         .navbar-item.tot-reg-mem-con
                             span Members Registered -
                             span.act &nbsp;{{ tot_mem }}
-                        .navbar-item
-                            ul.social_icons
-                                li.sc_icon
-                                    a(href="https://www.facebook.com/mjsupremeofficial/" target="_blank")
-                                        b-icon(icon="facebook-f" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a(href="https://www.instagram.com/mjsupremeofficial/" target="_blank")
-                                        b-icon(icon="instagram" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a(href="https://twitter.com/MjSupreme5?lang=en" target="_blank")
-                                        b-icon(icon="twitter" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
-                                        b-icon(icon="google-plus-g" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a(href="https://www.pinterest.com/mjsupremeofficial" target="_blank")
-                                        b-icon(icon="pinterest-p" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a(href="https://www.youtube.com/channel/UC0rvk78JHBZ2rPEkgf2iJlg" target="_blank")
-                                        b-icon(icon="youtube" size="is-small" pack="fab")
-                                li.sc_icon
-                                    a(href="https://mjsupremeofficial.wixsite.com/home" target="_blank")
-                                        b-icon(icon="wix" size="is-small" pack="fab")
+                        //- .navbar-item
+                        //-     ul.social_icons
+                        //-         li.sc_icon
+                        //-             a(href="https://www.facebook.com/mjsupremeofficial/" target="_blank")
+                        //-                 b-icon(icon="facebook-f" size="is-small" pack="fab")
+                        //-         li.sc_icon
+                        //-             a(href="https://www.instagram.com/mjsupremeofficial/" target="_blank")
+                        //-                 b-icon(icon="instagram" size="is-small" pack="fab")
+                        //-         li.sc_icon
+                        //-             a(href="https://twitter.com/MjSupreme5?lang=en" target="_blank")
+                        //-                 b-icon(icon="twitter" size="is-small" pack="fab")
+                        //-         li.sc_icon
+                        //-             a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
+                        //-                 b-icon(icon="google-plus-g" size="is-small" pack="fab")
+                        //-         li.sc_icon
+                        //-             a(href="https://www.pinterest.com/mjsupremeofficial" target="_blank")
+                        //-                 b-icon(icon="pinterest-p" size="is-small" pack="fab")
+                        //-         li.sc_icon
+                        //-             a(href="https://www.youtube.com/channel/UC0rvk78JHBZ2rPEkgf2iJlg" target="_blank")
+                        //-                 b-icon(icon="youtube" size="is-small" pack="fab")
+                        //-         li.sc_icon
+                        //-             a(href="https://mjsupremeofficial.wixsite.com/home" target="_blank")
+                        //-                 b-icon(icon="wix" size="is-small" pack="fab")
                         .navbar-item.has-dropdown.is-hoverable.p-0.profile_con_nav
                             .navbar-item
                                 b-icon(icon="user" size="is-small" pack="far")

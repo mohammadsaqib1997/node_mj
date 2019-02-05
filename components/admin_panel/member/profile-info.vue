@@ -101,7 +101,7 @@ export default {
     seeNotify() {
       this.$store.commit("showMsgs/resetData");
       this.$store.commit("showMsgs/setMsgData", {
-        title: "Varify Your Email!",
+        title: "Verify Your Email!",
         message: "Please verify your e-mail.",
         action: {
           txt: "Send E-mail",

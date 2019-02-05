@@ -121,7 +121,7 @@ export const actions = {
             if (res.data.email_v_sts === 0 && res.data.last_email === false) {
               commit('showMsgs/resetData')
               commit('showMsgs/setMsgData', {
-                title: "Varify Your Email!",
+                title: "Verify Your Email!",
                 message: 'Please verify your e-mail.',
                 action: {
                   txt: 'Send E-mail',

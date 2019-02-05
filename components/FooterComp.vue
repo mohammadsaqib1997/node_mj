@@ -19,9 +19,9 @@
                             li.sc_icon
                                 a(href="https://twitter.com/MjSupreme5?lang=en" target="_blank")
                                     b-icon(icon="twitter" size="is-small" pack="fab")
-                            li.sc_icon
-                                a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
-                                    b-icon(icon="google-plus-g" size="is-small" pack="fab")
+                            //- li.sc_icon
+                            //-     a(href="https://plus.google.com/b/110755905975639745647/110755905975639745647" target="_blank")
+                            //-         b-icon(icon="google-plus-g" size="is-small" pack="fab")
                             li.sc_icon
                                 a(href="https://www.pinterest.com/mjsupremeofficial" target="_blank")
                                     b-icon(icon="pinterest-p" size="is-small" pack="fab")

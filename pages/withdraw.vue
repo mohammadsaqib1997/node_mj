@@ -8,12 +8,14 @@
                 .section
                   .columns.is-gapless
                     .column.is-narrow
-                      h2.title Wallet
                       .wallet-sc
                         img(src="~/assets/img/wallet.png")
                         .amount
-                          span.placeholder Rs.
-                          span {{ $store.state.member.wallet }}
+                          span.placeholder Rs. {{ $store.state.member.wallet }}/-
+                          span Shopping Wallet
+                        .amount
+                          span.placeholder Rs. {{ $store.state.member.wallet }}/-
+                          span Wallet
                     .column
                       bankDetComp(:has_header="true")
                     
@@ -170,6 +172,20 @@ export default {
 
 <style lang="scss" scoped>
 .fund-details /deep/ {
+  .main-box .body .section .wallet-sc .amount {
+    margin-top: 20px;
+
+    span {
+      &:not(.placeholder) {
+        font-size: 18px;
+      }
+      &.placeholder {
+        text-align: center;
+        font-size: 25px;
+      }
+    }
+  }
+
   .cus-msg {
     .media {
       align-items: center;

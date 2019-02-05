@@ -28,10 +28,15 @@
                     h5 Indirect
                       
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
-          .amount-wrapper
-            b Rs.
-            h1 {{ wallet }}
-          h5 Wallet
+          .flex
+            table.table
+              tbody
+                tr
+                  td.vert.hd2.s1.has-text-right Rs. {{ wallet }}/-
+                  td.vert.hd1.s1 Shopping Wallet
+                tr
+                  td.vert.hd2.s1.has-text-right Rs. 0/-
+                  td.vert.hd1.s1 Wallet
 
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
           .flex
@@ -58,8 +63,8 @@
           h1 Registered Referrals
       .body
         .section
-          .columns
-            .column.is-6
+          .columns.is-multiline
+            .column.is-12.is-6-fullhd
               .columns
                 .column.is-narrow
                   .content-des-1
@@ -74,7 +79,7 @@
                 .column
                   bar-chart(:height="300" :ren_data="bar_data")
                 b-loading(:is-full-page="false" :active="loading" :can-cancel="false")
-            .column.is-6
+            .column.is-12.is-6-fullhd
               .box.bal-cont
                 table.table.is-fullwidth
                   thead
@@ -192,6 +197,44 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.m-dashboard {
+  .flex {
+    .table {
+      background-color: transparent;
+      td {
+        padding: 5px;
+        border: 0;
+        &.vert {
+          vertical-align: middle;
+        }
+        &.hd1 {
+          font-weight: 700;
+          font-size: 20px;
+          text-transform: uppercase;
+          color: #d9bd68;
+        }
+        &.hd2 {
+          color: white;
+          font-weight: 600;
+          font-size: 18px;
+          text-transform: uppercase;
+        }
+        &.hd1,
+        &.hd2 {
+          &.s1 {
+            font-size: 15px;
+            font-weight: 500;
+          }
+          &.s2 {
+            font-size: 30px;
+            line-height: 25px;
+            font-weight: 700;
+          }
+        }
+      }
+    }
+  }
+}
 .box.counter-box {
   position: relative;
 }
