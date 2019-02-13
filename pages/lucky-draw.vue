@@ -3,7 +3,7 @@
     <div class="box main-box">
       <div class="header columns is-gapless is-multiline">
         <div class="column">
-          <h1>Lucy Draw</h1>
+          <h1>Lucky Draw</h1>
         </div>
       </div>
       <div class="body">

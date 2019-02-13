@@ -30,11 +30,9 @@
                                 li.sc_icon
                                     a(href="https://mjsupremeofficial.wixsite.com/home" target="_blank")
                                         b-icon(icon="wix" size="is-small" pack="fab")
-                        .navbar-item.px-0.hidden-tablet
-                            span.sm-line
-                        a.navbar-item(href='#')
-                            b-icon(icon="envelope" size="is-small")
-                            span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
+                        //- .navbar-item.px-0.hidden-tablet
+                        //-     span.sm-line
+                        
 
                     .navbar-end
                         .navbar-item.prm-timer(v-if="timer_act")
@@ -42,6 +40,9 @@
                                 img(src="~/assets/img/motorbike_icon.png")
                             span Promotion ends at:
                             span.timer(:class="{'last-mom': timer.hour <= 4}") &nbsp;{{ `${timer.hour} ${timer.hour > 1 ? 'hours':'hour'} ${timer.minute} ${timer.minute > 1 ? 'minutes':'minute'} ${timer.second} ${timer.second > 1 ? 'seconds':'second'}` }}
+                        a.navbar-item(href='#')
+                            b-icon(icon="envelope" size="is-small")
+                            span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
                         //- .navbar-item.tot-reg-mem-con
                         //-     span Members Registered -
                         //-     span.act &nbsp;{{ tot_mem }}
