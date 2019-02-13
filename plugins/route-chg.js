@@ -139,6 +139,10 @@ const authRoutes = [{
     //     name: "messages",
     //     type_allowed: [0, 2]
     // }
+    {
+        name: "lucky-draw",
+        type_allowed: [2]
+    },
 ]
 
 const un_paid_routes = [{

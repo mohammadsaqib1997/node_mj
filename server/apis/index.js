@@ -65,6 +65,7 @@ router.use("/assign-role-fr", cors(corsOptions), require('./assign-role-fr.js'))
 router.use("/assign-role-trans-fr", cors(corsOptions), require('./assign-role-trans-fr.js'))
 router.use("/campaign", cors(corsOptions), require('./campaign.js'))
 router.use("/nomination", cors(corsOptions), require('./nomination.js'))
+router.use("/lucky-draw", cors(corsOptions), require('./lucky-draw.js'))
 
 router.all("*", function (req, res) {
   res.status(403).json({
