@@ -2,7 +2,7 @@ import _ from "lodash";
 
 export default {
     async mounted() {
-        this.loadData()
+        await this.loadData()
     },
     computed: {
         filter_val: function () {

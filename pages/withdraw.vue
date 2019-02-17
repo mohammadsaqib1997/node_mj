@@ -14,7 +14,7 @@
                           span.placeholder Rs. {{ $store.state.member.wallet }}/-
                           span Shopping Wallet
                         .amount
-                          span.placeholder Rs. {{ $store.state.member.wallet }}/-
+                          span.placeholder Rs. 0/-
                           span Wallet
                     .column
                       bankDetComp(:has_header="true")
