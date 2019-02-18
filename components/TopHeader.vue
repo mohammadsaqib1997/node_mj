@@ -30,8 +30,11 @@
                                 li.sc_icon
                                     a(href="https://mjsupremeofficial.wixsite.com/home" target="_blank")
                                         b-icon(icon="wix" size="is-small" pack="fab")
-                        //- .navbar-item.px-0.hidden-tablet
-                        //-     span.sm-line
+                        .navbar-item.px-0.hidden-tablet
+                            span.sm-line
+                        a.navbar-item(href='#')
+                            b-icon(icon="envelope" size="is-small")
+                            span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
                         
 
                     .navbar-end
@@ -40,12 +43,10 @@
                                 img(src="~/assets/img/motorbike_icon.png")
                             span Promotion ends at:
                             span.timer(:class="{'last-mom': timer.hour <= 4}") &nbsp;{{ `${timer.hour} ${timer.hour > 1 ? 'hours':'hour'} ${timer.minute} ${timer.minute > 1 ? 'minutes':'minute'} ${timer.second} ${timer.second > 1 ? 'seconds':'second'}` }}
-                        a.navbar-item(href='#')
-                            b-icon(icon="envelope" size="is-small")
-                            span.fs-14 &nbsp;&nbsp;info@mj-supreme.com
-                        //- .navbar-item.tot-reg-mem-con
-                        //-     span Members Registered -
-                        //-     span.act &nbsp;{{ tot_mem }}
+                        
+                        .navbar-item.tot-reg-mem-con
+                            span Members Registered -
+                            span.act &nbsp;{{ tot_mem }}
                         //- .navbar-item
                         //-     ul.social_icons
                         //-         li.sc_icon
@@ -90,19 +91,19 @@ export default {
       this.$router.push("/");
     }
   },
-  // mounted() {
-  //   const self = this;
-  //   self.$nextTick(async function() {
-  //     await self.$axios
-  //       .get("/api/web/tot-mem-count")
-  //       .then(res => {
-  //         self.tot_mem = res.data.mems;
-  //       })
-  //       .catch(err => {
-  //         console.log(err);
-  //       });
-  //   });
-  // },
+  mounted() {
+    const self = this;
+    self.$nextTick(async function() {
+      await self.$axios
+        .get("/api/web/tot-mem-count")
+        .then(res => {
+          self.tot_mem = res.data.mems;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    });
+  },
   computed: {
     timer_act: function() {
       return this.$store.state["timer-counter"]["is_timer"];
@@ -113,7 +114,7 @@ export default {
   },
   data() {
     return {
-      // tot_mem: 0
+      tot_mem: 0
     };
   }
 };
