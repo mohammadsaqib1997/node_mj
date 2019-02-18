@@ -5,7 +5,7 @@ module.exports = {
             host: 'localhost',
             user: 'mjsupr5_mj_usr',
             password: '9;jlk^cWH-k^',
-            database: 'mjsupr5_mj_dev'
+            database: 'mjsupr5_mj_db'
         },
         local: {
             host: 'localhost',
