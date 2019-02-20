@@ -420,15 +420,15 @@ export default {
             }
           ]
         },
-        {
-          name: "lucky-draw",
-          active: false,
-          img: null,
-          icon: '<i class="fas fa-trophy"></i>',
-          url: "/lucky-draw",
-          title: "Lucky Draw",
-          show: [2]
-        }
+        // {
+        //   name: "lucky-draw",
+        //   active: false,
+        //   img: null,
+        //   icon: '<i class="fas fa-trophy"></i>',
+        //   url: "/lucky-draw",
+        //   title: "Lucky Draw",
+        //   show: [2]
+        // }
       ]
     };
   },
