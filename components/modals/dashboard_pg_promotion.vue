@@ -6,7 +6,7 @@
 
 <script>
 import mxn_modal from "~/mixins/modal.js";
-import mdContent from "~/components/modals/promotions/daily_lucky_draw.vue";
+import mdContent from "~/components/modals/promotions/50_per_earn.vue";
 export default {
   mixins: [mxn_modal],
   components: {

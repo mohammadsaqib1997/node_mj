@@ -4,7 +4,7 @@
       member-dashboard(v-if="u_paid_sts === 1")
       memberProcess(v-else)
     admin-dashboard(v-else)
-    //- dbPgPromotion(v-if="u_type === 0" :md_act="true")
+    dbPgPromotion(v-if="u_type === 0" :md_act="true")
     //- ldWinners(v-if="u_type === 0" :md_act="md_act" @load_data="md_act=$event" )
 </template>
 
