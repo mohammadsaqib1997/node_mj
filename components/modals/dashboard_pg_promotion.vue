@@ -6,7 +6,7 @@
 
 <script>
 import mxn_modal from "~/mixins/modal.js";
-import mdContent from "~/components/modals/promotions/50_per_earn.vue";
+import mdContent from "~/components/modals/promotions/indirect-bonus.vue";
 export default {
   mixins: [mxn_modal],
   components: {
