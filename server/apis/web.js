@@ -139,7 +139,7 @@ router.use((req, res, next) => {
   }
 })
 
-router.get('/ac_branch/:search', (req, res) => {
+router.get('/ac_crct_ls/:search', (req, res) => {
   if (req.params.search) {
     db.getConnection(function (err, connection) {
       if (err) {
@@ -148,21 +148,21 @@ router.get('/ac_branch/:search', (req, res) => {
         })
       } else {
         connection.query(
-          `select 
-                crzb_var.*
-            from crzb_list as main_l
-            join (
-              select 
-                crzb_l.id,
-                get_crzb_with_p_name(crzb_l.id) as name
-              from crzb_list as crzb_l
-            ) as crzb_var
-            on main_l.id = crzb_var.id
-            
-            where main_l.type=3 AND main_l.active=1 AND (
-              crzb_var.name collate utf8mb4_general_ci like '%${req.params.search}%'
-            )
-            limit 10`,
+          `select * from (
+            select 
+              concat(ls1.name, 
+              if(ls2.name is null, "", concat(", ", ls2.name)),
+                  if(ls3.name is null, "", concat(", ", ls3.name))
+              ) as name, ls1.id
+              from crc_list as ls1
+              left join crc_list as ls2
+              on ls1.parent_id = ls2.id
+              left join crc_list as ls3
+              on ls2.parent_id = ls3.id
+              where ls1.type=2 and ls1.active=1
+            ) as tbl1
+          where tbl1.name like '%${req.params.search}%'
+          limit 10`,
           function (error, result) {
             connection.release();
             if (error) {
@@ -1043,33 +1043,15 @@ router.post('/signup', (req, res) => {
                         throw_error = error
                         return resolve()
                       } else {
-                        connection.query('INSERT INTO `mem_link_crzb` SET ?', {
+                        connection.query('INSERT INTO `mem_link_crc` SET ?', {
                           member_id: mem_id,
-                          crzb_id: req.body.ext_data.crzb_id,
-                          linked_type: 1
+                          crct_id: req.body.ext_data.crct,
+                          linked_mem_type: 1
                         }, async function (error, results, fields) {
                           if (error) {
                             throw_error = error
                             return resolve()
                           } else {
-                            if (req.body.ext_data.franchise) {
-                              await new Promise(resolveFr => {
-                                connection.query('INSERT INTO `mem_link_franchise` SET ?', {
-                                  member_id: mem_id,
-                                  franchise_id: req.body.ext_data.franchise,
-                                  linked_type: 1
-                                }, function (error, results, fields) {
-                                  if (error) {
-                                    throw_error = error
-                                  }
-                                  return resolveFr()
-                                })
-                              })
-                              if (throw_error) {
-                                return resolve()
-                              }
-                            }
-
                             connection.query('INSERT INTO `notifications` SET ?', {
                               from_type: 0,
                               to_type: 1,

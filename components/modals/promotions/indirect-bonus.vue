@@ -18,8 +18,7 @@
           <br>
           <br>
           <span class="hl bold">Members who already have 4 direct members can</span>
-
-           enjoy the bonus and rewards and can ignore this
+          enjoy the bonus and rewards and can ignore this
           message.
         </p>
       </div>
@@ -31,20 +30,19 @@
 .main {
   position: relative;
   background-color: #3b3f57;
+  &:before {
+    content: "";
+    position: absolute;
+    background-image: url("/img/prm-ass-3/bg-pattern-popup.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
   /deep/ {
-    &:before {
-      content: "";
-      position: absolute;
-      background-image: url("/img/prm-ass-3/bg-pattern-popup.png");
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-    }
-
     .content-cont {
       color: #ffffff;
       font-size: 16px;

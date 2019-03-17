@@ -3,10 +3,8 @@ export const state = () => ({
     type
       5 - admin
       0 - country head
-      1 - region head
+      1 - region head / sales coordinator
       2 - zonal head
-      3 - branch head
-      4 - franchise head
   */
   type: null,
   hod_mem_id: null,
@@ -40,7 +38,7 @@ export const actions = {
   async loadHeadInfo({
     commit
   }) {
-    let result = await this.$axios.$get('/api/assign-role/crzb-head-info')
+    let result = await this.$axios.$get('/api/assign-role/crct-head-info')
     commit('setBasicInfo', result ? result : null)
     commit('setInit', true)
   }

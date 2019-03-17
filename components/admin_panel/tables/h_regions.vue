@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Regions</h1>
+    <h1 class="title">Sales Coordinator</h1>
     <tblTopFilter
       :act_view="String(load_params.limit)"
       :s_txt="load_params.search"
@@ -30,11 +30,11 @@
         </tr>
       </template>
       <template slot="tbody">
-        <tr v-for="(row, ind) in l_data" :key="ind" @click.prevent="nextChild(row.crzb_id)">
+        <tr v-for="(row, ind) in l_data" :key="ind" @click.prevent="nextChild(row.crct_id)">
           <td>{{ row.user_asn_id }}</td>
           <td>{{ row.full_name }}</td>
-          <td>{{ row.crzb_code }}</td>
-          <td>{{ row.area_name }}</td>
+          <td>{{ row.crct_code }}</td>
+          <td>{{ row.crct_name }}</td>
           <td>{{ row.total_sale }}</td>
           <td>{{ row.monthly_sale }}</td>
           <td>{{ row.total_comm }}</td>

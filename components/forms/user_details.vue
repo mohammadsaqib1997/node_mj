@@ -53,39 +53,31 @@
     <div class="columns is-variable is-1">
       <div class="column">
         <b-field
-          label="Branch Name"
-          :type="(validation.hasError('form.sel_crzb_id')) ? 'is-danger':''"
-          :message="validation.firstError('form.sel_crzb_id')"
+          label="Zone"
+          :type="(validation.hasError('form.sel_crct_id')) ? 'is-danger':''"
+          :message="validation.firstError('form.sel_crct_id')"
         >
           <b-autocomplete
-            :data="crzb_list"
-            v-model="ac_crzb"
+            :data="crct_list"
+            v-model="ac_crct"
             field="name"
             expanded
             :keep-first="true"
-            @select="option => form.sel_crzb_id = option ? option.id : null"
-            @input="loadCRZB"
+            @select="option => form.sel_crct_id = option ? option.id : null"
+            @input="loadCRCT"
             :loading="isFetching"
-            placeholder="(example: Baldia Town)"
+            placeholder="(example: Karachi, Sindh, Pakistan)"
           ></b-autocomplete>
         </b-field>
       </div>
       <div class="column">
         <b-field
           class="cus-des-1"
-          label="Franchise"
-          :type="(validation.hasError('form.franchise')) ? 'is-danger':''"
-          :message="validation.firstError('form.franchise')"
+          label="Mailing Address"
+          :type="(validation.hasError('form.address')) ? 'is-danger':''"
+          :message="validation.firstError('form.address')"
         >
-          <b-select
-            v-model="form.franchise"
-            expanded
-            :loading="isLoadingFrc"
-            :disabled="isLoadingFrc"
-          >
-            <option value>Select Franchise</option>
-            <option v-for="(fr, ind) in frc_list" :value="fr.id" :key="ind">{{ fr.name }}</option>
-          </b-select>
+          <b-input type="text" placeholder="Enter Mailing Address" v-model="form.address"></b-input>
         </b-field>
       </div>
     </div>
@@ -125,32 +117,19 @@ export default {
   data() {
     return {
       ref_name: "",
-      ac_crzb: "",
-      crzb_list: [],
-      frc_list: [],
+      ac_crct: "",
+      crct_list: [],
       isFetching: false,
-      isLoadingFrc: false,
       form: {
         full_name: "",
         email: "",
         password: "",
         cont_num: "",
-        sel_crzb_id: null,
-        franchise: "",
+        sel_crct_id: null,
+        address: "",
         ref_code: ""
       }
     };
-  },
-  watch: {
-    "form.sel_crzb_id": function(val) {
-      this.frc_list = [];
-      this.form.franchise = "";
-      if (val !== null) {
-        this.loadFrnList(val);
-      } else {
-        this.isLoadingFrc = false;
-      }
-    }
   },
   validators: {
     "form.full_name": function(value) {
@@ -199,16 +178,17 @@ export default {
           "Invalid Contact Number(e.g 0300-000-0000)"
         );
     },
-    "form.sel_crzb_id": function(value) {
+    "form.sel_crct_id": function(value) {
       return Validator.value(value)
         .required()
         .digit()
         .maxLength(11);
     },
-    "form.franchise": function(value) {
+    "form.address": function(value) {
       return Validator.value(value)
-        .digit()
-        .maxLength(11);
+        .required()
+        .minLength(6)
+        .maxLength(100);
     },
     "form.ref_code": {
       cache: false,
@@ -251,62 +231,32 @@ export default {
       500,
       false
     ),
-    after_f_settle2: _.debounce(
-      function(cb) {
-        cb();
-      },
-      500,
-      false
-    ),
-    loadCRZB(event) {
+    loadCRCT(event) {
       const self = this;
       self.isFetching = true;
       self.after_f_settle(function() {
-        if (self.form.sel_crzb_id !== null) {
+        if (self.form.sel_crct_id !== null) {
           self.isFetching = false;
           return;
         }
-        self.crzb_list = [];
+        self.crct_list = [];
 
-        if (!self.ac_crzb.length) {
-          self.crzb_list = [];
+        if (!self.ac_crct.length) {
+          self.crct_list = [];
           self.isFetching = false;
           return;
         }
         self.$axios
-          .get(`/api/web/ac_branch/${self.ac_crzb}`)
+          .get(`/api/web/ac_crct_ls/${self.ac_crct}`)
           .then(({ data }) => {
-            self.crzb_list = data.result;
+            self.crct_list = data.result;
           })
           .catch(error => {
-            self.crzb_list = [];
+            self.crct_list = [];
             throw error;
           })
           .finally(() => {
             self.isFetching = false;
-          });
-      });
-    },
-    loadFrnList(crzb_id) {
-      const self = this;
-      self.isLoadingFrc = true;
-      self.after_f_settle2(function() {
-        if (crzb_id === null) {
-          self.isLoadingFrc = false;
-          return;
-        }
-        self.frc_list = [];
-        self.$axios
-          .get(`/api/web/ls_franchise/${crzb_id}`)
-          .then(({ data }) => {
-            self.frc_list = data.result;
-          })
-          .catch(error => {
-            self.frc_list = [];
-            throw error;
-          })
-          .finally(() => {
-            self.isLoadingFrc = false;
           });
       });
     },

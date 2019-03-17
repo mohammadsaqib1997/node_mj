@@ -89,10 +89,10 @@ export default {
               show: [2]
             },
             {
-              name: "branch-management",
+              name: "zone-management",
               active: false,
-              url: "/company-chart/branch-management",
-              title: "Branch Management",
+              url: "/company-chart/zone-management",
+              title: "Zone Management",
               show: [2]
             },
             {

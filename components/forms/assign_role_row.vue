@@ -1,26 +1,26 @@
 <template>
   <tr :class="[{form: edit_row.row_id === row.id}, 'ar_row']">
     <td>{{ row.id }}</td>
-    <td>{{ row.crzb_code }}</td>
+    <td>{{ row.code }}</td>
     <td>{{ row.mj_id }}</td>
-    <td>{{ row.full_name }}</td>
+    <td>{{ row.mj_name }}</td>
     <td :class="{'vc-top': edit_row.row_id === row.id}">
       <template v-if="edit_row.row_id !== row.id">{{ row.name }}</template>
       <b-field
         class="cus-des-1"
         v-else
-        :type="(validation.hasError('edit_row.form.crzb_id')) ? 'is-danger':''"
-        :message="validation.firstError('edit_row.form.crzb_id')"
+        :type="(validation.hasError('edit_row.form.crz_id')) ? 'is-danger':''"
+        :message="validation.firstError('edit_row.form.crz_id')"
       >
         <b-autocomplete
           :placeholder="`Update New ${roles[edit_row.form.role]}`"
-          :data="crzb_list"
-          v-model="edit_row.form.ac_crzb"
+          :data="crz_list"
+          v-model="edit_row.form.ac_crz"
           field="name"
           expanded
           :keep-first="true"
-          @select="option => edit_row.form.crzb_id = option ? option.id : null"
-          @input="loadCRZB"
+          @select="option => edit_row.form.crz_id = option ? option.id : null"
+          @input="loadCRZ"
           :loading="isFetching"
         ></b-autocomplete>
       </b-field>
@@ -33,7 +33,7 @@
         :type="(validation.hasError('edit_row.form.role')) ? 'is-danger':''"
         :message="validation.firstError('edit_row.form.role')"
       >
-        <b-select v-model="edit_row.form.role" expanded @input="edit_row.form.ac_crzb=''">
+        <b-select v-model="edit_row.form.role" expanded @input="edit_row.form.ac_crz=''">
           <option v-for="(r, ind) in roles" :value="ind" :key="ind">{{ r }}</option>
         </b-select>
       </b-field>
@@ -87,22 +87,22 @@ export default {
   },
   data() {
     return {
-      roles: ["Country", "Region", "Zone", "Branch"],
-      crzb_list: [],
+      roles: ["Country", "Sales Coordinator", "Zone"],
+      crz_list: [],
       isFetching: false,
       edit_row: {
         row_id: null,
         data: null,
         form: {
-          ac_crzb: "",
-          crzb_id: null,
+          ac_crz: "",
+          crz_id: null,
           role: ""
         }
       }
     };
   },
   validators: {
-    "edit_row.form.crzb_id": {
+    "edit_row.form.crz_id": {
       cache: false,
       validator: function(value) {
         const self = this;
@@ -140,32 +140,32 @@ export default {
     after_f_settle: _.debounce(function(cb) {
       cb();
     }, 500),
-    loadCRZB() {
+    loadCRZ() {
       const self = this;
       self.isFetching = true;
       self.after_f_settle(function() {
-        if (self.edit_row.form.crzb_id !== null) {
+        if (self.edit_row.form.crz_id !== null) {
           self.isFetching = false;
           return;
         }
-        self.crzb_list = [];
+        self.crz_list = [];
 
-        if (!self.edit_row.form.ac_crzb.length) {
-          self.crzb_list = [];
+        if (!self.edit_row.form.ac_crz.length) {
+          self.crz_list = [];
           self.isFetching = false;
           return;
         }
         self.$axios
           .get(
-            `/api/crzb-list/ac_search_list/${self.edit_row.form.role}/${
-              self.edit_row.form.ac_crzb
+            `/api/crct-list/ac_search_list/${self.edit_row.form.role}/${
+              self.edit_row.form.ac_crz
             }`
           )
           .then(({ data }) => {
-            self.crzb_list = data.result;
+            self.crz_list = data.result;
           })
           .catch(error => {
-            self.crzb_list = [];
+            self.crz_list = [];
             throw error;
           })
           .finally(() => {
@@ -189,7 +189,7 @@ export default {
             .post("/api/assign-role/toggle-status", {
               row_id: row.id,
               change_sts: asn_sts,
-              crzb_id: row.crzb_id
+              crz_id: row.crc_id
             })
             .then(async res => {
               self.$toast.open({
@@ -222,8 +222,8 @@ export default {
         row_id: row.id,
         data: row,
         form: {
-          ac_crzb: "",
-          crzb_id: null,
+          ac_crz: "",
+          crz_id: null,
           role: row.type
         }
       };
@@ -234,8 +234,8 @@ export default {
         row_id: null,
         data: null,
         form: {
-          ac_crzb: "",
-          crzb_id: null,
+          ac_crz: "",
+          crz_id: null,
           role: ""
         }
       };
@@ -248,7 +248,7 @@ export default {
         if (success) {
           const send_data = {
             updated_id: self.edit_row.data.id,
-            crzb_id: self.edit_row.form.crzb_id
+            crz_id: self.edit_row.form.crz_id
           };
           self.$axios
             .post("/api/assign-role/update-row", send_data)

@@ -41,39 +41,32 @@ router.get('/sale-list', function (req, res) {
       }
 
       connection.query(
-        `select 
-            COUNT(*) as tot_rows
-            from (
-              select mem_lk_crzb.crzb_id
-              from mem_link_crzb as mem_lk_crzb
-              join members as m
-              on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
-      
-              join (
-                select 
-                crzb_l.id,
-                get_crzb_rd_code(crzb_l.id) as crzb_code,
-                get_crzb_with_p_name(crzb_l.id) as crzb_name
-                from crzb_list as crzb_l
-              ) as crzb_var
-              on mem_lk_crzb.crzb_id = crzb_var.id
-              
-              left join assign_roles_trans as asn_role_tns
-              on mem_lk_crzb.crzb_id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
-              
-              left join members as asn_mem
-              on asn_role_tns.member_id = asn_mem.id
-              
-              where 
-              mem_lk_crzb.linked_type=1 and
-              (
-                asn_mem.user_asn_id like '%${search}%' or
-                asn_mem.full_name like '%${search}%' or
-                crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-                crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}$%'
-              )
-              group by mem_lk_crzb.crzb_id, asn_role_tns.member_id
-            ) as all_data`,
+        `select count(*) as tot_rows from (
+          select 
+            asn_mem.user_asn_id as role_asn_mj_id,
+            asn_mem.full_name as role_asn_mj_name,
+            get_crc_rd_code(mem_lk_crct.crct_id) as crct_code,
+            get_crc_with_p_name(mem_lk_crct.crct_id) as crct_name
+        
+          from mem_link_crc as mem_lk_crct
+          join members as m
+          on mem_lk_crct.member_id = m.id and m.is_paid_m=1
+        
+          left join assign_roles_trans as asn_role_tns
+          on mem_lk_crct.crct_id = asn_role_tns.crct_id and mem_lk_crct.member_id = asn_role_tns.linked_member_id
+        
+          left join members as asn_mem
+          on asn_role_tns.member_id = asn_mem.id
+        
+          where mem_lk_crct.linked_mem_type=1
+          group by mem_lk_crct.crct_id, asn_role_tns.member_id
+        ) as all_data
+
+        where 
+          all_data.role_asn_mj_id like '%${search}%' or
+          all_data.role_asn_mj_name like '%${search}%' or
+          all_data.crct_code like '%${search}%' or 
+          all_data.crct_name like '%${search}%'`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -93,43 +86,38 @@ router.get('/sale-list', function (req, res) {
             let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
               gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select 
-                    asn_mem.user_asn_id,
-                    asn_mem.full_name,
-                    crzb_var.crzb_code,
-                    crzb_var.crzb_name,
-                    count(*) as total_sale,
-                    get_crzb_mem_sale_monthly(mem_lk_crzb.crzb_id, asn_mem.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
-                
-                from mem_link_crzb as mem_lk_crzb
+              `select * from (
+                select 
+                  asn_mem.user_asn_id as role_asn_mj_id,
+                  asn_mem.full_name as role_asn_mj_name,
+                  get_crc_rd_code(mem_lk_crct.crct_id) as crct_code,
+                  get_crc_with_p_name(mem_lk_crct.crct_id) as crct_name,
+                  count(*) as total_sale,
+                  get_crc_mem_sale_monthly(mem_lk_crct.crct_id, asn_mem.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
+              
+                from mem_link_crc as mem_lk_crct
                 join members as m
-                on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
-
-                join (
-                  select 
-                    crzb_l.id,
-                    get_crzb_rd_code(crzb_l.id) as crzb_code,
-                    get_crzb_with_p_name(crzb_l.id) as crzb_name
-                    from crzb_list as crzb_l
-                ) as crzb_var
-                on mem_lk_crzb.crzb_id = crzb_var.id
-                
+                on mem_lk_crct.member_id = m.id and m.is_paid_m=1
+              
                 left join assign_roles_trans as asn_role_tns
-                on mem_lk_crzb.crzb_id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
-                
+                on mem_lk_crct.crct_id = asn_role_tns.crct_id and mem_lk_crct.member_id = asn_role_tns.linked_member_id
+              
                 left join members as asn_mem
                 on asn_role_tns.member_id = asn_mem.id
-                
-                where mem_lk_crzb.linked_type=1 and (
-                  asn_mem.user_asn_id like '%${search}%' or
-                  asn_mem.full_name like '%${search}%' or
-                  crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-                  crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-                )
-                group by mem_lk_crzb.crzb_id, asn_role_tns.member_id
-                order by total_sale desc
-                LIMIT ${limit}
-                OFFSET ${offset}`,
+              
+                where mem_lk_crct.linked_mem_type=1
+                group by mem_lk_crct.crct_id, asn_role_tns.member_id
+              ) as all_data
+
+              where 
+                all_data.role_asn_mj_id like '%${search}%' or
+                all_data.role_asn_mj_name like '%${search}%' or
+                all_data.crct_code like '%${search}%' or 
+                all_data.crct_name like '%${search}%'
+              
+              order by all_data.total_sale desc
+              LIMIT ${limit}
+              OFFSET ${offset}`,
               function (error, results) {
                 connection.release()
                 if (error) {
@@ -173,31 +161,27 @@ router.get('/commission-list', function (req, res) {
       }
 
       connection.query(
-        `select 
-            COUNT(*) as tot_rows
-            from (
-              select m.id
-              from assign_roles_trans as asr_trans
-              join members as m
-              on asr_trans.member_id = m.id
-              
-              join (
-              select 
-              crzb_l.id,
-              get_crzb_rd_code(crzb_l.id) as crzb_code,
-              get_crzb_with_p_name(crzb_l.id) as crzb_name
-              from crzb_list as crzb_l
-              ) as crzb_var
-              on asr_trans.crzb_id = crzb_var.id
-              
-              where (
-              m.user_asn_id like '%${search}%' or
-                m.full_name like '%${search}%' or
-                crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
-                crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-              )
-              group by m.id, crzb_var.id
-            ) as all_data`,
+        `select count(*) as tot_rows from (
+          select 
+            m.id,
+            m.user_asn_id as mj_id,
+            m.full_name as mj_name,
+            get_crc_rd_code(asr_trans.crct_id) as crct_code,
+            get_crc_with_p_name(asr_trans.crct_id) as crct_name
+
+          from assign_roles_trans as asr_trans
+          join members as m
+          on asr_trans.member_id = m.id
+            
+          group by m.id
+        ) as all_data
+        
+        where (
+          all_data.mj_id like '%${search}%' or
+          all_data.mj_name like '%${search}%' or
+          all_data.crct_code like '%${search}%' or
+          all_data.crct_name like '%${search}%'
+        )`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -217,37 +201,33 @@ router.get('/commission-list', function (req, res) {
             let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
               gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select 
+              `select * from (
+                select 
+                  m.id,
                   m.user_asn_id as mj_id,
                   m.full_name as mj_name,
-                  crzb_var.crzb_code,
-                  crzb_var.crzb_name,
+                  get_crc_rd_code(asr_trans.crct_id) as crct_code,
+                  get_crc_with_p_name(asr_trans.crct_id) as crct_name,
                   sum(asr_trans.amount) as total_comm,
-                  get_crzb_mem_comm_monthly(crzb_var.id, m.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
+                  get_crc_mem_comm_monthly(asr_trans.crct_id, m.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
                   
                 from assign_roles_trans as asr_trans
                 join members as m
                 on asr_trans.member_id = m.id
-                
-                join (
-                  select 
-                  crzb_l.id,
-                  get_crzb_rd_code(crzb_l.id) as crzb_code,
-                  get_crzb_with_p_name(crzb_l.id) as crzb_name
-                  from crzb_list as crzb_l
-                ) as crzb_var
-                on asr_trans.crzb_id = crzb_var.id
-                
-                where (
-                  m.user_asn_id like '%${search}%' or
-                    m.full_name like '%${search}%' or
-                    crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or
-                    crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-                  )
-                group by m.id, crzb_var.id
-                order by total_comm desc
-                LIMIT ${limit}
-                OFFSET ${offset}`,
+                  
+                group by m.id
+              ) as all_data
+              
+              where (
+                all_data.mj_id like '%${search}%' or
+                all_data.mj_name like '%${search}%' or
+                all_data.crct_code like '%${search}%' or
+                all_data.crct_name like '%${search}%'
+              )
+              
+              order by all_data.total_comm desc, all_data.total_month_comm desc
+              LIMIT ${limit}
+              OFFSET ${offset}`,
               function (error, results) {
                 connection.release()
                 if (error) {
@@ -284,9 +264,9 @@ router.get('/sale-count', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT COUNT(*) as sale FROM mem_link_crzb as mem_lk_crzb
+          `SELECT COUNT(*) as sale FROM mem_link_crc as mem_lk_crct
           JOIN members as m
-          ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1 AND mem_lk_crzb.linked_type=1`,
+          ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1 AND mem_lk_crct.linked_mem_type=1`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -298,10 +278,10 @@ router.get('/sale-count', (req, res) => {
               let gen_start_year = date.clone().startOf('year').format('YYYY-MM-DD HH:mm:ss'),
                 gen_end_year = date.clone().endOf('year').format('YYYY-MM-DD HH:mm:ss')
               connection.query(
-                `SELECT COUNT(*) as sale FROM mem_link_crzb as mem_lk_crzb
+                `SELECT COUNT(*) as sale FROM mem_link_crc as mem_lk_crct
                 JOIN members as m
-                ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
-                WHERE mem_lk_crzb.linked_at>='${gen_start_year}' AND mem_lk_crzb.linked_at<='${gen_end_year}' AND mem_lk_crzb.linked_type=1`,
+                ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
+                WHERE mem_lk_crct.linked_at>='${gen_start_year}' AND mem_lk_crct.linked_at<='${gen_end_year}' AND mem_lk_crct.linked_mem_type=1`,
                 function (error, result) {
                   if (error) {
                     err_hdl(error);
@@ -311,10 +291,10 @@ router.get('/sale-count', (req, res) => {
                     let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
                       gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
                     connection.query(
-                      `SELECT COUNT(*) as sale FROM mem_link_crzb as mem_lk_crzb
+                      `SELECT COUNT(*) as sale FROM mem_link_crc as mem_lk_crct
                       JOIN members as m
-                      ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
-                      WHERE mem_lk_crzb.linked_at>='${gen_start_month}' AND mem_lk_crzb.linked_at<='${gen_end_month}' AND mem_lk_crzb.linked_type=1`,
+                      ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
+                      WHERE mem_lk_crct.linked_at>='${gen_start_month}' AND mem_lk_crct.linked_at<='${gen_end_month}' AND mem_lk_crct.linked_mem_type=1`,
                       function (error, result) {
                         if (error) {
                           err_hdl(error);
@@ -356,7 +336,7 @@ router.get('/sale-region', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT id, name FROM crzb_list WHERE type=1`,
+          `SELECT id, name FROM crc_list WHERE type=1`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -368,16 +348,14 @@ router.get('/sale-region', (req, res) => {
                   COUNT(*) as sale,
                   l_r.id,
                   l_r.name
-                FROM mem_link_crzb as mem_lk_crzb
+                FROM mem_link_crc as mem_lk_crct
                 JOIN members as m
-                ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
-                LEFT JOIN crzb_list as l_b
-                ON mem_lk_crzb.crzb_id = l_b.id
-                LEFT JOIN crzb_list as l_z
-                ON l_b.parent_id = l_z.id
-                LEFT JOIN crzb_list as l_r
+                ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
+                LEFT JOIN crc_list as l_z
+                ON mem_lk_crct.crct_id = l_z.id
+                LEFT JOIN crc_list as l_r
                 ON l_z.parent_id = l_r.id
-                WHERE mem_lk_crzb.linked_type=1
+                WHERE mem_lk_crct.linked_mem_type=1
                 group by l_r.id`,
                 function (error, result) {
                   if (error) {
@@ -425,7 +403,7 @@ router.get('/sale-country', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT id as c_id, name as c_name FROM crzb_list WHERE type=0`,
+          `SELECT id as c_id, name as c_name FROM crc_list WHERE type=0`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -438,18 +416,18 @@ router.get('/sale-country', (req, res) => {
                   l_c.id as c_id,
                   l_c.name as c_name,
                   l_c.type as type
-                FROM mem_link_crzb as mem_lk_crzb
+                FROM mem_link_crc as mem_lk_crct
                 JOIN members as m
-                ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
-                LEFT JOIN crzb_list as l_b
-                ON mem_lk_crzb.crzb_id = l_b.id
-                LEFT JOIN crzb_list as l_z
-                ON l_b.parent_id = l_z.id
-                LEFT JOIN crzb_list as l_r
+                ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
+
+                LEFT JOIN crc_list as l_z
+                ON mem_lk_crct.crct_id = l_z.id
+                LEFT JOIN crc_list as l_r
                 ON l_z.parent_id = l_r.id
-                LEFT JOIN crzb_list as l_c
+                LEFT JOIN crc_list as l_c
                 ON l_r.parent_id = l_c.id
-                WHERE mem_lk_crzb.linked_type=1
+
+                WHERE mem_lk_crct.linked_mem_type=1
                 group by l_c.id`,
                 function (error, result) {
                   if (error) {
@@ -569,29 +547,19 @@ router.get('/commission-region', (req, res) => {
         connection.query(
           `select 
             r_l.id as r_id,
-              r_l.name as r_name,
-              (select sum(amount) from assign_roles_trans where crzb_id=r_l.id) as r_comm,
-              sum(zone.z_comm) as z_comm,
-              sum(zone.b_comm) as b_comm
-              
-          from crzb_list as r_l 
+            r_l.name as r_name,
+            (select sum(amount) from assign_roles_trans where crct_id=r_l.id) as r_comm,
+            sum(zone.z_comm) as z_comm
+            
+          from crc_list as r_l 
           join 
-            (
-              select 
-                      z_l.parent_id,
-                      (select sum(amount) from assign_roles_trans where crzb_id=z_l.id) as z_comm,
-                      sum(branch.b_comm) as b_comm
-                  from crzb_list as z_l
-                  join 
-                (
-                  select 
-                    b_l.parent_id,
-                              (select sum(amount) from assign_roles_trans where crzb_id=b_l.id) as b_comm
-                  from crzb_list as b_l
-                ) as branch
-              on z_l.id = branch.parent_id
-                  group by z_l.id
-            ) as zone
+          (
+            select 
+              z_l.parent_id,
+              (select sum(amount) from assign_roles_trans where crct_id=z_l.id) as z_comm
+            from crc_list as z_l
+            group by z_l.id
+          ) as zone
           on r_l.id = zone.parent_id
           where r_l.type=1
           group by r_l.id
@@ -605,7 +573,7 @@ router.get('/commission-region', (req, res) => {
                 let p_item = {}
                 p_item['r_id'] = o.r_id
                 p_item['name'] = o.r_name
-                p_item['comm'] = null_to_0(o.r_comm) + null_to_0(o.z_comm) + null_to_0(o.b_comm)
+                p_item['comm'] = null_to_0(o.r_comm) + null_to_0(o.z_comm)
                 regions.push(p_item)
               })
             }
@@ -643,46 +611,34 @@ router.get('/commission-country', (req, res) => {
         connection.query(
           `select 
             c_l.id as c_id,
-              c_l.name as c_name,
-              c_l.type,
-              (select sum(amount) from assign_roles_trans where crzb_id=c_l.id) as c_comm,
-              sum(region.r_comm) as r_comm,
-              sum(region.z_comm) as z_comm,
-              sum(region.b_comm) as b_comm
-            from crzb_list as c_l
+            c_l.name as c_name,
+            c_l.type,
+            (select sum(amount) from assign_roles_trans where crct_id=c_l.id) as c_comm,
+            sum(region.r_comm) as r_comm,
+            sum(region.z_comm) as z_comm
+          from crc_list as c_l
+          join (
+            select 
+              r_l.parent_id,
+              (select sum(amount) from assign_roles_trans where crct_id=r_l.id) as r_comm,
+              sum(zone.z_comm) as z_comm
+            from crc_list as r_l 
             join 
               (
-                select 
-                  r_l.parent_id,
-                  (select sum(amount) from assign_roles_trans where crzb_id=r_l.id) as r_comm,
-                  sum(zone.z_comm) as z_comm,
-                  sum(zone.b_comm) as b_comm
-                from crzb_list as r_l 
-                join 
-                  (
-                    select 
-                      z_l.parent_id,
-                      (select sum(amount) from assign_roles_trans where crzb_id=z_l.id) as z_comm,
-                      sum(branch.b_comm) as b_comm
-                    from crzb_list as z_l
-                    join 
-                      (
-                        select 
-                          b_l.parent_id,
-                          (select sum(amount) from assign_roles_trans where crzb_id=b_l.id) as b_comm
-                        from crzb_list as b_l
-                      ) as branch
-                    on z_l.id = branch.parent_id
-                    group by z_l.id
-                  ) as zone
-                on r_l.id = zone.parent_id
-                where r_l.type=1
-                group by r_l.id
-                ) as region
-            on c_l.id = region.parent_id
-            where c_l.type=0
-            group by c_l.id
-            order by c_l.id`,
+              select 
+                z_l.parent_id,
+                (select sum(amount) from assign_roles_trans where crct_id=z_l.id) as z_comm
+              from crc_list as z_l
+              group by z_l.id
+              ) as zone
+            on r_l.id = zone.parent_id
+            where r_l.type=1
+            group by r_l.id
+          ) as region
+          on c_l.id = region.parent_id
+          where c_l.type=0
+          group by c_l.id
+          order by c_l.id`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -693,7 +649,7 @@ router.get('/commission-country', (req, res) => {
                 p_item['c_id'] = o.c_id
                 p_item['c_name'] = o.c_name
                 p_item['type'] = o.type
-                p_item['comm'] = null_to_0(o.c_comm) + null_to_0(o.r_comm) + null_to_0(o.z_comm) + null_to_0(o.b_comm)
+                p_item['comm'] = null_to_0(o.c_comm) + null_to_0(o.r_comm) + null_to_0(o.z_comm)
                 countries.push(p_item)
               })
             }

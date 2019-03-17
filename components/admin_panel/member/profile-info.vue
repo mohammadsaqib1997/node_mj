@@ -50,15 +50,9 @@
 
     .columns.is-variable.is-1
       .column
-        label Branch
+        label Zone
       .column
-        h2 {{ profile.crzb_name }}
-
-    .columns.is-variable.is-1
-      .column
-        label Franchise
-      .column
-        h2 {{ profile.fr_name }}
+        h2 {{ profile.crct_name }}
 
     .columns.is-variable.is-1
       .column

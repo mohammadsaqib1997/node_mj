@@ -46,7 +46,7 @@
                   :type="(validation.hasError('f_data.sel_role')) ? 'is-danger':''"
                   :message="validation.firstError('f_data.sel_role')"
                 >
-                  <b-select v-model="f_data.sel_role" expanded @input="ac_crzb=''">
+                  <b-select v-model="f_data.sel_role" expanded @input="ac_crz=''">
                     <option value>Select Role</option>
                     <option v-for="(r, ind) in roles" :value="ind" :key="ind">{{ r }}</option>
                   </b-select>
@@ -59,18 +59,18 @@
                 <b-field
                   class="cus-des-1"
                   expanded
-                  :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_crzb_id')"
+                  :type="(validation.hasError('f_data.sel_crz_id')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.sel_crz_id')"
                 >
                   <b-autocomplete
                     :placeholder="`Enter ${roles[f_data.sel_role]}`"
-                    :data="crzb_list"
-                    v-model="ac_crzb"
+                    :data="crz_list"
+                    v-model="ac_crz"
                     field="name"
                     expanded
                     :keep-first="true"
-                    @select="option => f_data.sel_crzb_id = option ? option.id : null"
-                    @input="loadCRZB"
+                    @select="option => f_data.sel_crz_id = option ? option.id : null"
+                    @input="loadCRZ"
                     :loading="isFetching"
                   ></b-autocomplete>
                 </b-field>
@@ -160,19 +160,18 @@ export default {
   data() {
     return {
       loading_form: false,
-      roles: ["Country", "Region", "Zone", "Branch"],
+      roles: ["Country", "Sales Coordinator", "Zone"],
       row_edit_id: null,
       isFetching: false,
-      ac_crzb: "",
-      crzb_list: [],
+      ac_crz: "",
+      crz_list: [],
       search_mj_user: "",
       submitted: false,
       s_name: "",
-      s_user_cac_load: false,
       f_data: {
         mem_id: "",
         sel_role: "",
-        sel_crzb_id: null
+        sel_crz_id: null
       }
     };
   },
@@ -198,7 +197,6 @@ export default {
           } else {
             return validator.custom(() => {
               if (!Validator.isEmpty(value)) {
-                self.s_user_cac_load = true;
                 return self.$axios
                   .post("/api/assign-role/get-user-check", {
                     email: value
@@ -210,7 +208,6 @@ export default {
                       self.s_name = res.data.result.full_name;
                       self.f_data.mem_id = res.data.result.id;
                     }
-                    self.s_user_cac_load = false;
                   });
               }
             });
@@ -224,7 +221,7 @@ export default {
         .digit()
         .lessThanOrEqualTo(3);
     },
-    "f_data.sel_crzb_id": {
+    "f_data.sel_crz_id": {
       cache: false,
       validator: function(value) {
         const self = this;
@@ -282,33 +279,33 @@ export default {
     after_f_settle: _.debounce(function(cb) {
       cb();
     }, 500),
-    loadCRZB() {
+    loadCRZ() {
       const self = this;
       self.isFetching = true;
       self.after_f_settle(function() {
-        if (self.f_data.sel_crzb_id !== null) {
+        if (self.f_data.sel_crz_id !== null) {
           self.isFetching = false;
           return;
         }
         // self.isFetching = true;
-        self.crzb_list = [];
+        self.crz_list = [];
 
-        if (!self.ac_crzb.length) {
-          self.crzb_list = [];
+        if (!self.ac_crz.length) {
+          self.crz_list = [];
           self.isFetching = false;
           return;
         }
         self.$axios
           .get(
-            `/api/crzb-list/ac_search_list/${self.f_data.sel_role}/${
-              self.ac_crzb
+            `/api/crct-list/ac_search_list/${self.f_data.sel_role}/${
+              self.ac_crz
             }`
           )
           .then(({ data }) => {
-            self.crzb_list = data.result;
+            self.crz_list = data.result;
           })
           .catch(error => {
-            self.crzb_list = [];
+            self.crz_list = [];
             throw error;
           })
           .finally(() => {
@@ -354,7 +351,7 @@ export default {
       this.f_data = {
         mem_id: "",
         sel_role: "",
-        sel_crzb_id: null
+        sel_crz_id: null
       };
       this.search_mj_user = "";
       this.s_name = "";

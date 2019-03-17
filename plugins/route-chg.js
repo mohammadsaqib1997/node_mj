@@ -104,7 +104,7 @@ const authRoutes = [{
         type_allowed: [2]
     },
     {
-        name: "company-chart-branch-management",
+        name: "company-chart-zone-management",
         type_allowed: [2]
     },
     {
