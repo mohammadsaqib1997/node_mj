@@ -71,6 +71,14 @@
                   b-autocomplete(:data="crct_list" v-model="ac_crct" field="name" expanded :keep-first="true" @select="option => f_data.sel_crct_id = option ? option.id : null" @input="loadCRCT" :loading="isFetching" placeholder="(example: Karachi, Sindh, Pakistan)")
             .columns.is-variable.is-1
               .column.is-3
+                label Branch
+              .column
+                b-field(class="cus-des-1" :type="(validation.hasError('f_data.sel_brn_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_brn_id')")
+                  b-select(v-model="f_data.sel_brn_id" expanded :loading="isLoadingBrn" :disabled="isLoadingBrn")
+                    option(value="") Select Branch
+                    option(v-for="(br, ind) in brn_list" :value="br.id" :key="ind") {{ br.name }}
+            .columns.is-variable.is-1
+              .column.is-3
                 label Referral ID
               .column
                 b-field(:type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''" :message="validation.firstError('f_data.ref_code')")
@@ -143,6 +151,8 @@ export default {
       con_pass: "",
       ac_crct: "",
       crct_list: [],
+      brn_list: [],
+      isLoadingBrn: false,
       isFetching: false,
       f_data: {
         user_asn_id: "",
@@ -155,7 +165,8 @@ export default {
         address: "",
         ref_code: "",
         status: "",
-        sel_crct_id: null
+        sel_crct_id: null,
+        sel_brn_id: ""
       },
       prd_data: {
         prd: ""
@@ -167,6 +178,17 @@ export default {
         submitted: false
       }
     };
+  },
+  watch: {
+    "f_data.sel_crct_id": function(val) {
+      this.brn_list = [];
+      this.f_data.sel_brn_id = "";
+      if (val !== null) {
+        this.loadBrnList(val);
+      } else {
+        this.isLoadingBrn = false;
+      }
+    }
   },
   validators: {
     "f_data.user_asn_id": {
@@ -283,6 +305,12 @@ export default {
         .digit()
         .maxLength(11);
     },
+    "f_data.sel_brn_id": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
     "f_data.ref_code": {
       cache: false,
       debounce: 500,
@@ -344,6 +372,36 @@ export default {
       500,
       false
     ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
+    loadBrnList(crct_id) {
+      const self = this;
+      self.isLoadingBrn = true;
+      self.after_f_settle2(function() {
+        if (crct_id === null) {
+          self.isLoadingBrn = false;
+          return;
+        }
+        self.brn_list = [];
+        self.$axios
+          .get(`/api/web/ls_branch/${crct_id}`)
+          .then(({ data }) => {
+            self.brn_list = data.result;
+          })
+          .catch(error => {
+            self.brn_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingBrn = false;
+          });
+      });
+    },
     loadCRCT(event) {
       const self = this;
       self.isFetching = true;
@@ -412,7 +470,8 @@ export default {
               member_data: mem_data,
               ext_data: {
                 prd_id: self.prd_data.prd,
-                crct_id: self.f_data.sel_crct_id
+                crct_id: self.f_data.sel_crct_id,
+                crzb_id: self.f_data.sel_brn_id
               }
             })
             .then(res => {

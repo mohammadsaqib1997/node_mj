@@ -14,7 +14,7 @@
                 th ID
                 th Email
                 th Name
-                th Zone
+                th Branch
                 th Status
                 th Paid Status
                 th Receipt
@@ -27,7 +27,7 @@
                 td {{ row.user_asn_id }}
                 td {{ row.email }}
                 td {{ row.full_name }}
-                td {{ row.crct_name }}
+                td {{ row.crzb_name }}
                 td {{ (row.active_sts === 1) ? 'Approved':'Suspended' }}
                 td
                   template(v-if="row.is_paid_m == 1") Paid

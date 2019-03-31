@@ -88,9 +88,9 @@
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
-                  <div class="column"><label>Zone</label></div>
+                  <div class="column"><label>Branch</label></div>
                   <div class="column">
-                    <h2>{{ mem_info.crct_name }}</h2>
+                    <h2>{{ mem_info.crzb_name }}</h2>
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
@@ -256,7 +256,7 @@ export default {
         { name: "Email", value: mem_info.email },
         { name: "Contact Number", value: mem_info.contact_num },
         { name: "Address", value: mem_info.address },
-        { name: "Zone", value: mem_info.crct_name },
+        { name: "Branch", value: mem_info.crzb_name },
         { name: "Referral ID", value: mem_info.ref_user_asn_id },
         {
           name: "Status",

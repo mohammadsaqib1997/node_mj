@@ -297,7 +297,7 @@ export default {
         }
         self.$axios
           .get(
-            `/api/crct-list/ac_search_list/${self.f_data.sel_role}/${
+            `/api/crzb-list/ac_search_list/${self.f_data.sel_role}/${
               self.ac_crz
             }`
           )

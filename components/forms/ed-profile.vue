@@ -22,9 +22,17 @@
       b-field(label='Mailing Address', :type="(validation.hasError('f_data.address')) ? 'is-danger':''", :message="validation.firstError('f_data.address')")
         b-input(type='text', placeholder='House No. #, Street Name, Area, City, Province, Country', v-model='f_data.address')
 
-      b-field(label="Zone" :type="(validation.hasError('f_data.sel_crct_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_crct_id')")
-        b-input(v-if="user_asn_id !== '' && profile.crct_id !== null" type="text" placeholder="(example: Baldia Town)" readonly v-bind:value="ac_crct")
-        b-autocomplete(v-else :data="crct_list" v-model="ac_crct" field="name" expanded :keep-first="true" @select="option => f_data.sel_crct_id = option ? option.id : null" @input="loadCRCT" :loading="isFetching" placeholder="(example: Karachi, Sindh, Pakistan)")
+      template(v-if="user_asn_id === '' || profile.crzb_id === null")
+        b-field(label="Zone" :type="(validation.hasError('f_data.sel_crct_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_crct_id')")
+          b-autocomplete(:data="crct_list" v-model="ac_crct" field="name" expanded :keep-first="true" @select="option => f_data.sel_crct_id = option ? option.id : null" @input="loadCRCT" :loading="isFetching" placeholder="(example: Karachi, Sindh, Pakistan)")
+
+        b-field(label="Branch" class="cus-des-1" :type="(validation.hasError('f_data.sel_brn_id')) ? 'is-danger':''" :message="validation.firstError('f_data.sel_brn_id')")
+          b-select(v-model="f_data.sel_brn_id" expanded :loading="isLoadingBrn" :disabled="isLoadingBrn")
+            option(value="") Select Branch
+            option(v-for="(br, ind) in brn_list" :value="br.id" :key="ind") {{ br.name }}
+
+      b-field(v-else label="Branch")
+        b-input(type="text" placeholder="Select Branch" readonly v-bind:value="profile.crzb_name")
 
       b-field(label='Referral ID', :type="(validation.hasError('f_data.ref_code')) ? 'is-danger':''", :message="validation.firstError('f_data.ref_code')")
         b-input(v-if="user_asn_id === ''", type='text', placeholder='000000000', v-model='f_data.ref_code', v-mask="'#########'", :loading="validation.isValidating('f_data.ref_code')")
@@ -80,6 +88,8 @@ export default {
       secure: false,
       ac_crct: "",
       crct_list: [],
+      brn_list: [],
+      isLoadingBrn: false,
       isFetching: false,
       is_auto_crct: false,
       f_data: {
@@ -90,12 +100,26 @@ export default {
         cont_num: "",
         address: "",
         ref_code: "",
-        sel_crct_id: null
+        sel_crct_id: null,
+        sel_brn_id: ""
       },
       form: {
         loading: false
       }
     };
+  },
+  watch: {
+    "f_data.sel_crct_id": function(val) {
+      this.brn_list = [];
+      if (this.validation.isTouched("f_data.sel_crct_id")) {
+        this.f_data.sel_brn_id = "";
+      }
+      if (val !== null) {
+        this.loadBrnList(val);
+      } else {
+        this.isLoadingBrn = false;
+      }
+    }
   },
   validators: {
     "f_data.full_name": function(value) {
@@ -165,6 +189,12 @@ export default {
         .digit()
         .maxLength(11);
     },
+    "f_data.sel_brn_id": function(value) {
+      return Validator.value(value)
+        .required()
+        .digit()
+        .maxLength(11);
+    },
     "f_data.ref_code": {
       cache: false,
       debounce: 500,
@@ -206,6 +236,13 @@ export default {
       500,
       false
     ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
     loadCRCT(event) {
       const self = this;
       self.isFetching = true;
@@ -239,6 +276,29 @@ export default {
           });
       });
     },
+    loadBrnList(crct_id) {
+      const self = this;
+      self.isLoadingBrn = true;
+      self.after_f_settle2(function() {
+        if (crct_id === null) {
+          self.isLoadingBrn = false;
+          return;
+        }
+        self.brn_list = [];
+        self.$axios
+          .get(`/api/web/ls_branch/${crct_id}`)
+          .then(({ data }) => {
+            self.brn_list = data.result;
+          })
+          .catch(error => {
+            self.brn_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingBrn = false;
+          });
+      });
+    },
     setData: function(data) {
       this.user_asn_id = data.user_asn_id === null ? "" : data.user_asn_id;
       this.status = data.active_sts;
@@ -251,7 +311,8 @@ export default {
         cont_num: data.contact_num,
         address: data.address,
         ref_code: data.ref_user_asn_id,
-        sel_crct_id: data.crct_id
+        sel_crct_id: data.crct_id,
+        sel_brn_id: data.crzb_id ? data.crzb_id : ""
       };
       this.ac_crct = data.crct_name;
     },
@@ -291,7 +352,8 @@ export default {
               update_id: self.$store.state.user.data.user_id,
               data: new_data,
               ext_data: {
-                crct_id: self.f_data.sel_crct_id
+                crct_id: self.f_data.sel_crct_id,
+                crzb_id: self.f_data.sel_brn_id
               }
             })
             .then(async res => {

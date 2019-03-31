@@ -20,8 +20,9 @@
           expanded
           :keep-first="true"
           @select="option => edit_row.form.crz_id = option ? option.id : null"
-          @input="loadCRZ"
+          @input="function() { return edit_row.form.role <= 2  ? loadCRZ(): null }"
           :loading="isFetching"
+          :disabled="edit_row.form.role > 2"
         ></b-autocomplete>
       </b-field>
     </td>
@@ -157,7 +158,7 @@ export default {
         }
         self.$axios
           .get(
-            `/api/crct-list/ac_search_list/${self.edit_row.form.role}/${
+            `/api/crzb-list/ac_search_list/${self.edit_row.form.role}/${
               self.edit_row.form.ac_crz
             }`
           )
@@ -189,7 +190,7 @@ export default {
             .post("/api/assign-role/toggle-status", {
               row_id: row.id,
               change_sts: asn_sts,
-              crz_id: row.crc_id
+              crz_id: row.crzb_id
             })
             .then(async res => {
               self.$toast.open({

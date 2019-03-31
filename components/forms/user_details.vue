@@ -72,12 +72,20 @@
       </div>
       <div class="column">
         <b-field
+          label="Branch"
           class="cus-des-1"
-          label="Mailing Address"
-          :type="(validation.hasError('form.address')) ? 'is-danger':''"
-          :message="validation.firstError('form.address')"
+          :type="(validation.hasError('form.sel_brn_id')) ? 'is-danger':''"
+          :message="validation.firstError('form.sel_brn_id')"
         >
-          <b-input type="text" placeholder="Enter Mailing Address" v-model="form.address"></b-input>
+          <b-select
+            v-model="form.sel_brn_id"
+            expanded
+            :loading="isLoadingBrn"
+            :disabled="isLoadingBrn"
+          >
+            <option value>Select Branch</option>
+            <option v-for="(br, ind) in brn_list" :value="br.id" :key="ind">{{ br.name }}</option>
+          </b-select>
         </b-field>
       </div>
     </div>
@@ -119,17 +127,31 @@ export default {
       ref_name: "",
       ac_crct: "",
       crct_list: [],
+      brn_list: [],
       isFetching: false,
+      isLoadingBrn: false,
       form: {
         full_name: "",
         email: "",
         password: "",
         cont_num: "",
         sel_crct_id: null,
+        sel_brn_id: "",
         address: "",
         ref_code: ""
       }
     };
+  },
+  watch: {
+    "form.sel_crct_id": function(val) {
+      this.brn_list = [];
+      this.form.sel_brn_id = "";
+      if (val !== null) {
+        this.loadBrnList(val);
+      } else {
+        this.isLoadingBrn = false;
+      }
+    }
   },
   validators: {
     "form.full_name": function(value) {
@@ -184,11 +206,11 @@ export default {
         .digit()
         .maxLength(11);
     },
-    "form.address": function(value) {
+    "form.sel_brn_id": function(value) {
       return Validator.value(value)
         .required()
-        .minLength(6)
-        .maxLength(100);
+        .digit()
+        .maxLength(11);
     },
     "form.ref_code": {
       cache: false,
@@ -231,6 +253,13 @@ export default {
       500,
       false
     ),
+    after_f_settle2: _.debounce(
+      function(cb) {
+        cb();
+      },
+      500,
+      false
+    ),
     loadCRCT(event) {
       const self = this;
       self.isFetching = true;
@@ -257,6 +286,29 @@ export default {
           })
           .finally(() => {
             self.isFetching = false;
+          });
+      });
+    },
+    loadBrnList(crct_id) {
+      const self = this;
+      self.isLoadingBrn = true;
+      self.after_f_settle2(function() {
+        if (crct_id === null) {
+          self.isLoadingBrn = false;
+          return;
+        }
+        self.brn_list = [];
+        self.$axios
+          .get(`/api/web/ls_branch/${crct_id}`)
+          .then(({ data }) => {
+            self.brn_list = data.result;
+          })
+          .catch(error => {
+            self.brn_list = [];
+            throw error;
+          })
+          .finally(() => {
+            self.isLoadingBrn = false;
           });
       });
     },

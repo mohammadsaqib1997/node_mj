@@ -44,15 +44,15 @@
 
     .columns.is-variable.is-1
       .column
-        label Address
+        label Mail Address
       .column
         h2 {{ profile.address }}
 
     .columns.is-variable.is-1
       .column
-        label Zone
+        label Branch
       .column
-        h2 {{ profile.crct_name }}
+        h2 {{ profile.crzb_name }}
 
     .columns.is-variable.is-1
       .column

@@ -79,8 +79,10 @@
     "crc_list": {
         "type": {
             "0": "Country",
-            "1": "Region",
-            "2": "Zone"
+            "1": "Region -> Sales Coordinator",
+            "2": "Zone",
+            "3": "Branch",
+            "4": "Zones -> Others"
         }
     },
     "mem_link_crc": {

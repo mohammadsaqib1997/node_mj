@@ -151,13 +151,13 @@ router.get('/ac_crct_ls/:search', (req, res) => {
           `select * from (
             select 
               concat(ls1.name, 
-              if(ls2.name is null, "", concat(", ", ls2.name)),
-                  if(ls3.name is null, "", concat(", ", ls3.name))
+                if(ls2.name is null, "", concat(", ", ls2.name)),
+                if(ls3.name is null, "", concat(", ", ls3.name))
               ) as name, ls1.id
-              from crc_list as ls1
-              left join crc_list as ls2
+              from crzb_list as ls1
+              left join crzb_list as ls2
               on ls1.parent_id = ls2.id
-              left join crc_list as ls3
+              left join crzb_list as ls3
               on ls2.parent_id = ls3.id
               where ls1.type=2 and ls1.active=1
             ) as tbl1
@@ -185,8 +185,8 @@ router.get('/ac_crct_ls/:search', (req, res) => {
   }
 })
 
-router.get('/ls_franchise/:crzb_id', (req, res) => {
-  if (req.params.crzb_id && /^[0-9]*$/.test(req.params.crzb_id)) {
+router.get('/ls_branch/:crct_id', (req, res) => {
+  if (req.params.crct_id && /^[0-9]*$/.test(req.params.crct_id)) {
     db.getConnection(function (err, connection) {
       if (err) {
         res.status(500).json({
@@ -194,7 +194,7 @@ router.get('/ls_franchise/:crzb_id', (req, res) => {
         })
       } else {
         connection.query(
-          `SELECT id, name FROM franchises where branch_id=${req.params.crzb_id} and active=1;`,
+          `SELECT id, name FROM crzb_list where parent_id=${req.params.crct_id} and active=1;`,
           function (error, result) {
             connection.release();
             if (error) {
@@ -1043,9 +1043,9 @@ router.post('/signup', (req, res) => {
                         throw_error = error
                         return resolve()
                       } else {
-                        connection.query('INSERT INTO `mem_link_crc` SET ?', {
+                        connection.query('INSERT INTO `mem_link_crzb` SET ?', {
                           member_id: mem_id,
-                          crct_id: req.body.ext_data.crct,
+                          crzb_id: req.body.ext_data.brn_id,
                           linked_mem_type: 1
                         }, async function (error, results, fields) {
                           if (error) {
@@ -1065,7 +1065,6 @@ router.post('/signup', (req, res) => {
                               }
                               return resolve()
                             })
-
                           }
                         })
                       }

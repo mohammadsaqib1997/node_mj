@@ -50,12 +50,12 @@ router.get("/", function (req, res) {
         FROM members as m
         LEFT JOIN info_var_m as u_var
         ON m.id = u_var.member_id
-        LEFT JOIN mem_link_crc as mem_l_crc
-        ON m.id=mem_l_crc.member_id
-        LEFT JOIN crc_list as crct_l
-        ON mem_l_crc.crct_id=crct_l.id
+        LEFT JOIN mem_link_crzb as mem_l_crzb
+        ON m.id=mem_l_crzb.member_id
+        LEFT JOIN crzb_list as crzb_l
+        ON mem_l_crzb.crzb_id=crzb_l.id
         ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crct_l.name LIKE ?)' : ''}
+        ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_l.name LIKE ?)' : ''}
         ${(filter_qry !== '') ? filter_qry:''}
         `,
         ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
@@ -77,20 +77,20 @@ router.get("/", function (req, res) {
                   m.full_name,
                   m.active_sts, 
                   m.is_paid_m, 
-                  crct_l.name as crct_name,
+                  crzb_l.name as crzb_name,
                   u_var.level,
                   COUNT(ur.id) as tot_rcp_up 
                 FROM members as m
-                LEFT JOIN mem_link_crc as mem_l_crc
-                ON m.id=mem_l_crc.member_id
-                LEFT JOIN crc_list as crct_l
-                ON mem_l_crc.crct_id=crct_l.id
+                LEFT JOIN mem_link_crzb as mem_l_crzb
+                ON m.id=mem_l_crzb.member_id
+                LEFT JOIN crzb_list as crzb_l
+                ON mem_l_crzb.crzb_id=crzb_l.id
                 LEFT JOIN user_receipts as ur
                 ON m.id=ur.ref_id AND ur.type=0 
                 LEFT JOIN info_var_m as u_var
                 ON m.id = u_var.member_id
                 ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
-                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crct_l.name LIKE ?)' : ''}
+                ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_l.name LIKE ?)' : ''}
                 ${(filter_qry !== '') ? filter_qry:''}
                 GROUP BY m.id
                 ORDER BY m.id DESC
@@ -160,13 +160,26 @@ router.get('/member_info/:id', function (req, res, next) {
               u_bank.account_title,
               u_bank.iban_number,
               u_bank.address as bk_address,
-              crc_l.name as crct_name
+              crzb_l.name as crzb_name
             FROM members as m
 
-            LEFT JOIN mem_link_crc as mem_l_crc
-            ON m.id=mem_l_crc.member_id
-            LEFT JOIN crc_list as crc_l
-            ON mem_l_crc.crct_id=crc_l.id
+            LEFT JOIN mem_link_crzb as mem_l_crzb
+            ON m.id=mem_l_crzb.member_id
+            LEFT JOIN (
+              select
+                ls_b.id,
+                concat(ls_b.name, ", ", ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as name
+              from crzb_list as ls_b
+                
+              join crzb_list as ls_z
+              on ls_b.parent_id = ls_z.id
+              join crzb_list as ls_r
+              on ls_z.parent_id = ls_r.id
+              join crzb_list as ls_c
+              on ls_r.parent_id = ls_c.id
+                
+            ) as crzb_l
+            ON mem_l_crzb.crzb_id=crzb_l.id
             
             LEFT JOIN user_product_details as u_prd
             ON m.id = u_prd.member_id
@@ -592,20 +605,32 @@ router.get("/:id", function (req, res, next) {
       } else {
         let options = {
           sql: `
-          SELECT m.*, upd.product_id, mem_l_crc.crct_id, 
-            (SELECT concat(ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as name 
-                FROM crc_list as ls_z
-                join crc_list as ls_r
-                on ls_z.parent_id = ls_r.id
-                join crc_list as ls_c
-                on ls_r.parent_id = ls_c.id
-              where ls_z.id=mem_l_crc.crct_id) as crct_ac_name
-            FROM members AS m
-            LEFT JOIN user_product_details as upd
-            ON m.id=upd.member_id
-            LEFT JOIN mem_link_crc as mem_l_crc
-            ON m.id=mem_l_crc.member_id
-            WHERE m.id=?
+          SELECT m.*, upd.product_id, crzb_data.*
+          FROM members AS m
+
+          LEFT JOIN user_product_details as upd
+          ON m.id=upd.member_id
+          LEFT JOIN mem_link_crzb as mem_l_crzb
+          ON m.id=mem_l_crzb.member_id
+          left join (
+            select
+              ls_b.id as crzb_id,
+              concat(ls_b.name, ", ", ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as crzb_name,
+              concat(ls_z.name, ", ", ls_r.name, ", ", ls_c.name) as crct_name,
+              ls_b.parent_id as crct_id
+              from crzb_list as ls_b
+                
+              join crzb_list as ls_z
+              on ls_b.parent_id = ls_z.id
+              join crzb_list as ls_r
+              on ls_z.parent_id = ls_r.id
+              join crzb_list as ls_c
+              on ls_r.parent_id = ls_c.id
+              
+          ) as crzb_data
+          on mem_l_crzb.crzb_id = crzb_data.crzb_id
+
+          WHERE m.id=?
         `
         }
 
@@ -767,9 +792,9 @@ router.post("/add_referral", function (req, res) {
                                                         resolve()
                                                       } else {
                                                         connection.query(
-                                                          'INSERT INTO `mem_link_crc` SET ?', {
+                                                          'INSERT INTO `mem_link_crzb` SET ?', {
                                                             member_id: mem_id,
-                                                            crct_id: req.body.ext_data.crct_id,
+                                                            crzb_id: req.body.ext_data.crzb_id,
                                                             linked_mem_type: 1
                                                           },
                                                           async function (error, results) {
@@ -943,9 +968,9 @@ router.post('/add', function (req, res) {
                 err_hdl(error)
                 resolve()
               } else {
-                connection.query('INSERT INTO `mem_link_crc` SET ?', {
+                connection.query('INSERT INTO `mem_link_crzb` SET ?', {
                   member_id: mem_id,
-                  crct_id: req.body.ext_data.crct_id,
+                  crzb_id: req.body.ext_data.crzb_id,
                   linked_mem_type: 1
                 }, async function (error, results, fields) {
                   if (error) {
@@ -1024,7 +1049,7 @@ router.post('/update', function (req, res) {
                   } else {
                     connection.query(
                       `SELECT link_mem.member_id, m.is_paid_m FROM members as m
-                      LEFT JOIN mem_link_crc as link_mem
+                      LEFT JOIN mem_link_crzb as link_mem
                       ON m.id = link_mem.member_id
                       WHERE m.id=?`,
                       [req.body.update_id],
@@ -1033,15 +1058,15 @@ router.post('/update', function (req, res) {
                           err_hdl(error)
                           resolve()
                         } else {
-                          let query = 'UPDATE `mem_link_crc` SET ? WHERE member_id=?'
+                          let query = 'UPDATE `mem_link_crzb` SET ? WHERE member_id=?'
                           let params = [{
-                            crct_id: req.body.ext_data.crct_id
+                            crzb_id: req.body.ext_data.crzb_id
                           }, req.body.update_id]
 
                           if (results.length && results[0].member_id == null) {
-                            query = 'INSERT INTO `mem_link_crc` SET ?'
+                            query = 'INSERT INTO `mem_link_crzb` SET ?'
                             params = [{
-                              crct_id: req.body.ext_data.crct_id,
+                              crzb_id: req.body.ext_data.crzb_id,
                               member_id: req.body.update_id,
                               linked_mem_type: results[0].is_paid_m == 0 ? 1 : 0
                             }]
@@ -1488,21 +1513,57 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                     if (direct_inc === 1) {
                       set_param['direct_ref_count'] = parseInt(results[0].direct_ref_count) + 1
                       commission_amount = (prd_id && prd_id == 2) ? 1500 : 1000
-                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
 
                     } else if (direct_inc === 2) {
                       set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
                       commission_amount = 300
-                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
 
                     } else if (direct_inc <= 9) {
                       set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
                       commission_amount = 200
-                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
                     }
                     //  else {
                     //   set_param['in_direct_ref_count'] = parseInt(results[0].in_direct_ref_count) + 1
                     // }
+
+                    // Check ref user has 4 direct members or active this account this month
+                    if (direct_inc > 1) {
+                      await new Promise(in_res => {
+                        connection.query(
+                          `select 
+                            h_m.created_at as join_member,
+                            m_info.direct_ref_count as direct_ref
+                          from hierarchy_m as h_m 
+                          join info_var_m as m_info
+                          on h_m.member_id = m_info.member_id
+                          where h_m.member_id=${ref_mem_id}`,
+                          function (error, result) {
+                            if (error) {
+                              throw_error = error
+                            } else {
+                              if (result.length > 0 && result[0]) {
+                                let now = moment(DateTime.local()
+                                  .setZone("UTC+5")
+                                  .toString())
+                                let old = moment(result[0].join_member)
+                                let dur = Math.floor((moment.duration(now.diff(old))).asMonths())
+                                if (dur > 1 && parseInt(result[0].direct_ref) < 4) {
+                                  commission_amount = 0
+                                }
+                              }
+                            }
+                            return in_res()
+                          }
+                        )
+                      })
+                      if (throw_error) {
+                        return resolve2()
+                      }
+                    }
+
+                    if (commission_amount > 0) {
+                      set_param['wallet'] = parseInt(results[0].wallet) + commission_amount
+                    }
 
                     if (_.isEmpty(set_param)) {
                       return resolve2()
@@ -1615,57 +1676,55 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
   // Country Region Zone and Branch commission goes here
   await new Promise(resolve => {
     // select ref user and apply comissions and set wallet and direct or indirect count increament
-    connection.query('SELECT crct_id FROM mem_link_crc WHERE member_id=?', mem_id, async function (error, results, fields) {
+    connection.query('SELECT crzb_id FROM mem_link_crzb WHERE member_id=?', mem_id, async function (error, results, fields) {
       if (error) {
         throw_error = error
         return resolve()
       } else {
-        if (results.length > 0 && results[0].crct_id !== null) {
-          let grab_crct_ids = [results[0].crct_id]
+        if (results.length > 0 && results[0].crzb_id !== null) {
+          let grab_crzb_ids = [results[0].crzb_id]
 
-          let crct_inc = 0
-          for (crct_id of grab_crct_ids) {
+          for (crzb_id of grab_crzb_ids) {
             await new Promise(resolve2 => {
 
               connection.query(
                 `SELECT 
-                  crct_l.id, 
-                  crct_l.parent_id, 
-                  crct_l.type as crct_type,
+                  crzb_l.id, 
+                  crzb_l.parent_id, 
+                  crzb_l.type as crzb_type,
                   asn_role.id as asn_role_id, 
                   asn_role.member_id,
                   iv_mem.wallet,
                   m.user_asn_id
-                FROM crc_list as crct_l
+                FROM crzb_list as crzb_l
                 LEFT JOIN assign_roles as asn_role
-                ON crct_l.id = asn_role.crc_id AND asn_role.role_status=1
+                ON crzb_l.id = asn_role.crzb_id AND asn_role.role_status=1
                 LEFT JOIN info_var_m as iv_mem
                 ON asn_role.member_id = iv_mem.member_id
                 LEFT JOIN members as m
                 ON asn_role.member_id = m.id
-                WHERE crct_l.id=?`,
-                crct_id,
+                WHERE crzb_l.id=?`,
+                crzb_id,
                 async function (error, results) {
                   if (error) {
                     throw_error = error
                     return resolve2()
                   } else {
                     if (results[0].parent_id > 0 && results[0].parent_id !== null) {
-                      grab_crct_ids.push(results[0].parent_id)
+                      grab_crzb_ids.push(results[0].parent_id)
                     }
-                    crct_inc++
 
                     let asn_role_id = results[0].asn_role_id
                     let asn_role_mem_id = results[0].member_id
                     let asn_role_mem_wallet = parseInt(results[0].wallet)
                     let asn_role_mem_asn_id = results[0].user_asn_id
-                    let crct_type = results[0].crct_type
+                    let crzb_type = results[0].crzb_type
 
                     if (asn_role_mem_id !== null) {
                       let set_param = {}
                       let commission_amount = 0
 
-                      if (crct_type === 2) {
+                      if (crzb_type === 2) {
                         // Zonal commission
                         commission_amount = 300
 
@@ -1680,8 +1739,8 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                               count(id) as tot_sale_m
                             from assign_roles_trans as asn_r_tr 
                             where 
-                              asn_r_tr.member_id=5 and 
-                              asn_r_tr.crct_id=25 and 
+                              asn_r_tr.member_id=${asn_role_mem_id} and 
+                              asn_r_tr.crzb_id=${crzb_id} and 
                               (asn_r_tr.created_at >= '${start_of_m}' and asn_r_tr.created_at <= '${end_of_m}')`,
                             async function (error, results, fields) {
                               if (error) {
@@ -1703,10 +1762,10 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                           return resolve2()
                         }
 
-                      } else if (crct_type === 1) {
+                      } else if (crzb_type === 1) {
                         // Sales Coordinator/Regional commission
                         commission_amount = 150
-                      } else if (crct_type === 0) {
+                      } else if (crzb_type === 0) {
                         // Country Manager commission
                         commission_amount = 100
                       }
@@ -1715,7 +1774,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
 
                       add_to_c_wallet = add_to_c_wallet - commission_amount
 
-                      let crct_names = ['Country', 'Sales Coordinator', 'Zone']
+                      let crz_names = ['Country', 'Sales Coordinator', 'Zone']
 
                       connection.query('UPDATE `info_var_m` SET ? WHERE member_id=?', [set_param, asn_role_mem_id], function (error, results) {
                         if (error) {
@@ -1726,7 +1785,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                           // save commission - transaction in assign role transaction
                           connection.query('INSERT INTO `assign_roles_trans` SET ?', {
                             member_id: asn_role_mem_id,
-                            crct_id,
+                            crzb_id,
                             asn_role_id,
                             linked_member_id: mem_id,
                             amount: commission_amount
@@ -1738,7 +1797,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                               // apply commission - transaction
                               connection.query('INSERT INTO `transactions_m` SET ?', {
                                 member_id: asn_role_mem_id,
-                                remarks: `Issued Commission For ${crct_names[crct_type]} From User ID ${mem_asn_id}`,
+                                remarks: `Issued Commission For ${crz_names[crzb_type]} From User ID ${mem_asn_id}`,
                                 debit: commission_amount
                               }, function (error, results, fields) {
                                 if (error) {
@@ -1752,7 +1811,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                                     from_id: 1,
                                     to_id: asn_role_mem_id,
                                     from_txt: 'Admin',
-                                    message: `Issued Commission For ${crct_names[crct_type]} From User ID ${mem_asn_id} Amount Rs.${commission_amount}/-`,
+                                    message: `Issued Commission For ${crz_names[crzb_type]} From User ID ${mem_asn_id} Amount Rs.${commission_amount}/-`,
                                     notify_type: 0
                                   }, function (error, results, fields) {
                                     if (error) {
@@ -1761,7 +1820,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                                     } else {
                                       // transaction insert in company
                                       connection.query('INSERT INTO `transactions_comp` SET ?', {
-                                        remarks: `Issued Commission For ${crct_names[crct_type]} To User ID ${asn_role_mem_asn_id}`,
+                                        remarks: `Issued Commission For ${crz_names[crzb_type]} To User ID ${asn_role_mem_asn_id}`,
                                         credit: commission_amount
                                       }, function (error, results, fields) {
                                         if (error) {
@@ -1774,7 +1833,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                                             to_type: 1,
                                             from_id: asn_role_mem_id,
                                             to_id: 1,
-                                            message: `Issued Commission For ${crct_names[crct_type]} To User ID ${asn_role_mem_asn_id} Amount Rs.${commission_amount}/-`,
+                                            message: `Issued Commission For ${crz_names[crzb_type]} To User ID ${asn_role_mem_asn_id} Amount Rs.${commission_amount}/-`,
                                             notify_type: 0
                                           }, function (error, results, fields) {
                                             if (error) {

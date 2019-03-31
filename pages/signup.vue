@@ -149,6 +149,7 @@ export default {
             ext_data: {
               prd_id: form_data.sel_prd,
               crct: form_data.sel_crct_id,
+              brn_id: form_data.sel_brn_id,
               promotion: self.isPromotion
             }
           })

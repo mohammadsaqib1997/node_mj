@@ -33,12 +33,12 @@ router.get('/crct-head-info', function (req, res) {
         connection.query(
           `select 
               asn_role.member_id, 
-              crc_l.id as crc_id,
-              crc_l.type as crc_type,
+              crzb_l.id as crzb_id,
+              crzb_l.type as crzb_type,
               asn_role.role_status
             from assign_roles as asn_role 
-            join crc_list as crc_l
-            on asn_role.crc_id = crc_l.id
+            join crzb_list as crzb_l
+            on asn_role.crzb_id = crzb_l.id
             where asn_role.member_id=${req.decoded.data.user_id}`,
           function (error, result) {
             connection.release()
@@ -49,9 +49,9 @@ router.get('/crct-head-info', function (req, res) {
             } else {
               if (result.length > 0) {
                 res.json({
-                  type: result[0].crc_type,
+                  type: result[0].crzb_type,
                   hod_mem_id: result[0].member_id,
-                  hod_id: result[0].crc_id,
+                  hod_id: result[0].crzb_id,
                   role_status: result[0].role_status
                 })
               } else {
@@ -110,20 +110,20 @@ router.get('/list', function (req, res) {
         from (
           select 
             asn_role.*,
-            crc_l.*,
+            crzb_l.*,
             m.user_asn_id as mj_id,
             m.full_name as mj_name
           from assign_roles as asn_role
           join (
           select 
-            ls1.id as crc_l_id, ls1.name, ls1.type, concat(if(ls3.rd_id is null, "", concat(ls3.rd_id, "-")), if(ls2.rd_id is null, "", concat(ls2.rd_id, "-")), ls1.rd_id) as code
-          from crc_list as ls1
-              left join crc_list as ls2
+            ls1.id as crzb_l_id, ls1.name, ls1.type, concat(if(ls3.rd_id is null, "", concat(ls3.rd_id, "-")), if(ls2.rd_id is null, "", concat(ls2.rd_id, "-")), ls1.rd_id) as code
+          from crzb_list as ls1
+              left join crzb_list as ls2
               on ls1.parent_id = ls2.id
-              left join crc_list as ls3
+              left join crzb_list as ls3
               on ls2.parent_id = ls3.id
-          ) as crc_l
-          on asn_role.crc_id = crc_l.crc_l_id
+          ) as crzb_l
+          on asn_role.crzb_id = crzb_l.crzb_l_id
           join members as m
           on asn_role.member_id = m.id
         ) as tbl
@@ -140,30 +140,33 @@ router.get('/list', function (req, res) {
             connection.query(
               `select
                 tbl.id,
-                tbl.crc_id,
+                tbl.crzb_id,
                 tbl.role_status,
                 tbl.name,
                 tbl.type,
                 tbl.code,
                 tbl.mj_id,
                 tbl.mj_name
-              from (
+                from (
                 select 
                   asn_role.*,
-                  crc_l.*,
+                  crzb_l.*,
                   m.user_asn_id as mj_id,
                   m.full_name as mj_name
                 from assign_roles as asn_role
                 join (
-                select 
-                  ls1.id as crc_l_id, ls1.name, ls1.type, concat(if(ls3.rd_id is null, "", concat(ls3.rd_id, "-")), if(ls2.rd_id is null, "", concat(ls2.rd_id, "-")), ls1.rd_id) as code
-                from crc_list as ls1
-                    left join crc_list as ls2
-                    on ls1.parent_id = ls2.id
-                    left join crc_list as ls3
-                    on ls2.parent_id = ls3.id
-                ) as crc_l
-                on asn_role.crc_id = crc_l.crc_l_id
+                  select 
+                    ls1.id as crzb_l_id, 
+                        ls1.name, 
+                        ls1.type, 
+                        concat(if(ls3.rd_id is null, "", concat(ls3.rd_id, "-")), if(ls2.rd_id is null, "", concat(ls2.rd_id, "-")), ls1.rd_id) as code
+                  from crzb_list as ls1
+                  left join crzb_list as ls2
+                  on ls1.parent_id = ls2.id
+                  left join crzb_list as ls3
+                  on ls2.parent_id = ls3.id
+                ) as crzb_l
+                on asn_role.crzb_id = crzb_l.crzb_l_id
                 join members as m
                 on asn_role.member_id = m.id
               ) as tbl
@@ -198,7 +201,7 @@ router.get('/exist-check/:crz_id', (req, res) => {
           err
         })
       } else {
-        let query = `SELECT COUNT(*) as count FROM assign_roles where crc_id=${req.params.crz_id} AND role_status=1`
+        let query = `SELECT COUNT(*) as count FROM assign_roles where crzb_id=${req.params.crz_id} AND role_status=1`
         connection.query(query, function (error, result) {
           connection.release();
           if (error) {
@@ -291,7 +294,7 @@ router.post('/assign', function (req, res) {
       connection.query(
         'INSERT INTO `assign_roles` SET ?', {
           member_id: req.body.mem_id,
-          crc_id: req.body.sel_crz_id
+          crzb_id: req.body.sel_crz_id
         },
         function (error, results) {
           connection.release();
@@ -321,7 +324,7 @@ router.post('/update-row', function (req, res) {
           let throw_err = null
           await new Promise(in_resolve => {
             connection.query(
-              `SELECT COUNT(*) as tot_rows FROM assign_roles WHERE crc_id=${req.body.crz_id} AND role_status=1`,
+              `SELECT COUNT(*) as tot_rows FROM assign_roles WHERE crzb_id=${req.body.crz_id} AND role_status=1`,
               function (error, result) {
                 if (error) {
                   throw_err = error
@@ -329,7 +332,7 @@ router.post('/update-row', function (req, res) {
                 } else {
                   if (result[0].tot_rows > 0) {
                     connection.query(
-                      `UPDATE assign_roles SET ? WHERE crc_id=${req.body.crz_id} AND role_status=1`, {
+                      `UPDATE assign_roles SET ? WHERE crzb_id=${req.body.crz_id} AND role_status=1`, {
                         role_status: 0
                       },
                       function (error, result) {
@@ -353,7 +356,7 @@ router.post('/update-row', function (req, res) {
 
           connection.query(
             `UPDATE assign_roles SET ? WHERE id=${req.body.updated_id}`, {
-              crc_id: req.body.crz_id,
+              crzb_id: req.body.crz_id,
               role_status: 1
             },
             function (error, results) {
@@ -391,7 +394,7 @@ router.post('/toggle-status', function (req, res) {
             let throw_err = null
             await new Promise(in_resolve => {
               connection.query(
-                `SELECT COUNT(*) as tot_rows FROM assign_roles WHERE crc_id=${req.body.crz_id} AND role_status=1`,
+                `SELECT COUNT(*) as tot_rows FROM assign_roles WHERE crzb_id=${req.body.crz_id} AND role_status=1`,
                 function (error, result) {
                   if (error) {
                     throw_err = error
@@ -399,7 +402,7 @@ router.post('/toggle-status', function (req, res) {
                   } else {
                     if (result[0].tot_rows > 0) {
                       connection.query(
-                        `UPDATE assign_roles SET ? WHERE crc_id=${req.body.crz_id} AND role_status=1`, {
+                        `UPDATE assign_roles SET ? WHERE crzb_id=${req.body.crz_id} AND role_status=1`, {
                           role_status: 0
                         },
                         function (error, result) {

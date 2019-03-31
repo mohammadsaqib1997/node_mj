@@ -222,7 +222,7 @@ export default {
                 if (!Validator.isEmpty(self.f_data.sel_cr_id)) {
                   return self.$axios
                     .get(
-                      `/api/crct-list/exist-check/${
+                      `/api/crzb-list/exist-check/${
                         self.f_data.sel_cr_id
                       }/${value}`
                     )
@@ -247,7 +247,7 @@ export default {
       const self = this;
       self.loading = true;
       await self.$axios
-        .get("/api/crct-list/zone-list", {
+        .get("/api/crzb-list/zone-list", {
           params: self.load_params
         })
         .then(res => {
@@ -282,7 +282,7 @@ export default {
           return;
         }
         self.$axios
-          .get(`/api/crct-list/ac_search_cr/${self.ac_cr}`)
+          .get(`/api/crzb-list/ac_search_cr/${self.ac_cr}`)
           .then(({ data }) => {
             self.cr_list = data.result;
           })
@@ -302,7 +302,7 @@ export default {
         if (success) {
           self.loading_form = true;
           self.$axios
-            .post("/api/crct-list/zone-add", self.f_data)
+            .post("/api/crzb-list/zone-add", self.f_data)
             .then(async res => {
               self.reset();
               self.loading_form = false;
@@ -336,7 +336,7 @@ export default {
           let data = _.cloneDeep(self.f_data);
           data["update_id"] = self.updated_id;
           self.$axios
-            .post("/api/crct-list/zone-update", data)
+            .post("/api/crzb-list/zone-update", data)
             .then(async res => {
               if (res.data.status === false) {
                 self.loading_form = false;
@@ -395,7 +395,7 @@ export default {
         onConfirm: async () => {
           self.loading = true;
           await self.$axios
-            .post("/api/crct-list/tg-act-zone", {
+            .post("/api/crzb-list/tg-act-zone", {
               tgl_id: id,
               sts
             })
@@ -438,7 +438,7 @@ export default {
       self.reset();
       self.loading_form = true;
       await self.$axios
-        .get(`/api/crct-list/zone-load/${id}`)
+        .get(`/api/crzb-list/zone-load/${id}`)
         .then(res => {
           if (res.data.status === false) {
             self.$toast.open({
