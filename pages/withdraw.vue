@@ -13,9 +13,9 @@
                         .amount
                           span.placeholder Rs. {{ $store.state.member.wallet }}/-
                           span Shopping Wallet
-                        .amount
-                          span.placeholder Rs. 0/-
-                          span Wallet
+                        // .amount
+                        //   span.placeholder Rs. 0/-
+                        //   span Wallet
                     .column
                       bankDetComp(:has_header="true")
                     
@@ -28,6 +28,18 @@
                           ul.errors
                             li.item(v-for="err in w_errors") {{ err.message }}
 
+                        form.form(v-else-if="mem_var.available > 0" @submit.prevent="withdraw")
+                          .columns.is-variable.is-1
+                              .column.is-3
+                                  label Withdraw Amount
+                              .column
+                                  b-field(:type="(validation.hasError('form.amount')) ? 'is-danger':''" :message="validation.firstError('form.amount')")
+                                      b-input(type="text" placeholder="Enter Amount in Rupees" v-model="form.amount" v-mask="'#######'" :loading="validation.isValidating('form.amount')")
+                          .columns.is-variable.is-1
+                              .column.is-offset-3
+                                  button.button.btn-des-1(type="submit" style="margin-top:0")
+                                      img(src="~/assets/img/transfer.png")
+                                      | &nbsp;&nbsp;&nbsp;&nbsp;Withdraw
                         template(v-else)
                           b-message.cus-msg(type="is-danger" has-icon)
                             | You cannot withdraw any amount until shows in Available Balance.
@@ -41,29 +53,17 @@
                           tbody
                             tr
                               td Available Balance:
-                              td.has-text-right 0 PKR
+                              td.has-text-right PKR {{ mem_var.available }}/-
                             tr
                               td Pending Balance:
-                              td.has-text-right 0 PKR
+                              td.has-text-right PKR {{ mem_var.pending }}/-
                             tr
                               td Additional Fees:
-                              td.has-text-right 0 PKR
+                              td.has-text-right PKR {{ mem_var.paid_tax }}/-
                             tr
                               td
                                 nuxt-link(to="/fund-manager/finance-details") Account Summary
-                  
-                      //- form.form(v-else @submit.prevent="withdraw")
-                      //-     .columns.is-variable.is-1
-                      //-         .column.is-3
-                      //-             label Withdraw Amount
-                      //-         .column
-                      //-             b-field(:type="(validation.hasError('form.amount')) ? 'is-danger':''" :message="validation.firstError('form.amount')")
-                      //-                 b-input(type="text" placeholder="Enter Amount in Rupees" v-model="form.amount" v-mask="'#######'")
-                      //-     .columns.is-variable.is-1
-                      //-         .column.is-offset-3
-                      //-             button.button.btn-des-1(type="submit" style="margin-top:0")
-                      //-                 img(src="~/assets/img/transfer.png")
-                      //-                 | &nbsp;&nbsp;&nbsp;&nbsp;Withdraw
+
                     b-loading(:is-full-page="false" :active="form.loading" :can-cancel="false")
                     
 </template>
@@ -93,10 +93,16 @@ export default {
     this.form.loading = true;
     await this.$store.dispatch("member/loadWallet");
     await this.$store.dispatch("profile/mayWalletReq");
+    await this.loadAvlb();
     this.form.loading = false;
   },
   data() {
     return {
+      mem_var: {
+        available: 0,
+        pending: 0,
+        paid_tax: 0
+      },
       form: {
         loading: false,
         amount: ""
@@ -109,21 +115,48 @@ export default {
       let validator = Validator.value(value)
         .required()
         .digit()
-        .greaterThanOrEqualTo(100, "Minimum amount transfer 100!")
-        .lessThanOrEqualTo(1000000, "Maximum amount transfer 1000000!");
+        .greaterThanOrEqualTo(100, "Minimum amount withdraw 100!");
 
       if (validator.hasImmediateError()) {
         return validator;
       } else {
         return validator.custom(() => {
-          if (parseInt(self.$store.state.member.wallet) < parseInt(value)) {
-            return "You reached your wallet amount!";
-          }
+          return self.$axios
+            .post("/api/commission/wd_check", {
+              amount: value
+            })
+            .then(res => {
+              if (!res.data.status) {
+                return res.data.message;
+              }
+            });
         });
       }
     }
   },
   methods: {
+    async loadAvlb() {
+      const self = this;
+      await self.$axios
+        .get("/api/profile/load_fin_var")
+        .then(async res => {
+          if (res.data.result) {
+            self.mem_var = {
+              available: parseInt(res.data.result["available"]),
+              pending: parseInt(res.data.result["pending"]),
+              paid_tax: parseInt(res.data.result["paid_tax"])
+            };
+          }
+        })
+        .catch(err => {
+          self.$toast.open({
+            duration: 3000,
+            message: `Server Error!`,
+            position: "is-bottom",
+            type: "is-danger"
+          });
+        });
+    },
     withdraw: function() {
       const self = this;
 
@@ -141,7 +174,8 @@ export default {
               if (res.data.status !== false) {
                 self.reset_form();
                 msg = "Successfully Withdraw Request Submitted.";
-                await self.$store.dispatch("member/loadWallet");
+                await self.loadAvlb();
+                await self.$store.dispatch("notification/load_tbar_list");
               } else {
                 is_err = true;
                 msg = res.data.message;

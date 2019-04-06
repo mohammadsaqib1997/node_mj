@@ -3,7 +3,7 @@
     .box.main-box
       .header.columns.is-gapless
         .column
-          h1 Transfer Funds To User
+          h1 Transfer Funds
       .body
         .section
           .columns.is-gapless
@@ -14,9 +14,9 @@
                 .amount
                   span.placeholder Rs. {{ $store.state.member.wallet }}/-
                   span Shopping Wallet
-                .amount
-                  span.placeholder Rs. 0/-
-                  span Wallet
+                // .amount
+                //   span.placeholder Rs. 0/-
+                //   span Wallet
             .column
               h2.title Transfer Details
               span.heading.has-text-danger Note: Funds transfer only admin.

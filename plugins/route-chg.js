@@ -123,10 +123,10 @@ const authRoutes = [{
         name: "company-chart-sales",
         type_allowed: [0]
     },
-    {
-        name: "campaign-create",
-        type_allowed: [2]
-    },
+    // {
+    //     name: "campaign-create",
+    //     type_allowed: [2]
+    // },
     {
         name: "system-level-campaign",
         type_allowed: [0]

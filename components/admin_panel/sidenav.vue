@@ -394,32 +394,32 @@ export default {
               show: [2]
             }
           ]
-        },
-        {
-          name: "campaign",
-          active: false,
-          img: null,
-          icon: '<i class="fas fa-bullhorn"></i>',
-          url: false,
-          title: "Campaign",
-          show: [2],
-          children: [
-            {
-              name: "create",
-              active: false,
-              url: "/campaign/create",
-              title: "Campaign Create",
-              show: [2]
-            },
-            {
-              name: "completed",
-              active: false,
-              url: "/campaign/completed",
-              title: "Campaign Completed",
-              show: [2]
-            }
-          ]
-        },
+        }
+        // {
+        //   name: "campaign",
+        //   active: false,
+        //   img: null,
+        //   icon: '<i class="fas fa-bullhorn"></i>',
+        //   url: false,
+        //   title: "Campaign",
+        //   show: [2],
+        //   children: [
+        //     {
+        //       name: "create",
+        //       active: false,
+        //       url: "/campaign/create",
+        //       title: "Campaign Create",
+        //       show: [2]
+        //     },
+        //     {
+        //       name: "completed",
+        //       active: false,
+        //       url: "/campaign/completed",
+        //       title: "Campaign Completed",
+        //       show: [2]
+        //     }
+        //   ]
+        // },
         // {
         //   name: "lucky-draw",
         //   active: false,

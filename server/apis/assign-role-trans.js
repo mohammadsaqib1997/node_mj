@@ -264,9 +264,9 @@ router.get('/sale-count', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT COUNT(*) as sale FROM mem_link_crc as mem_lk_crct
+          `SELECT COUNT(*) as sale FROM mem_link_crzb as mem_lk_crzb
           JOIN members as m
-          ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1 AND mem_lk_crct.linked_mem_type=1`,
+          ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1 AND mem_lk_crzb.linked_mem_type=1`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -278,10 +278,10 @@ router.get('/sale-count', (req, res) => {
               let gen_start_year = date.clone().startOf('year').format('YYYY-MM-DD HH:mm:ss'),
                 gen_end_year = date.clone().endOf('year').format('YYYY-MM-DD HH:mm:ss')
               connection.query(
-                `SELECT COUNT(*) as sale FROM mem_link_crc as mem_lk_crct
+                `SELECT COUNT(*) as sale FROM mem_link_crzb as mem_lk_crzb
                 JOIN members as m
-                ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
-                WHERE mem_lk_crct.linked_at>='${gen_start_year}' AND mem_lk_crct.linked_at<='${gen_end_year}' AND mem_lk_crct.linked_mem_type=1`,
+                ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
+                WHERE mem_lk_crzb.linked_at>='${gen_start_year}' AND mem_lk_crzb.linked_at<='${gen_end_year}' AND mem_lk_crzb.linked_mem_type=1`,
                 function (error, result) {
                   if (error) {
                     err_hdl(error);
@@ -291,10 +291,10 @@ router.get('/sale-count', (req, res) => {
                     let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
                       gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
                     connection.query(
-                      `SELECT COUNT(*) as sale FROM mem_link_crc as mem_lk_crct
+                      `SELECT COUNT(*) as sale FROM mem_link_crzb as mem_lk_crzb
                       JOIN members as m
-                      ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
-                      WHERE mem_lk_crct.linked_at>='${gen_start_month}' AND mem_lk_crct.linked_at<='${gen_end_month}' AND mem_lk_crct.linked_mem_type=1`,
+                      ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
+                      WHERE mem_lk_crzb.linked_at>='${gen_start_month}' AND mem_lk_crzb.linked_at<='${gen_end_month}' AND mem_lk_crzb.linked_mem_type=1`,
                       function (error, result) {
                         if (error) {
                           err_hdl(error);
@@ -336,7 +336,7 @@ router.get('/sale-region', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT id, name FROM crc_list WHERE type=1`,
+          `SELECT id, name FROM crzb_list WHERE type=1`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -348,14 +348,16 @@ router.get('/sale-region', (req, res) => {
                   COUNT(*) as sale,
                   l_r.id,
                   l_r.name
-                FROM mem_link_crc as mem_lk_crct
+                FROM mem_link_crzb as mem_lk_crzb
                 JOIN members as m
-                ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
-                LEFT JOIN crc_list as l_z
-                ON mem_lk_crct.crct_id = l_z.id
-                LEFT JOIN crc_list as l_r
+                ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
+                LEFT JOIN crzb_list as l_b
+                ON mem_lk_crzb.crzb_id = l_b.id
+                LEFT JOIN crzb_list as l_z
+                ON l_b.parent_id = l_z.id
+                LEFT JOIN crzb_list as l_r
                 ON l_z.parent_id = l_r.id
-                WHERE mem_lk_crct.linked_mem_type=1
+                WHERE mem_lk_crzb.linked_mem_type=1
                 group by l_r.id`,
                 function (error, result) {
                   if (error) {
@@ -403,7 +405,7 @@ router.get('/sale-country', (req, res) => {
 
       db_util.connectTrans(connection, function (resolve, err_hdl) {
         connection.query(
-          `SELECT id as c_id, name as c_name FROM crc_list WHERE type=0`,
+          `SELECT id as c_id, name as c_name FROM crzb_list WHERE type=0`,
           function (error, result) {
             if (error) {
               err_hdl(error);
@@ -416,18 +418,20 @@ router.get('/sale-country', (req, res) => {
                   l_c.id as c_id,
                   l_c.name as c_name,
                   l_c.type as type
-                FROM mem_link_crc as mem_lk_crct
+                FROM mem_link_crzb as mem_lk_crzb
                 JOIN members as m
-                ON mem_lk_crct.member_id=m.id AND m.is_paid_m=1
+                ON mem_lk_crzb.member_id=m.id AND m.is_paid_m=1
 
-                LEFT JOIN crc_list as l_z
-                ON mem_lk_crct.crct_id = l_z.id
-                LEFT JOIN crc_list as l_r
+                LEFT JOIN crzb_list as l_b
+                ON mem_lk_crzb.crzb_id = l_b.id
+                LEFT JOIN crzb_list as l_z
+                ON l_b.parent_id = l_z.id
+                LEFT JOIN crzb_list as l_r
                 ON l_z.parent_id = l_r.id
-                LEFT JOIN crc_list as l_c
+                LEFT JOIN crzb_list as l_c
                 ON l_r.parent_id = l_c.id
 
-                WHERE mem_lk_crct.linked_mem_type=1
+                WHERE mem_lk_crzb.linked_mem_type=1
                 group by l_c.id`,
                 function (error, result) {
                   if (error) {

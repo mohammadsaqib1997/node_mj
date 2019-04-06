@@ -50,7 +50,7 @@
           .column
             .img-cont
               img(src="~/assets/img/hm-op-img-1.png")
-    hmPgPromotion(:md_act="true")
+    // hmPgPromotion(:md_act="true")
 </template>
 
 <script>
