@@ -16,8 +16,8 @@ router.use(function (req, res, next) {
   }
 })
 
-router.get('/sale-list/:hod_id/:type', function (req, res) {
-  if (!/^[0-9]*$/.test(req.params.hod_id) || !/^1$|^2$|^3$|^4$/.test(req.params.type)) {
+router.get('/zonal-sale-list/:hod_id', (req, res) => {
+  if (!/^[0-9]*$/.test(req.params.hod_id)) {
     return res.status(500).json({
       error: "Invalid Parameters!"
     })
@@ -47,108 +47,31 @@ router.get('/sale-list/:hod_id/:type', function (req, res) {
 
       connection.query(
         `select 
-            COUNT(*) as tot_rows
-            from (
-              select crzbf_ls.code
-              from assign_roles_trans as asn_r_tr
-              
-              join mem_link_franchise as mem_lk_fr
-              on asn_r_tr.linked_member_id = mem_lk_fr.member_id
-              
-              join(
-                select 
-                  l1.id as l1_id,
-                  if(
-                    ${req.params.type}=4, 
-                    l1.id, 
-                    if(
-                      ${req.params.type}=3,
-                      l2.id,
-                      if(
-                        ${req.params.type}=2,
-                        l3.id,
-                        if(
-                          ${req.params.type}=1,
-                          l4.id,
-                          null
-                          )
-                        )
-                      )
-                    ) as crzbf_id,
-                    get_crzbf_name_type(if(
-                      ${req.params.type}=4, 
-                      l1.id, 
-                      if(
-                        ${req.params.type}=3,
-                        l2.id,
-                        if(
-                          ${req.params.type}=2,
-                          l3.id,
-                          if(
-                            ${req.params.type}=1,
-                            l4.id,
-                            null
-                            )
-                          )
-                        )
-                    ), ${req.params.type}) as name,
-                    get_crzbf_code_type(if(
-                      ${req.params.type}=4, 
-                      l1.id, 
-                      if(
-                        ${req.params.type}=3,
-                        l2.id,
-                        if(
-                          ${req.params.type}=2,
-                          l3.id,
-                          if(
-                            ${req.params.type}=1,
-                            l4.id,
-                            null
-                            )
-                          )
-                        )
-                    ), ${req.params.type}) as code
-                from franchises as l1
-                join crzb_list as l2
-                on l1.branch_id = l2.id
-                join crzb_list as l3
-                on l2.parent_id = l3.id
-                join crzb_list as l4
-                on l3.parent_id = l4.id
-              ) as crzbf_ls
-              on mem_lk_fr.franchise_id = crzbf_ls.l1_id
-              
-              left join 
-                (
-                  select 
-                    asn_r_tr.member_id, 
-                    asn_r_tr.linked_member_id, 
-                    asn_r_tr.crzb_id as crzbf_id
-                  from assign_roles_trans as asn_r_tr
-              
-                  union all
-              
-                  select 
-                    asn_r_tr_fr.member_id, 
-                    asn_r_tr_fr.linked_member_id, 
-                    asn_r_tr_fr.fr_id as crzbf_id
-                  from assign_roles_trans_fr as asn_r_tr_fr
-                  ) as tr_childs
-              on mem_lk_fr.member_id = tr_childs.linked_member_id and tr_childs.crzbf_id <> ${req.params.hod_id} and tr_childs.crzbf_id = crzbf_ls.crzbf_id
-              
-              left join members as asn_mem
-              on tr_childs.member_id = asn_mem.id
-              
-              where asn_r_tr.member_id = ${req.decoded.data.user_id} and asn_r_tr.crzb_id = ${req.params.hod_id} and (
-                crzbf_ls.code collate utf8mb4_general_ci like '%${search}%' or 
-                  crzbf_ls.name collate utf8mb4_general_ci like '%${search}%' or
-                  asn_mem.user_asn_id like '%${search}%' or
-                  asn_mem.full_name like '%${search}%' 
-              )
-              
-              group by crzbf_ls.code, crzbf_ls.name, asn_mem.id
-            ) as all_data`,
+        COUNT(*) as tot_rows
+        from (
+          select 
+            get_crzb_rd_code(b_list.id) as crzb_code,
+            get_crzb_with_p_name(b_list.id) as crzb_name
+
+          from mem_link_crzb as mem_lk_crzb
+          join members as m
+          on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+          left join crzb_list as b_list
+          on mem_lk_crzb.crzb_id = b_list.id
+          left join crzb_list as z_list
+          on b_list.parent_id = z_list.id
+
+          join assign_roles_trans as asn_role_tns
+          on z_list.id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+
+          where mem_lk_crzb.linked_mem_type=1 and z_list.id=${req.params.hod_id} and asn_role_tns.member_id=${req.decoded.data.user_id}
+          group by b_list.id
+        ) as all_data
+        where 
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+        `,
         function (error, result) {
           if (error) {
             connection.release()
@@ -168,112 +91,42 @@ router.get('/sale-list/:hod_id/:type', function (req, res) {
             let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
               gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select 
-                crzbf_ls.code,
-                crzbf_ls.name,
-                asn_mem.user_asn_id as mj_id,
-                asn_mem.full_name as mj_name,
-                count(*) as total_sale,
-                sum(ifnull(get_mem_lk_exist_month(mem_lk_fr.member_id, '${gen_start_month}', '${gen_end_month}'), 0)) as month_sale
-              from assign_roles_trans as asn_r_tr
-              
-              join mem_link_franchise as mem_lk_fr
-              on asn_r_tr.linked_member_id = mem_lk_fr.member_id
-              
-              join(
+              `select all_data.* from (
                 select 
-                  l1.id as l1_id,
-                  if(
-                    ${req.params.type}=4, 
-                    l1.id, 
-                    if(
-                      ${req.params.type}=3,
-                      l2.id,
-                      if(
-                        ${req.params.type}=2,
-                        l3.id,
-                        if(
-                          ${req.params.type}=1,
-                          l4.id,
-                          null
-                          )
-                        )
-                      )
-                    ) as crzbf_id,
-                    get_crzbf_name_type(if(
-                      ${req.params.type}=4, 
-                      l1.id, 
-                      if(
-                        ${req.params.type}=3,
-                        l2.id,
-                        if(
-                          ${req.params.type}=2,
-                          l3.id,
-                          if(
-                            ${req.params.type}=1,
-                            l4.id,
-                            null
-                            )
-                          )
-                        )
-                    ), ${req.params.type}) as name,
-                    get_crzbf_code_type(if(
-                      ${req.params.type}=4, 
-                      l1.id, 
-                      if(
-                        ${req.params.type}=3,
-                        l2.id,
-                        if(
-                          ${req.params.type}=2,
-                          l3.id,
-                          if(
-                            ${req.params.type}=1,
-                            l4.id,
-                            null
-                            )
-                          )
-                        )
-                    ), ${req.params.type}) as code
-                from franchises as l1
-                join crzb_list as l2
-                on l1.branch_id = l2.id
-                join crzb_list as l3
-                on l2.parent_id = l3.id
-                join crzb_list as l4
-                on l3.parent_id = l4.id
-              ) as crzbf_ls
-              on mem_lk_fr.franchise_id = crzbf_ls.l1_id
+                  get_crzb_rd_code(b_list.id) as crzb_code,
+                  get_crzb_with_p_name(b_list.id) as crzb_name,
+                  count(*) as total_sale,
+                  sum(if(m_tb_sale.member_id is null, 0, 1)) as month_sale
+
+                from mem_link_crzb as mem_lk_crzb
+                join members as m
+                on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+                left join (
+                select 
+                  mem_lk.member_id,
+                  mem_lk.linked_at
+                from mem_link_crzb as mem_lk
+                ) as m_tb_sale
+                on mem_lk_crzb.member_id = m_tb_sale.member_id and (m_tb_sale.linked_at >= '${gen_start_month}' and m_tb_sale.linked_at <= '${gen_end_month}')
+
+                left join crzb_list as b_list
+                on mem_lk_crzb.crzb_id = b_list.id
+                left join crzb_list as z_list
+                on b_list.parent_id = z_list.id
+
+                join assign_roles_trans as asn_role_tns
+                on z_list.id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+
+                where mem_lk_crzb.linked_mem_type=1 and z_list.id=${req.params.hod_id} and asn_role_tns.member_id=${req.decoded.data.user_id}
+                group by b_list.id
+              ) as all_data
               
-              left join 
-                (
-                  select 
-                    asn_r_tr.member_id, 
-                    asn_r_tr.linked_member_id, 
-                    asn_r_tr.crzb_id as crzbf_id
-                  from assign_roles_trans as asn_r_tr
+              where 
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
               
-                  union all
-              
-                  select 
-                    asn_r_tr_fr.member_id, 
-                    asn_r_tr_fr.linked_member_id, 
-                    asn_r_tr_fr.fr_id as crzbf_id
-                  from assign_roles_trans_fr as asn_r_tr_fr
-                  ) as tr_childs
-              on mem_lk_fr.member_id = tr_childs.linked_member_id and tr_childs.crzbf_id <> ${req.params.hod_id} and tr_childs.crzbf_id = crzbf_ls.crzbf_id
-              
-              left join members as asn_mem
-              on tr_childs.member_id = asn_mem.id
-              
-              where asn_r_tr.member_id = ${req.decoded.data.user_id} and asn_r_tr.crzb_id = ${req.params.hod_id} and (
-                crzbf_ls.code collate utf8mb4_general_ci like '%${search}%' or 
-                  crzbf_ls.name collate utf8mb4_general_ci like '%${search}%' or
-                  asn_mem.user_asn_id like '%${search}%' or
-                  asn_mem.full_name like '%${search}%' 
-              )
-              
-              group by crzbf_ls.code, crzbf_ls.name, asn_mem.id
-              order by total_sale desc, month_sale desc
+              order by all_data.total_sale desc, all_data.month_sale desc
           
               LIMIT ${limit}
               OFFSET ${offset}`,
@@ -296,8 +149,8 @@ router.get('/sale-list/:hod_id/:type', function (req, res) {
   })
 })
 
-router.get('/commission-list/:hod_id/:type', function (req, res) {
-  if (!/^[0-9]*$/.test(req.params.hod_id) || !/^1$|^2$|^3$|^4$/.test(req.params.type)) {
+router.get('/region-sale-list/:hod_id', (req, res) => {
+  if (!/^[0-9]*$/.test(req.params.hod_id)) {
     return res.status(500).json({
       error: "Invalid Parameters!"
     })
@@ -327,84 +180,44 @@ router.get('/commission-list/:hod_id/:type', function (req, res) {
 
       connection.query(
         `select 
-          COUNT(*) as tot_rows
-        from assign_roles_trans as trans
-        join assign_roles_trans_fr as trans_fr
-        on trans.linked_member_id = trans_fr.linked_member_id
-        
-        join(
+        COUNT(*) as tot_rows
+        from (
           select 
-            l1.id as l1_id,
-            if(
-              ${req.params.type}=4, 
-              l1.id, 
-              if(
-                ${req.params.type}=3,
-                l2.id,
-                if(
-                  ${req.params.type}=2,
-                  l3.id,
-                  if(
-                    ${req.params.type}=1,
-                    l4.id,
-                    null
-                    )
-                  )
-                )
-            ) as crzbf_id,
-            get_crzbf_name_type(if(
-              ${req.params.type}=4, 
-              l1.id, 
-              if(
-                ${req.params.type}=3,
-                l2.id,
-                if(
-                  ${req.params.type}=2,
-                  l3.id,
-                  if(
-                    ${req.params.type}=1,
-                    l4.id,
-                    null
-                    )
-                  )
-                )
-            ), ${req.params.type}) as name,
-            get_crzbf_code_type(if(
-              ${req.params.type}=4, 
-              l1.id, 
-              if(
-                ${req.params.type}=3,
-                l2.id,
-                if(
-                  ${req.params.type}=2,
-                  l3.id,
-                  if(
-                    ${req.params.type}=1,
-                    l4.id,
-                    null
-                    )
-                  )
-                )
-            ), ${req.params.type}) as code
-          from franchises as l1
-          join crzb_list as l2
-          on l1.branch_id = l2.id
-          join crzb_list as l3
-          on l2.parent_id = l3.id
-          join crzb_list as l4
-          on l3.parent_id = l4.id
-          ) as crzbf_ls
-        on trans_fr.fr_id = crzbf_ls.l1_id
-        
-        join members as j_mem
-        on trans.linked_member_id = j_mem.id
-        
-        where trans.member_id = ${req.decoded.data.user_id} and trans.crzb_id = ${req.params.hod_id} and (
-          crzbf_ls.code collate utf8mb4_general_ci like '%${search}%' or
-          crzbf_ls.name collate utf8mb4_general_ci like '%${search}%' or
-          j_mem.user_asn_id like '%${search}%' or
-          j_mem.full_name like '%${search}%'
-        )`,
+            asn_mem.user_asn_id as mj_id,
+            asn_mem.full_name as mj_name,
+            get_crzb_rd_code(z_list.id) as crzb_code,
+            get_crzb_with_p_name(z_list.id) as crzb_name
+          from assign_roles as asn_role
+
+          join assign_roles_trans as asn_trans
+          on asn_role.crzb_id=asn_trans.crzb_id and asn_role.member_id=asn_trans.member_id
+
+          join mem_link_crzb as mem_lk_crzb
+          on asn_trans.linked_member_id=mem_lk_crzb.member_id
+
+          join members as m
+          on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+          left join crzb_list as b_list
+          on mem_lk_crzb.crzb_id = b_list.id
+          left join crzb_list as z_list
+          on b_list.parent_id = z_list.id
+
+          left join assign_roles_trans as asn_mem_tns
+          on z_list.id = asn_mem_tns.crzb_id and mem_lk_crzb.member_id = asn_mem_tns.linked_member_id
+
+          left join members as asn_mem
+          on asn_mem_tns.member_id = asn_mem.id
+
+          where asn_role.crzb_id=${req.params.hod_id} and asn_role.member_id=${req.decoded.data.user_id}
+          group by z_list.id, asn_mem_tns.member_id
+        ) as all_data
+        where 
+          all_data.mj_id like '%${search}%' or
+          all_data.mj_name like '%${search}%' or
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+        `,
         function (error, result) {
           if (error) {
             connection.release()
@@ -420,96 +233,637 @@ router.get('/commission-list/:hod_id/:type', function (req, res) {
               })
             }
             let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select 
-                trans.id,
-                crzbf_ls.code,
-                crzbf_ls.name,
-                j_mem.user_asn_id as j_mj_id,
-                j_mem.full_name as j_mj_name,
-                trans.amount,
-                trans.created_at as issue_date
-                  
-              from assign_roles_trans as trans
-              join assign_roles_trans_fr as trans_fr
-              on trans.linked_member_id = trans_fr.linked_member_id
-              
-              join(
+              `select all_data.* from (
                 select 
-                  l1.id as l1_id,
-                  if(
-                    ${req.params.type}=4, 
-                    l1.id, 
-                    if(
-                      ${req.params.type}=3,
-                      l2.id,
-                      if(
-                        ${req.params.type}=2,
-                        l3.id,
-                        if(
-                          ${req.params.type}=1,
-                          l4.id,
-                          null
-                          )
-                        )
-                      )
-                  ) as crzbf_id,
-                  get_crzbf_name_type(if(
-                    ${req.params.type}=4, 
-                    l1.id, 
-                    if(
-                      ${req.params.type}=3,
-                      l2.id,
-                      if(
-                        ${req.params.type}=2,
-                        l3.id,
-                        if(
-                          ${req.params.type}=1,
-                          l4.id,
-                          null
-                          )
-                        )
-                      )
-                  ), ${req.params.type}) as name,
-                  get_crzbf_code_type(if(
-                    ${req.params.type}=4, 
-                    l1.id, 
-                    if(
-                      ${req.params.type}=3,
-                      l2.id,
-                      if(
-                        ${req.params.type}=2,
-                        l3.id,
-                        if(
-                          ${req.params.type}=1,
-                          l4.id,
-                          null
-                          )
-                        )
-                      )
-                  ), ${req.params.type}) as code
-                from franchises as l1
-                join crzb_list as l2
-                on l1.branch_id = l2.id
-                join crzb_list as l3
-                on l2.parent_id = l3.id
-                join crzb_list as l4
-                on l3.parent_id = l4.id
-                ) as crzbf_ls
-              on trans_fr.fr_id = crzbf_ls.l1_id
+                  asn_mem.user_asn_id as mj_id,
+                  asn_mem.full_name as mj_name,
+                  get_crzb_rd_code(z_list.id) as crzb_code,
+                  get_crzb_with_p_name(z_list.id) as crzb_name,
+                  count(*) as total_sale,
+                  sum(if(m_tb_sale.member_id is null, 0, 1)) as month_sale
+                from assign_roles as asn_role
+
+                join assign_roles_trans as asn_trans
+                on asn_role.crzb_id=asn_trans.crzb_id and asn_role.member_id=asn_trans.member_id
+
+                join mem_link_crzb as mem_lk_crzb
+                on asn_trans.linked_member_id=mem_lk_crzb.member_id
+
+                left join (
+                select 
+                  mem_lk.member_id,
+                  mem_lk.linked_at
+                from mem_link_crzb as mem_lk
+                ) as m_tb_sale
+                on mem_lk_crzb.member_id = m_tb_sale.member_id and (m_tb_sale.linked_at >= '${gen_start_month}' and m_tb_sale.linked_at <= '${gen_end_month}')
+
+                join members as m
+                on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+                left join crzb_list as b_list
+                on mem_lk_crzb.crzb_id = b_list.id
+                left join crzb_list as z_list
+                on b_list.parent_id = z_list.id
+
+                left join assign_roles_trans as asn_mem_tns
+                on z_list.id = asn_mem_tns.crzb_id and mem_lk_crzb.member_id = asn_mem_tns.linked_member_id
+
+                left join members as asn_mem
+                on asn_mem_tns.member_id = asn_mem.id
+
+                where asn_role.crzb_id=${req.params.hod_id} and asn_role.member_id=${req.decoded.data.user_id}
+                group by z_list.id, asn_mem_tns.member_id
+              ) as all_data
               
-              join members as j_mem
-              on trans.linked_member_id = j_mem.id
+              where 
+                all_data.mj_id like '%${search}%' or
+                all_data.mj_name like '%${search}%' or
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
               
+              order by all_data.total_sale desc, all_data.month_sale desc
+          
+              LIMIT ${limit}
+              OFFSET ${offset}`,
+              function (error, results) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
+  })
+})
+
+router.get('/country-sale-list/:hod_id', (req, res) => {
+  if (!/^[0-9]*$/.test(req.params.hod_id)) {
+    return res.status(500).json({
+      error: "Invalid Parameters!"
+    })
+  }
+
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `select 
+        COUNT(*) as tot_rows
+        from (
+          select 
+            asn_mem.user_asn_id as mj_id,
+            asn_mem.full_name as mj_name,
+            get_crzb_rd_code(r_list.id) as crzb_code,
+            get_crzb_with_p_name(r_list.id) as crzb_name
+          from assign_roles as asn_role
+
+          join assign_roles_trans as asn_trans
+          on asn_role.crzb_id=asn_trans.crzb_id and asn_role.member_id=asn_trans.member_id
+
+          join mem_link_crzb as mem_lk_crzb
+          on asn_trans.linked_member_id=mem_lk_crzb.member_id
+
+          join members as m
+          on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+          left join crzb_list as b_list
+          on mem_lk_crzb.crzb_id = b_list.id
+          left join crzb_list as z_list
+          on b_list.parent_id = z_list.id
+          left join crzb_list as r_list
+          on z_list.parent_id = r_list.id
+
+          left join assign_roles_trans as asn_mem_tns
+          on r_list.id = asn_mem_tns.crzb_id and mem_lk_crzb.member_id = asn_mem_tns.linked_member_id
+
+          left join members as asn_mem
+          on asn_mem_tns.member_id = asn_mem.id
+
+          where asn_role.crzb_id=${req.params.hod_id} and asn_role.member_id=${req.decoded.data.user_id}
+          group by r_list.id, asn_mem_tns.member_id
+        ) as all_data
+        where 
+          all_data.mj_id like '%${search}%' or
+          all_data.mj_name like '%${search}%' or
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+        `,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (result.length < 1) {
+              connection.release()
+              return res.json({
+                data: [],
+                tot_rows: 0
+              })
+            }
+            let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
+            connection.query(
+              `select all_data.* from (
+                select 
+                  asn_mem.user_asn_id as mj_id,
+                  asn_mem.full_name as mj_name,
+                  get_crzb_rd_code(r_list.id) as crzb_code,
+                  get_crzb_with_p_name(r_list.id) as crzb_name,
+                  count(*) as total_sale,
+                  sum(if(m_tb_sale.member_id is null, 0, 1)) as month_sale
+                from assign_roles as asn_role
+
+                join assign_roles_trans as asn_trans
+                on asn_role.crzb_id=asn_trans.crzb_id and asn_role.member_id=asn_trans.member_id
+
+                join mem_link_crzb as mem_lk_crzb
+                on asn_trans.linked_member_id=mem_lk_crzb.member_id
+
+                left join (
+                select 
+                  mem_lk.member_id,
+                  mem_lk.linked_at
+                from mem_link_crzb as mem_lk
+                ) as m_tb_sale
+                on mem_lk_crzb.member_id = m_tb_sale.member_id and (m_tb_sale.linked_at >= '${gen_start_month}' and m_tb_sale.linked_at <= '${gen_end_month}')
+
+                join members as m
+                on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+                left join crzb_list as b_list
+                on mem_lk_crzb.crzb_id = b_list.id
+                left join crzb_list as z_list
+                on b_list.parent_id = z_list.id
+                left join crzb_list as r_list
+                on z_list.parent_id = r_list.id
+
+                left join assign_roles_trans as asn_mem_tns
+                on r_list.id = asn_mem_tns.crzb_id and mem_lk_crzb.member_id = asn_mem_tns.linked_member_id
+
+                left join members as asn_mem
+                on asn_mem_tns.member_id = asn_mem.id
+
+                where asn_role.crzb_id=${req.params.hod_id} and asn_role.member_id=${req.decoded.data.user_id}
+                group by r_list.id, asn_mem_tns.member_id
+              ) as all_data
               
-              where trans.member_id = ${req.decoded.data.user_id} and trans.crzb_id = ${req.params.hod_id} and (
-                crzbf_ls.code collate utf8mb4_general_ci like '%${search}%' or
-                crzbf_ls.name collate utf8mb4_general_ci like '%${search}%' or
-                j_mem.user_asn_id like '%${search}%' or
-                j_mem.full_name like '%${search}%'
-              )
+              where 
+                all_data.mj_id like '%${search}%' or
+                all_data.mj_name like '%${search}%' or
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
               
-              order by trans.id desc
+              order by all_data.total_sale desc, all_data.month_sale desc
+          
+              LIMIT ${limit}
+              OFFSET ${offset}`,
+              function (error, results) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
+  })
+})
+
+router.get('/country-comm-list/:hod_id', (req, res) => {
+  if (!/^[0-9]*$/.test(req.params.hod_id)) {
+    return res.status(500).json({
+      error: "Invalid Parameters!"
+    })
+  }
+
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `select 
+        COUNT(*) as tot_rows
+        from (
+          SELECT 
+            asn_mem.user_asn_id as mj_id,
+            asn_mem.full_name as mj_name,
+            get_crzb_rd_code(r_l.id) as crzb_code,
+            get_crzb_with_p_name(r_l.id) as crzb_name
+          FROM assign_roles_trans as asn_trans
+
+          join mem_link_crzb as mem_lk_crzb
+          on asn_trans.linked_member_id = mem_lk_crzb.member_id
+
+          join crzb_list as b_l
+          on mem_lk_crzb.crzb_id = b_l.id
+          join crzb_list as z_l
+          on b_l.parent_id = z_l.id
+          join crzb_list as r_l
+          on z_l.parent_id = r_l.id
+
+          left join assign_roles_trans as asn_mem_trn
+          on mem_lk_crzb.member_id = asn_mem_trn.linked_member_id and asn_mem_trn.crzb_id = r_l.id
+
+          left join members as asn_mem
+          on asn_mem_trn.member_id= asn_mem.id
+
+          where asn_trans.member_id=${req.decoded.data.user_id} and asn_trans.crzb_id=${req.params.hod_id}
+          group by asn_mem.id, r_l.id
+        ) as all_data
+        where 
+          all_data.mj_id like '%${search}%' or
+          all_data.mj_name like '%${search}%' or
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+        `,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (result.length < 1) {
+              connection.release()
+              return res.json({
+                data: [],
+                tot_rows: 0
+              })
+            }
+            let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
+            connection.query(
+              `select all_data.* from (
+                SELECT 
+                  asn_mem.user_asn_id as mj_id,
+                  asn_mem.full_name as mj_name,
+                  get_crzb_rd_code(r_l.id) as crzb_code,
+                  get_crzb_with_p_name(r_l.id) as crzb_name,
+                  sum(asn_trans.amount) as total_comm,
+                  sum(if(m_tb_sale.member_id is null, 0, asn_trans.amount)) as month_comm
+                FROM assign_roles_trans as asn_trans
+
+                join mem_link_crzb as mem_lk_crzb
+                on asn_trans.linked_member_id = mem_lk_crzb.member_id
+
+                left join (
+                select 
+                  mem_lk.member_id,
+                  mem_lk.linked_at
+                from mem_link_crzb as mem_lk
+                ) as m_tb_sale
+                on mem_lk_crzb.member_id = m_tb_sale.member_id and (m_tb_sale.linked_at >= '${gen_start_month}' and m_tb_sale.linked_at <= '${gen_end_month}')
+
+                join crzb_list as b_l
+                on mem_lk_crzb.crzb_id = b_l.id
+                join crzb_list as z_l
+                on b_l.parent_id = z_l.id
+                join crzb_list as r_l
+                on z_l.parent_id = r_l.id
+
+                left join assign_roles_trans as asn_mem_trn
+                on mem_lk_crzb.member_id = asn_mem_trn.linked_member_id and asn_mem_trn.crzb_id = r_l.id
+
+                left join members as asn_mem
+                on asn_mem_trn.member_id= asn_mem.id
+
+                where asn_trans.member_id=${req.decoded.data.user_id} and asn_trans.crzb_id=${req.params.hod_id}
+                group by asn_mem.id, r_l.id
+              ) as all_data
+              
+              where 
+                all_data.mj_id like '%${search}%' or
+                all_data.mj_name like '%${search}%' or
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              
+              order by all_data.total_comm desc, all_data.month_comm desc
+          
+              LIMIT ${limit}
+              OFFSET ${offset}`,
+              function (error, results) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
+  })
+})
+
+router.get('/region-comm-list/:hod_id', (req, res) => {
+  if (!/^[0-9]*$/.test(req.params.hod_id)) {
+    return res.status(500).json({
+      error: "Invalid Parameters!"
+    })
+  }
+
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `select 
+        COUNT(*) as tot_rows
+        from (
+          SELECT 
+            asn_mem.user_asn_id as mj_id,
+            asn_mem.full_name as mj_name,
+            get_crzb_rd_code(z_l.id) as crzb_code,
+            get_crzb_with_p_name(z_l.id) as crzb_name
+          FROM assign_roles_trans as asn_trans
+
+          join mem_link_crzb as mem_lk_crzb
+          on asn_trans.linked_member_id = mem_lk_crzb.member_id
+
+          join crzb_list as b_l
+          on mem_lk_crzb.crzb_id = b_l.id
+          join crzb_list as z_l
+          on b_l.parent_id = z_l.id
+
+          left join assign_roles_trans as asn_mem_trn
+          on mem_lk_crzb.member_id = asn_mem_trn.linked_member_id and asn_mem_trn.crzb_id = z_l.id
+
+          left join members as asn_mem
+          on asn_mem_trn.member_id= asn_mem.id
+
+          where asn_trans.member_id=${req.decoded.data.user_id} and asn_trans.crzb_id=${req.params.hod_id}
+          group by asn_mem.id, z_l.id
+        ) as all_data
+        where 
+          all_data.mj_id like '%${search}%' or
+          all_data.mj_name like '%${search}%' or
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+        `,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (result.length < 1) {
+              connection.release()
+              return res.json({
+                data: [],
+                tot_rows: 0
+              })
+            }
+            let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
+            connection.query(
+              `select all_data.* from (
+                SELECT 
+                  asn_mem.user_asn_id as mj_id,
+                  asn_mem.full_name as mj_name,
+                  get_crzb_rd_code(z_l.id) as crzb_code,
+                  get_crzb_with_p_name(z_l.id) as crzb_name,
+                  sum(asn_trans.amount) as total_comm,
+                  sum(if(m_tb_sale.member_id is null, 0, asn_trans.amount)) as month_comm
+                FROM assign_roles_trans as asn_trans
+
+                join mem_link_crzb as mem_lk_crzb
+                on asn_trans.linked_member_id = mem_lk_crzb.member_id
+
+                left join (
+                select 
+                  mem_lk.member_id,
+                  mem_lk.linked_at
+                from mem_link_crzb as mem_lk
+                ) as m_tb_sale
+                on mem_lk_crzb.member_id = m_tb_sale.member_id and (m_tb_sale.linked_at >= '${gen_start_month}' and m_tb_sale.linked_at <= '${gen_end_month}')
+
+                join crzb_list as b_l
+                on mem_lk_crzb.crzb_id = b_l.id
+                join crzb_list as z_l
+                on b_l.parent_id = z_l.id
+
+                left join assign_roles_trans as asn_mem_trn
+                on mem_lk_crzb.member_id = asn_mem_trn.linked_member_id and asn_mem_trn.crzb_id = z_l.id
+
+                left join members as asn_mem
+                on asn_mem_trn.member_id= asn_mem.id
+
+                where asn_trans.member_id=${req.decoded.data.user_id} and asn_trans.crzb_id=${req.params.hod_id}
+                group by asn_mem.id, z_l.id
+              ) as all_data
+              
+              where 
+                all_data.mj_id like '%${search}%' or
+                all_data.mj_name like '%${search}%' or
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              
+              order by all_data.total_comm desc, all_data.month_comm desc
+          
+              LIMIT ${limit}
+              OFFSET ${offset}`,
+              function (error, results) {
+                connection.release()
+                if (error) {
+                  res.status(500).json({
+                    error
+                  })
+                } else {
+                  res.json({
+                    data: results,
+                    tot_rows
+                  })
+                }
+              })
+          }
+        })
+    }
+  })
+})
+
+router.get('/zonal-comm-list/:hod_id', (req, res) => {
+  if (!/^[0-9]*$/.test(req.params.hod_id)) {
+    return res.status(500).json({
+      error: "Invalid Parameters!"
+    })
+  }
+
+  db.getConnection(async function (err, connection) {
+    if (err) {
+      res.status(500).json({
+        err
+      })
+    } else {
+      let offset = 0,
+        limit = 10,
+        search = ""
+
+      if (/^10$|^20$|^50$|^100$/.test(req.query.limit)) {
+        limit = req.query.limit
+      }
+
+      if (req.query.page && /^[0-9]*$/.test(req.query.page)) {
+        offset = (parseInt(req.query.page) - 1) * limit
+      }
+
+      if (req.query.search) {
+        search = req.query.search
+      }
+
+      connection.query(
+        `select 
+        COUNT(*) as tot_rows
+        from (
+          SELECT 
+            get_crzb_rd_code(mem_lk_crzb.crzb_id) as crzb_code,
+            get_crzb_with_p_name(mem_lk_crzb.crzb_id) as crzb_name
+          FROM assign_roles_trans as asn_trans
+
+          join mem_link_crzb as mem_lk_crzb
+          on asn_trans.linked_member_id = mem_lk_crzb.member_id
+
+          where asn_trans.member_id=${req.decoded.data.user_id} and asn_trans.crzb_id=${req.params.hod_id}
+          group by mem_lk_crzb.crzb_id
+        ) as all_data
+        where 
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+        `,
+        function (error, result) {
+          if (error) {
+            connection.release()
+            res.status(500).json({
+              error
+            })
+          } else {
+            if (result.length < 1) {
+              connection.release()
+              return res.json({
+                data: [],
+                tot_rows: 0
+              })
+            }
+            let tot_rows = result[0].tot_rows
+            let date = moment()
+            let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+              gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
+            connection.query(
+              `select all_data.* from (
+                SELECT 
+                  get_crzb_rd_code(mem_lk_crzb.crzb_id) as crzb_code,
+                  get_crzb_with_p_name(mem_lk_crzb.crzb_id) as crzb_name,
+                  sum(asn_trans.amount) as total_comm,
+                  sum(if(m_tb_sale.member_id is null, 0, asn_trans.amount)) as month_comm
+                FROM assign_roles_trans as asn_trans
+
+                join mem_link_crzb as mem_lk_crzb
+                on asn_trans.linked_member_id = mem_lk_crzb.member_id
+
+                left join (
+                select 
+                  mem_lk.member_id,
+                  mem_lk.linked_at
+                from mem_link_crzb as mem_lk
+                ) as m_tb_sale
+                on mem_lk_crzb.member_id = m_tb_sale.member_id and (m_tb_sale.linked_at >= '${gen_start_month}' and m_tb_sale.linked_at <= '${gen_end_month}')
+
+                where asn_trans.member_id=${req.decoded.data.user_id} and asn_trans.crzb_id=${req.params.hod_id}
+                group by mem_lk_crzb.crzb_id
+              ) as all_data
+              
+              where
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              
+              order by all_data.total_comm desc, all_data.month_comm desc
           
               LIMIT ${limit}
               OFFSET ${offset}`,
@@ -688,64 +1042,6 @@ router.get('/commission-count/:hod_id', (req, res) => {
 
 })
 
-router.get('/top5-branch-childs-sale/:hod_id', (req, res) => {
-  if (!/^[0-9]*$/.test(req.params.hod_id)) {
-    return res.status(500).json({
-      error: "Invalid HOD ID!"
-    })
-  }
-  db.getConnection(function (error, connection) {
-    if (error) {
-      res.status(500).json({
-        error
-      })
-    } else {
-
-      let data = []
-
-      db_util.connectTrans(connection, function (resolve, err_hdl) {
-        connection.query(
-          `select 
-                fr.name,
-                count(fr.id) as sale
-            from assign_roles as asn_role
-            
-            left join assign_roles_trans as asnr_tr 
-            on asn_role.member_id = asnr_tr.member_id and asn_role.crzb_id = asnr_tr.crzb_id
-            
-            right join mem_link_franchise as mem_lk_fr
-            on asnr_tr.linked_member_id = mem_lk_fr.member_id
-            
-            left join franchises as fr
-            on mem_lk_fr.franchise_id = fr.id
-            
-            where asn_role.member_id=${req.decoded.data.user_id} and asn_role.crzb_id=${req.params.hod_id}
-            group by fr.id
-            order by sale desc
-            limit 5`,
-          function (error, result) {
-            if (error) {
-              err_hdl(error);
-            } else {
-              data = result
-            }
-            resolve()
-          });
-      }, function (error) {
-        if (error) {
-          res.status(500).json({
-            error
-          })
-        } else {
-          res.json({
-            data
-          })
-        }
-      })
-    }
-  })
-})
-
 router.get('/top5-childs-sale/:hod_id', (req, res) => {
   if (!/^[0-9]*$/.test(req.params.hod_id)) {
     return res.status(500).json({
@@ -789,17 +1085,17 @@ router.get('/top5-childs-sale/:hod_id', (req, res) => {
             left join (
               select 
                 crzb_1.id as l1_id,
-                    crzb_1.name as l1_name,
-                    crzb_1.parent_id as l1_p,
-                    crzb_2.id as l2_id,
-                    crzb_2.name as l2_name,
-                    crzb_2.parent_id as l2_p,
-                    crzb_3.id as l3_id,
-                    crzb_3.name as l3_name,
-                    crzb_3.parent_id as l3_p,
-                    crzb_4.id as l4_id,
-                    crzb_4.name as l4_name,
-                    crzb_4.parent_id as l4_p
+                crzb_1.name as l1_name,
+                crzb_1.parent_id as l1_p,
+                crzb_2.id as l2_id,
+                crzb_2.name as l2_name,
+                crzb_2.parent_id as l2_p,
+                crzb_3.id as l3_id,
+                crzb_3.name as l3_name,
+                crzb_3.parent_id as l3_p,
+                crzb_4.id as l4_id,
+                crzb_4.name as l4_name,
+                crzb_4.parent_id as l4_p
               from crzb_list as crzb_1
                 
                 left join crzb_list as crzb_2

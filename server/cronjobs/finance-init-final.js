@@ -124,7 +124,7 @@ async function init() {
 async function pend_job() {
   setTimeout(async function () {
     if (init_pend_job_done) {
-      let cronjob_pend_at = moment().subtract(1, 'minutes').format('YYYY-MM-DD HH:mm:ss') // diffrence in 1 min but change to 15 days for pending
+      let cronjob_pend_at = moment().subtract(15, 'days').format('YYYY-MM-DD HH:mm:ss') // diffrence in 1 min but change to 15 days for pending
       let pend_mem = 0
       await new Promise(resolve => {
         db.getConnection(async function (err, connection) {
@@ -232,7 +232,7 @@ async function pend_job() {
 async function avlb_job() {
   setTimeout(async function () {
     if (init_avlb_job_done) {
-      let cronjob_avlb_at = moment().subtract(1, 'minutes').format('YYYY-MM-DD HH:mm:ss') // diffrence in 1 min but change to 24 hours for available
+      let cronjob_avlb_at = moment().subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss') // diffrence in 1 min but change to 24 hours for available
       let avlb_mem = 0
       await new Promise(resolve => {
         db.getConnection(async function (err, connection) {

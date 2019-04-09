@@ -30,11 +30,11 @@
         </tr>
       </template>
       <template slot="tbody">
-        <tr v-for="(row, ind) in l_data" :key="ind">
+        <tr v-for="(row, ind) in l_data" :key="ind" @click.prevent="nextChild(row.crzb_id)">
           <td>{{ row.user_asn_id }}</td>
           <td>{{ row.full_name }}</td>
-          <td>{{ row.crct_code }}</td>
-          <td>{{ row.crct_name }}</td>
+          <td>{{ row.crzb_code }}</td>
+          <td>{{ row.crzb_name }}</td>
           <td>{{ row.total_sale }}</td>
           <td>{{ row.monthly_sale }}</td>
           <td>{{ row.total_comm }}</td>
@@ -89,6 +89,9 @@ export default {
         500
       );
       self.loading = false;
+    },
+    nextChild(crzb_id) {
+      this.$emit("load_child", crzb_id);
     }
   }
 };

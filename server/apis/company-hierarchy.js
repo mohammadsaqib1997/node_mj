@@ -56,26 +56,26 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
           select
             m.user_asn_id,
             m.full_name,
-            get_crc_rd_code(crct_l.id) as crct_code,
-            get_crc_with_p_name(crct_l.id) as crct_name
-              
-          from crc_list as crct_l
+            get_crzb_rd_code(crzb_l.id) as crzb_code,
+            get_crzb_with_p_name(crzb_l.id) as crzb_name
+            
+          from crzb_list as crzb_l
           left join assign_roles as asn_role
-          on crct_l.id = asn_role.crc_id and asn_role.role_status=1
+          on crzb_l.id = asn_role.crzb_id and asn_role.role_status=1
           left join members as m
           on asn_role.member_id = m.id
-        
+
           where 
-            crct_l.type=${type} and
-            crct_l.parent_id=${parent_id} and 
-            crct_l.active=1
+            crzb_l.type=${type} and
+            crzb_l.parent_id=${parent_id} and 
+            crzb_l.active=1
         ) as all_data
         
         where 
           all_data.user_asn_id like '%${search}%' or
           all_data.full_name like '%${search}%' or
-          all_data.crct_code collate utf8mb4_general_ci like '%${search}%' or 
-          all_data.crct_name collate utf8mb4_general_ci like '%${search}%'`,
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -99,33 +99,33 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
                 select
                   m.user_asn_id,
                   m.full_name,
-                  crct_l.id as crct_id,
-                  get_crc_rd_code(crct_l.id) as crct_code,
-                  get_crc_with_p_name(crct_l.id) as crct_name,
-                  get_crc_total_sale(crct_l.id) as total_sale,
-                  get_crc_month_sale(crct_l.id, '${gen_start_month}', '${gen_end_month}') as monthly_sale,
-                  get_crct_total_comm(crct_l.id) as total_comm,
-                  get_crct_month_comm(crct_l.id, '${gen_start_month}', '${gen_end_month}') as monthly_comm
-                    
-                from crc_list as crct_l
+                  crzb_l.id as crzb_id,
+                  get_crzb_rd_code(crzb_l.id) as crzb_code,
+                  get_crzb_with_p_name(crzb_l.id) as crzb_name,
+                  get_crzb_total_sale(crzb_l.id) as total_sale,
+                  get_crzb_month_sale(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as monthly_sale,
+                  get_crzb_total_comm(crzb_l.id) as total_comm,
+                  get_crzb_month_comm(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as monthly_comm
+                  
+                from crzb_list as crzb_l
                 left join assign_roles as asn_role
-                on crct_l.id = asn_role.crc_id and asn_role.role_status=1
+                on crzb_l.id = asn_role.crzb_id and asn_role.role_status=1
                 left join members as m
                 on asn_role.member_id = m.id
-              
+
                 where 
-                  crct_l.type=${type} and
-                  crct_l.parent_id=${parent_id} and 
-                  crct_l.active=1
+                  crzb_l.type=${type} and
+                  crzb_l.parent_id=${parent_id} and 
+                  crzb_l.active=1
               ) as all_data
               
               where 
                 all_data.user_asn_id like '%${search}%' or
                 all_data.full_name like '%${search}%' or
-                all_data.crct_code collate utf8mb4_general_ci like '%${search}%' or 
-                all_data.crct_name collate utf8mb4_general_ci like '%${search}%'
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
               
-              order by all_data.crct_id
+              order by all_data.crzb_id
               
               LIMIT ${limit}
               OFFSET ${offset}`,

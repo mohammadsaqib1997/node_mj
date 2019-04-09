@@ -34,7 +34,7 @@
           <td>{{ row.user_asn_id }}</td>
           <td>{{ row.full_name }}</td>
           <td>{{ row.crzb_code }}</td>
-          <td>{{ row.area_name }}</td>
+          <td>{{ row.crzb_name }}</td>
           <td>{{ row.total_sale }}</td>
           <td>{{ row.monthly_sale }}</td>
           <td>{{ row.total_comm }}</td>
@@ -83,12 +83,14 @@ export default {
         })
         .catch(err => {
           console.log(err);
+        })
+        .finally(() => {
+          self.loading = false;
+          $(".main-content").animate(
+            { scrollTop: $("#branch-cont").position().top },
+            500
+          );
         });
-      $(".main-content").animate(
-        { scrollTop: $("#branch-cont").position().top },
-        500
-      );
-      self.loading = false;
     }
   }
 };

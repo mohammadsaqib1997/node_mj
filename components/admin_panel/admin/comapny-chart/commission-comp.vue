@@ -106,8 +106,8 @@
               <tr v-for="(row, ind) in l_data" :key="ind">
                 <td>{{ row.mj_id }}</td>
                 <td>{{ row.mj_name }}</td>
-                <td>{{ row.crct_code }}</td>
-                <td>{{ row.crct_name }}</td>
+                <td>{{ row.crzb_code }}</td>
+                <td>{{ row.crzb_name }}</td>
                 <td>{{ row.total_month_comm ? row.total_month_comm : 0 }}/-</td>
                 <td>{{ row.total_comm ? row.total_comm: 0 }}/-</td>
               </tr>

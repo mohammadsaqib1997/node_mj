@@ -13,7 +13,8 @@ dist
 # Backpack build
 build
 
-mysqls
+mysqls/*
+!mysqls/functions.sql
 
 README.md
 

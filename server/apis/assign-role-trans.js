@@ -45,28 +45,33 @@ router.get('/sale-list', function (req, res) {
           select 
             asn_mem.user_asn_id as role_asn_mj_id,
             asn_mem.full_name as role_asn_mj_name,
-            get_crc_rd_code(mem_lk_crct.crct_id) as crct_code,
-            get_crc_with_p_name(mem_lk_crct.crct_id) as crct_name
-        
-          from mem_link_crc as mem_lk_crct
+            get_crzb_rd_code(z_list.id) as crzb_code,
+            get_crzb_with_p_name(z_list.id) as crzb_name
+
+          from mem_link_crzb as mem_lk_crzb
           join members as m
-          on mem_lk_crct.member_id = m.id and m.is_paid_m=1
-        
+          on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+          left join crzb_list as b_list
+          on mem_lk_crzb.crzb_id = b_list.id
+          left join crzb_list as z_list
+          on b_list.parent_id = z_list.id
+
           left join assign_roles_trans as asn_role_tns
-          on mem_lk_crct.crct_id = asn_role_tns.crct_id and mem_lk_crct.member_id = asn_role_tns.linked_member_id
-        
+          on z_list.id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+
           left join members as asn_mem
           on asn_role_tns.member_id = asn_mem.id
-        
-          where mem_lk_crct.linked_mem_type=1
-          group by mem_lk_crct.crct_id, asn_role_tns.member_id
+
+          where mem_lk_crzb.linked_mem_type=1
+          group by z_list.id, asn_role_tns.member_id
         ) as all_data
 
         where 
           all_data.role_asn_mj_id like '%${search}%' or
           all_data.role_asn_mj_name like '%${search}%' or
-          all_data.crct_code like '%${search}%' or 
-          all_data.crct_name like '%${search}%'`,
+          all_data.crzb_code like '%${search}%' or 
+          all_data.crzb_name like '%${search}%'`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -90,30 +95,35 @@ router.get('/sale-list', function (req, res) {
                 select 
                   asn_mem.user_asn_id as role_asn_mj_id,
                   asn_mem.full_name as role_asn_mj_name,
-                  get_crc_rd_code(mem_lk_crct.crct_id) as crct_code,
-                  get_crc_with_p_name(mem_lk_crct.crct_id) as crct_name,
+                  get_crzb_rd_code(z_list.id) as crzb_code,
+                  get_crzb_with_p_name(z_list.id) as crzb_name,
                   count(*) as total_sale,
-                  get_crc_mem_sale_monthly(mem_lk_crct.crct_id, asn_mem.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
-              
-                from mem_link_crc as mem_lk_crct
+                  get_zonal_sale_monthly(z_list.id, asn_mem.id, '${gen_start_month}', '${gen_end_month}') as total_month_sale
+
+                from mem_link_crzb as mem_lk_crzb
                 join members as m
-                on mem_lk_crct.member_id = m.id and m.is_paid_m=1
-              
+                on mem_lk_crzb.member_id = m.id and m.is_paid_m=1
+
+                left join crzb_list as b_list
+                on mem_lk_crzb.crzb_id = b_list.id
+                left join crzb_list as z_list
+                on b_list.parent_id = z_list.id
+
                 left join assign_roles_trans as asn_role_tns
-                on mem_lk_crct.crct_id = asn_role_tns.crct_id and mem_lk_crct.member_id = asn_role_tns.linked_member_id
-              
+                on z_list.id = asn_role_tns.crzb_id and mem_lk_crzb.member_id = asn_role_tns.linked_member_id
+
                 left join members as asn_mem
                 on asn_role_tns.member_id = asn_mem.id
-              
-                where mem_lk_crct.linked_mem_type=1
-                group by mem_lk_crct.crct_id, asn_role_tns.member_id
+
+                where mem_lk_crzb.linked_mem_type=1
+                group by z_list.id, asn_role_tns.member_id
               ) as all_data
 
               where 
                 all_data.role_asn_mj_id like '%${search}%' or
                 all_data.role_asn_mj_name like '%${search}%' or
-                all_data.crct_code like '%${search}%' or 
-                all_data.crct_name like '%${search}%'
+                all_data.crzb_code like '%${search}%' or 
+                all_data.crzb_name like '%${search}%'
               
               order by all_data.total_sale desc
               LIMIT ${limit}
@@ -166,8 +176,8 @@ router.get('/commission-list', function (req, res) {
             m.id,
             m.user_asn_id as mj_id,
             m.full_name as mj_name,
-            get_crc_rd_code(asr_trans.crct_id) as crct_code,
-            get_crc_with_p_name(asr_trans.crct_id) as crct_name
+            get_crzb_rd_code(asr_trans.crzb_id) as crzb_code,
+            get_crzb_with_p_name(asr_trans.crzb_id) as crzb_name
 
           from assign_roles_trans as asr_trans
           join members as m
@@ -179,8 +189,8 @@ router.get('/commission-list', function (req, res) {
         where (
           all_data.mj_id like '%${search}%' or
           all_data.mj_name like '%${search}%' or
-          all_data.crct_code like '%${search}%' or
-          all_data.crct_name like '%${search}%'
+          all_data.crzb_code like '%${search}%' or
+          all_data.crzb_name like '%${search}%'
         )`,
         function (error, result) {
           if (error) {
@@ -206,10 +216,10 @@ router.get('/commission-list', function (req, res) {
                   m.id,
                   m.user_asn_id as mj_id,
                   m.full_name as mj_name,
-                  get_crc_rd_code(asr_trans.crct_id) as crct_code,
-                  get_crc_with_p_name(asr_trans.crct_id) as crct_name,
+                  get_crzb_rd_code(asr_trans.crzb_id) as crzb_code,
+                  get_crzb_with_p_name(asr_trans.crzb_id) as crzb_name,
                   sum(asr_trans.amount) as total_comm,
-                  get_crc_mem_comm_monthly(asr_trans.crct_id, m.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
+                  get_crzb_mem_comm_monthly(asr_trans.crzb_id, m.id, '${gen_start_month}', '${gen_end_month}') as total_month_comm
                   
                 from assign_roles_trans as asr_trans
                 join members as m
@@ -221,8 +231,8 @@ router.get('/commission-list', function (req, res) {
               where (
                 all_data.mj_id like '%${search}%' or
                 all_data.mj_name like '%${search}%' or
-                all_data.crct_code like '%${search}%' or
-                all_data.crct_name like '%${search}%'
+                all_data.crzb_code like '%${search}%' or
+                all_data.crzb_name like '%${search}%'
               )
               
               order by all_data.total_comm desc, all_data.total_month_comm desc
@@ -552,16 +562,16 @@ router.get('/commission-region', (req, res) => {
           `select 
             r_l.id as r_id,
             r_l.name as r_name,
-            (select sum(amount) from assign_roles_trans where crct_id=r_l.id) as r_comm,
+            (select sum(amount) from assign_roles_trans where crzb_id=r_l.id) as r_comm,
             sum(zone.z_comm) as z_comm
             
-          from crc_list as r_l 
+          from crzb_list as r_l 
           join 
           (
             select 
               z_l.parent_id,
-              (select sum(amount) from assign_roles_trans where crct_id=z_l.id) as z_comm
-            from crc_list as z_l
+              (select sum(amount) from assign_roles_trans where crzb_id=z_l.id) as z_comm
+            from crzb_list as z_l
             group by z_l.id
           ) as zone
           on r_l.id = zone.parent_id
@@ -617,22 +627,22 @@ router.get('/commission-country', (req, res) => {
             c_l.id as c_id,
             c_l.name as c_name,
             c_l.type,
-            (select sum(amount) from assign_roles_trans where crct_id=c_l.id) as c_comm,
+            (select sum(amount) from assign_roles_trans where crzb_id=c_l.id) as c_comm,
             sum(region.r_comm) as r_comm,
             sum(region.z_comm) as z_comm
-          from crc_list as c_l
+          from crzb_list as c_l
           join (
             select 
               r_l.parent_id,
-              (select sum(amount) from assign_roles_trans where crct_id=r_l.id) as r_comm,
+              (select sum(amount) from assign_roles_trans where crzb_id=r_l.id) as r_comm,
               sum(zone.z_comm) as z_comm
-            from crc_list as r_l 
+            from crzb_list as r_l 
             join 
               (
               select 
                 z_l.parent_id,
-                (select sum(amount) from assign_roles_trans where crct_id=z_l.id) as z_comm
-              from crc_list as z_l
+                (select sum(amount) from assign_roles_trans where crzb_id=z_l.id) as z_comm
+              from crzb_list as z_l
               group by z_l.id
               ) as zone
             on r_l.id = zone.parent_id

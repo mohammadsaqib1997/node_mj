@@ -27,12 +27,12 @@ router.get("/", function (req, res) {
   }
 
   if (/^[0-9]$|^(unpaid|paid)$|^suspend$/.test(req.query.filter)) {
-    filter_qry = `${search !== "" ? 'AND':''}`;
+    filter_qry = `${search !== "" ? 'AND' : ''}`;
 
     if (/^[0-9]$/.test(req.query.filter)) {
       filter_qry += ` u_var.level='${req.query.filter}'`
     } else if (/^(unpaid|paid)$/.test(req.query.filter)) {
-      filter_qry += ` m.is_paid_m='${req.query.filter == 'paid' ? 1:0}'`
+      filter_qry += ` m.is_paid_m='${req.query.filter == 'paid' ? 1 : 0}'`
     } else if (/^suspend$/.test(req.query.filter)) {
       filter_qry += ` m.active_sts=0`
     }
@@ -54,9 +54,9 @@ router.get("/", function (req, res) {
         ON m.id=mem_l_crzb.member_id
         LEFT JOIN crzb_list as crzb_l
         ON mem_l_crzb.crzb_id=crzb_l.id
-        ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
+        ${(search !== '' || filter_qry !== '') ? 'WHERE' : ''}
         ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_l.name LIKE ?)' : ''}
-        ${(filter_qry !== '') ? filter_qry:''}
+        ${(filter_qry !== '') ? filter_qry : ''}
         `,
         ['%' + search + '%', '%' + search + '%', '%' + search + '%', '%' + search + '%'],
         function (error, results, fields) {
@@ -89,9 +89,9 @@ router.get("/", function (req, res) {
                 ON m.id=ur.ref_id AND ur.type=0 
                 LEFT JOIN info_var_m as u_var
                 ON m.id = u_var.member_id
-                ${(search !== '' || filter_qry !== '') ? 'WHERE': ''}
+                ${(search !== '' || filter_qry !== '') ? 'WHERE' : ''}
                 ${(search !== '') ? '(m.user_asn_id LIKE ? OR m.email LIKE ? OR m.full_name LIKE ? OR crzb_l.name LIKE ?)' : ''}
-                ${(filter_qry !== '') ? filter_qry:''}
+                ${(filter_qry !== '') ? filter_qry : ''}
                 GROUP BY m.id
                 ORDER BY m.id DESC
                 LIMIT ${limit}
@@ -712,16 +712,32 @@ router.post("/add_referral", function (req, res) {
 
                         // deduct amount from wallet
                         connection.query(
-                          'SELECT wallet FROM `info_var_m` WHERE member_id=?',
+                          'SELECT wallet, pending FROM `info_var_m` WHERE member_id=?',
                           req.decoded.data.user_id,
                           function (error, results) {
                             if (error) {
                               err_hdl(error)
                               resolve()
                             } else {
-                              if (results.length > 0 && parseInt(results[0].wallet) >= prd_reg_amount) {
+                              let amount_wp = 0
+
+                              let wallet = 0,
+                                pending = 0
+                              if (results.length) {
+                                wallet = results[0].wallet ? parseInt(results[0].wallet) : 0
+                                pending = results[0].pending ? parseInt(results[0].pending) : 0
+                              }
+                              amount_wp = wallet + pending
+
+                              if (amount_wp >= prd_reg_amount) {
+                                wallet -= prd_reg_amount
+                                if (wallet < 0) {
+                                  pending -= -(wallet)
+                                  wallet = 0
+                                }
                                 let set_w_params = {
-                                  wallet: parseInt(results[0].wallet) - prd_reg_amount
+                                  wallet,
+                                  pending
                                 }
                                 connection.query(
                                   'UPDATE info_var_m SET ? WHERE member_id=?',
@@ -847,7 +863,7 @@ router.post("/add_referral", function (req, res) {
                                     }
                                   })
                               } else {
-                                err_hdl(`You have not Rs. ${prd_reg_amount}/- in your wallet!`)
+                                err_hdl(`You have not Rs. ${prd_reg_amount}/- in your account!`)
                                 resolve()
                               }
                             }
@@ -1419,7 +1435,7 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
             await new Promise(resolve2 => {
 
               connection.query(
-                `SELECT m.id, m.full_name, m.ref_user_asn_id , iv.direct_ref_count, iv.in_direct_ref_count, iv.wallet, iv.level
+                `SELECT m.id, m.full_name, m.ref_user_asn_id, m.active_sts, iv.direct_ref_count, iv.in_direct_ref_count, iv.wallet, iv.level
                 FROM \`members\` as m
                 LEFT JOIN info_var_m as iv
                 ON m.id = iv.member_id
@@ -1432,6 +1448,9 @@ async function after_paid_member(connection, mem_id, mem_asn_id, cb) {
                   } else {
                     if (results[0].ref_user_asn_id !== null) {
                       grab_ref_usr_ids.push(results[0].ref_user_asn_id)
+                    }
+                    if(results[0].active_sts !== 1) {
+                      return resolve2()
                     }
 
                     direct_inc++

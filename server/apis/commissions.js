@@ -271,7 +271,7 @@ router.post('/set_sts', function (req, res) {
 
                         // - tax apply and fees
                         let gen_amount = mem_amount
-                        let tax = mem_amount * .13, fees = 25
+                        let tax = Math.round(mem_amount * .13), fees = 25
                         if (type === 1) {
                           gen_amount = mem_amount - (tax + fees)
                         }
@@ -371,7 +371,7 @@ router.post('/set_sts', function (req, res) {
                                                   throw_error = error
                                                   return resolve()
                                                 } else {
-                                                  
+
                                                   connection.query('INSERT INTO notifications SET ?', {
                                                     from_type: 1,
                                                     to_type: 0,

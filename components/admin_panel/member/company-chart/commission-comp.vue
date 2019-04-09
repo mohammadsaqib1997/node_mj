@@ -74,24 +74,26 @@
           >
             <template slot="thead">
               <tr>
-                <th>ID</th>
-                <th>Joined Member ID</th>
-                <th>Joined Member Name</th>
+                <template v-if="hod_data.type > 2">
+                  <th>MJ ID</th>
+                  <th>MJ Name</th>
+                </template>
                 <th>Code</th>
                 <th>Area Name</th>
-                <th>Amount</th>
-                <th>issue_date</th>
+                <th>Monthly Commission</th>
+                <th>Total Commission</th>
               </tr>
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
-                <td>{{ row.id }}</td>
-                <td>{{ row.j_mj_id }}</td>
-                <td>{{ row.j_mj_name }}</td>
-                <td>{{ row.code }}</td>
-                <td>{{ row.name }}</td>
-                <td>{{ row.amount }}</td>
-                <td>{{ $store.getters['formatDate'](row.issue_date) }}</td>
+                <template v-if="hod_data.type > 2">
+                  <td>{{ row.mj_id }}</td>
+                  <td>{{ row.mj_name }}</td>
+                </template>
+                <td>{{ row.crzb_code }}</td>
+                <td>{{ row.crzb_name }}</td>
+                <td>{{ row.month_comm }}</td>
+                <td>{{ row.total_comm }}</td>
               </tr>
             </template>
           </tableComp>
@@ -125,7 +127,7 @@ export default {
         monthly: 0
       },
       lvl_1_comm: {},
-      type_data: ["Country", "Region", "Zone", "Branch"]
+      type_data: ["Country", "Sales Coordinator", "Zone", "Branch"]
     };
   },
   methods: {
@@ -149,8 +151,16 @@ export default {
         .catch(err => {
           console.log(err);
         });
+      let list_of = "";
+      if (self.hod_data.type === 0) {
+        list_of = "country";
+      } else if (self.hod_data.type === 1) {
+        list_of = "region";
+      } else if (self.hod_data.type === 2) {
+        list_of = "zonal";
+      }
       await self.$axios
-        .get(`/api/hod/commission-list/${self.hod_data.hod_id}/${self.hod_data.type+1}`, {
+        .get(`/api/hod/${list_of}-comm-list/${self.hod_data.hod_id}`, {
           params: self.load_params
         })
         .then(res => {

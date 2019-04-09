@@ -111,8 +111,8 @@
               <tr v-for="(row, ind) in l_data" :key="ind">
                 <td>{{ row.role_asn_mj_id }}</td>
                 <td>{{ row.role_asn_mj_name }}</td>
-                <td>{{ row.crct_code }}</td>
-                <td>{{ row.crct_name }}</td>
+                <td>{{ row.crzb_code }}</td>
+                <td>{{ row.crzb_name }}</td>
                 <template v-if="hod_data.type != 3">
                   <td>{{ row.total_month_sale }}</td>
                   <td>{{ row.total_sale }}</td>

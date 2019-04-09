@@ -1,12 +1,12 @@
 module.exports = {
-    dev: false,
+    dev: true,
     db: {
-        live: {
-            host: 'localhost',
-            user: 'mjsupr5_mj_usr',
-            password: '9;jlk^cWH-k^',
-            database: 'mjsupr5_mj_dev'
-        },
+ //autocomment         live: {
+ //autocomment             host: 'localhost',
+ //autocomment             user: 'mjsupr5_mj_usr',
+ //autocomment             password: '9;jlk^cWH-k^',
+ //autocomment             database: 'mjsupr5_mj_dev'
+ //autocomment         },
         local: {
             host: 'localhost',
             user: 'root',
