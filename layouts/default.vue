@@ -21,17 +21,17 @@ import forgotPassForm from "~/components/forms/forgot_password.vue";
 
 export default {
   //comment-in-dev-start
- //autocomment   head: {
- //autocomment     script: [
- //autocomment       {
- //autocomment         src: "https://consent.cookiebot.com/uc.js",
- //autocomment         id: "Cookiebot",
- //autocomment         "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
- //autocomment         type: "text/javascript",
- //autocomment         async: true
- //autocomment       }
- //autocomment     ]
- //autocomment   },
+  head: {
+    script: [
+      {
+        src: "https://consent.cookiebot.com/uc.js",
+        id: "Cookiebot",
+        "data-cbid": "560ee249-27e9-4c7e-aba3-46dcedf5de68",
+        type: "text/javascript",
+        async: true
+      }
+    ]
+  },
   //comment-in-dev-end
   components: {
     topHeader,
