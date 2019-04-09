@@ -53,38 +53,38 @@
     <div class="columns is-variable is-1">
       <div class="column">
         <b-field
-          label="Branch Name"
-          :type="(validation.hasError('form.sel_crzb_id')) ? 'is-danger':''"
-          :message="validation.firstError('form.sel_crzb_id')"
+          label="Zone"
+          :type="(validation.hasError('form.sel_crct_id')) ? 'is-danger':''"
+          :message="validation.firstError('form.sel_crct_id')"
         >
           <b-autocomplete
-            :data="crzb_list"
-            v-model="ac_crzb"
+            :data="crct_list"
+            v-model="ac_crct"
             field="name"
             expanded
             :keep-first="true"
-            @select="option => form.sel_crzb_id = option ? option.id : null"
-            @input="loadCRZB"
+            @select="option => form.sel_crct_id = option ? option.id : null"
+            @input="loadCRCT"
             :loading="isFetching"
-            placeholder="(example: Baldia Town)"
+            placeholder="(example: Karachi, Sindh, Pakistan)"
           ></b-autocomplete>
         </b-field>
       </div>
       <div class="column">
         <b-field
+          label="Branch"
           class="cus-des-1"
-          label="Franchise"
-          :type="(validation.hasError('form.franchise')) ? 'is-danger':''"
-          :message="validation.firstError('form.franchise')"
+          :type="(validation.hasError('form.sel_brn_id')) ? 'is-danger':''"
+          :message="validation.firstError('form.sel_brn_id')"
         >
           <b-select
-            v-model="form.franchise"
+            v-model="form.sel_brn_id"
             expanded
-            :loading="isLoadingFrc"
-            :disabled="isLoadingFrc"
+            :loading="isLoadingBrn"
+            :disabled="isLoadingBrn"
           >
-            <option value>Select Franchise</option>
-            <option v-for="(fr, ind) in frc_list" :value="fr.id" :key="ind">{{ fr.name }}</option>
+            <option value>Select Branch</option>
+            <option v-for="(br, ind) in brn_list" :value="br.id" :key="ind">{{ br.name }}</option>
           </b-select>
         </b-field>
       </div>
@@ -125,30 +125,31 @@ export default {
   data() {
     return {
       ref_name: "",
-      ac_crzb: "",
-      crzb_list: [],
-      frc_list: [],
+      ac_crct: "",
+      crct_list: [],
+      brn_list: [],
       isFetching: false,
-      isLoadingFrc: false,
+      isLoadingBrn: false,
       form: {
         full_name: "",
         email: "",
         password: "",
         cont_num: "",
-        sel_crzb_id: null,
-        franchise: "",
+        sel_crct_id: null,
+        sel_brn_id: "",
+        address: "",
         ref_code: ""
       }
     };
   },
   watch: {
-    "form.sel_crzb_id": function(val) {
-      this.frc_list = [];
-      this.form.franchise = "";
+    "form.sel_crct_id": function(val) {
+      this.brn_list = [];
+      this.form.sel_brn_id = "";
       if (val !== null) {
-        this.loadFrnList(val);
+        this.loadBrnList(val);
       } else {
-        this.isLoadingFrc = false;
+        this.isLoadingBrn = false;
       }
     }
   },
@@ -199,14 +200,15 @@ export default {
           "Invalid Contact Number(e.g 0300-000-0000)"
         );
     },
-    "form.sel_crzb_id": function(value) {
+    "form.sel_crct_id": function(value) {
       return Validator.value(value)
         .required()
         .digit()
         .maxLength(11);
     },
-    "form.franchise": function(value) {
+    "form.sel_brn_id": function(value) {
       return Validator.value(value)
+        .required()
         .digit()
         .maxLength(11);
     },
@@ -258,28 +260,28 @@ export default {
       500,
       false
     ),
-    loadCRZB(event) {
+    loadCRCT(event) {
       const self = this;
       self.isFetching = true;
       self.after_f_settle(function() {
-        if (self.form.sel_crzb_id !== null) {
+        if (self.form.sel_crct_id !== null) {
           self.isFetching = false;
           return;
         }
-        self.crzb_list = [];
+        self.crct_list = [];
 
-        if (!self.ac_crzb.length) {
-          self.crzb_list = [];
+        if (!self.ac_crct.length) {
+          self.crct_list = [];
           self.isFetching = false;
           return;
         }
         self.$axios
-          .get(`/api/web/ac_branch/${self.ac_crzb}`)
+          .get(`/api/web/ac_crct_ls/${self.ac_crct}`)
           .then(({ data }) => {
-            self.crzb_list = data.result;
+            self.crct_list = data.result;
           })
           .catch(error => {
-            self.crzb_list = [];
+            self.crct_list = [];
             throw error;
           })
           .finally(() => {
@@ -287,26 +289,26 @@ export default {
           });
       });
     },
-    loadFrnList(crzb_id) {
+    loadBrnList(crct_id) {
       const self = this;
-      self.isLoadingFrc = true;
+      self.isLoadingBrn = true;
       self.after_f_settle2(function() {
-        if (crzb_id === null) {
-          self.isLoadingFrc = false;
+        if (crct_id === null) {
+          self.isLoadingBrn = false;
           return;
         }
-        self.frc_list = [];
+        self.brn_list = [];
         self.$axios
-          .get(`/api/web/ls_franchise/${crzb_id}`)
+          .get(`/api/web/ls_branch/${crct_id}`)
           .then(({ data }) => {
-            self.frc_list = data.result;
+            self.brn_list = data.result;
           })
           .catch(error => {
-            self.frc_list = [];
+            self.brn_list = [];
             throw error;
           })
           .finally(() => {
-            self.isLoadingFrc = false;
+            self.isLoadingBrn = false;
           });
       });
     },

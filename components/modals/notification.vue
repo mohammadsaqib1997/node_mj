@@ -12,7 +12,7 @@
         .section
           //- here is simple message
           .show-info
-            label {{ a_item.msg }}
+            label(v-if="a_item.msg" v-html="strToHTML(a_item.msg)")
             
           //- here is loaded content
           .load-content(v-if="(a_item.type === 1 || a_item.type === 3) && a_item.hasOwnProperty('data') && loading !== true")
@@ -144,6 +144,9 @@ export default {
     };
   },
   methods: {
+    strToHTML(str) {
+      return str.replace(/(?:\r\n|\r|\n)/g, "<br>");
+    },
     payUser: async function(id) {
       const self = this;
       let is_err = false;

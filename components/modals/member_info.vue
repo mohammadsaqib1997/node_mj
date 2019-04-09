@@ -94,12 +94,6 @@
                   </div>
                 </div>
                 <div class="columns is-variable is-1">
-                  <div class="column"><label>Franchise</label></div>
-                  <div class="column">
-                    <h2>{{ mem_info.fr_name }}</h2>
-                  </div>
-                </div>
-                <div class="columns is-variable is-1">
                   <div class="column"><label>Referral ID</label></div>
                   <div class="column">
                     <h2>{{ mem_info.ref_user_asn_id }}</h2>
@@ -263,7 +257,6 @@ export default {
         { name: "Contact Number", value: mem_info.contact_num },
         { name: "Address", value: mem_info.address },
         { name: "Branch", value: mem_info.crzb_name },
-        { name: "Franchise", value: mem_info.fr_name },
         { name: "Referral ID", value: mem_info.ref_user_asn_id },
         {
           name: "Status",

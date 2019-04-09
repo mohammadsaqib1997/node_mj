@@ -1,6 +1,6 @@
 <template>
   <div class="hr-ls">
-    <h1 class="title">Region Sale</h1>
+    <h1 class="title">Sales Coordinator Sale</h1>
     <tblTopFilter
       :act_view="String(load_params.limit)"
       :s_txt="load_params.search"
@@ -31,18 +31,18 @@
         <tr v-for="(row, ind) in l_data" :key="ind">
           <td>{{ row.mj_id }}</td>
           <td>{{ row.mj_name }}</td>
-          <td>{{ row.code }}</td>
-          <td>{{ row.name }}</td>
-          <td>{{ row.total_sale }}</td>
+          <td>{{ row.crzb_code }}</td>
+          <td>{{ row.crzb_name }}</td>
           <td>{{ row.month_sale }}</td>
+          <td>{{ row.total_sale }}</td>
         </tr>
       </template>
     </tableComp>
-    <b-field>
+    <!-- <b-field>
       <p class="control has-text-centered">
         <button class="button btn-des-1 dark" @click.prevent="$emit('nextType', 2)">Load Zone Sale</button>
       </p>
-    </b-field>
+    </b-field>-->
   </div>
 </template>
 
@@ -67,7 +67,7 @@ export default {
       const self = this;
       self.loading = true;
       await self.$axios
-        .get(`/api/hod/sale-list/${self.p_hod_id}/1`, {
+        .get(`/api/hod/country-sale-list/${self.p_hod_id}`, {
           params: self.load_params
         })
         .then(res => {

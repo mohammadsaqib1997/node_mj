@@ -1,9 +1,9 @@
 <template>
   <div class="section">
     <div id="slider-hm" class="slider-cont">
-      <div class="item sld-2">
+      <!-- <div class="item sld-2">
         <slideComp @popup_open="md_act=$event"></slideComp>
-      </div>
+      </div> -->
 
       <div class="item sld-1">
         <div class="container">

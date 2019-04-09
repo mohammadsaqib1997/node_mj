@@ -13,7 +13,8 @@ dist
 # Backpack build
 build
 
-mysqls
+mysqls/*
+!mysqls/functions.sql
 
 README.md
 
@@ -32,10 +33,11 @@ server/e-conf.js
 server/uploads/cvs/*
 !server/uploads/cvs/readme.md
 server/ssl
+server/cronjobs/__*.js
 
 static/docs
 static/gallery
 
-scripts
+__*.txt
 
-cronjobs
+scripts

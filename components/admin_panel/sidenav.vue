@@ -89,10 +89,10 @@ export default {
               show: [2]
             },
             {
-              name: "branch-management",
+              name: "zone-management",
               active: false,
-              url: "/company-chart/branch-management",
-              title: "Branch Management",
+              url: "/company-chart/zone-management",
+              title: "Zone Management",
               show: [2]
             },
             {
@@ -394,32 +394,32 @@ export default {
               show: [2]
             }
           ]
-        },
-        {
-          name: "campaign",
-          active: false,
-          img: null,
-          icon: '<i class="fas fa-bullhorn"></i>',
-          url: false,
-          title: "Campaign",
-          show: [2],
-          children: [
-            {
-              name: "create",
-              active: false,
-              url: "/campaign/create",
-              title: "Campaign Create",
-              show: [2]
-            },
-            {
-              name: "completed",
-              active: false,
-              url: "/campaign/completed",
-              title: "Campaign Completed",
-              show: [2]
-            }
-          ]
-        },
+        }
+        // {
+        //   name: "campaign",
+        //   active: false,
+        //   img: null,
+        //   icon: '<i class="fas fa-bullhorn"></i>',
+        //   url: false,
+        //   title: "Campaign",
+        //   show: [2],
+        //   children: [
+        //     {
+        //       name: "create",
+        //       active: false,
+        //       url: "/campaign/create",
+        //       title: "Campaign Create",
+        //       show: [2]
+        //     },
+        //     {
+        //       name: "completed",
+        //       active: false,
+        //       url: "/campaign/completed",
+        //       title: "Campaign Completed",
+        //       show: [2]
+        //     }
+        //   ]
+        // },
         // {
         //   name: "lucky-draw",
         //   active: false,

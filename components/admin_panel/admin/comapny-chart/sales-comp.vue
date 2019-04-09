@@ -2,9 +2,7 @@
   <div class="main">
     <div class="box counter-box">
       <div class="columns is-gapless is-multiline">
-        <div
-          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
-        >
+        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
               <div class="tile is-ancestor c-tile is-parent">
@@ -34,12 +32,12 @@
             </div>
           </div>
         </div>
-        <div v-if="hod_data.type != 3" class="column is-12-mobile is-6-tablet is-4-widescreen">
+        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
               <h5
                 class="title-cus-1"
-              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Region') }} Sale</h5>
+              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Sales Coordinator') }} Sale</h5>
               <div class="tile is-ancestor c-tile is-parent">
                 <div class="tile is-vertical is-narrow">
                   <div class="tile is-child" v-for="(row, ind) in lvl_2_sale" :key="ind">
@@ -55,9 +53,7 @@
             </div>
           </div>
         </div>
-        <div
-          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
-        >
+        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
               <div class="amount-wrapper">
@@ -113,8 +109,8 @@
             </template>
             <template slot="tbody">
               <tr v-for="(row, ind) in l_data" :key="ind">
-                <td>{{ row.user_asn_id }}</td>
-                <td>{{ row.full_name }}</td>
+                <td>{{ row.role_asn_mj_id }}</td>
+                <td>{{ row.role_asn_mj_name }}</td>
                 <td>{{ row.crzb_code }}</td>
                 <td>{{ row.crzb_name }}</td>
                 <template v-if="hod_data.type != 3">
@@ -156,26 +152,26 @@ export default {
         yearly: 0,
         monthly: 0
       },
-      type_data: ["Country", "Region", "Zone", "Branch"],
+      type_data: ["Country", "Sales Coordinator", "Zone"],
       lvl_2_sale: [
         {
-          name: "SINDH Region",
+          name: "SINDH",
           sale: 0
         },
         {
-          name: "PUNJAB Region",
+          name: "PUNJAB",
           sale: 0
         },
         {
-          name: "BALOCHISTAN Region",
+          name: "BALOCHISTAN",
           sale: 0
         },
         {
-          name: "KHYBER PAKHTUNKHWA Region",
+          name: "KHYBER PAKHTUNKHWA",
           sale: 0
         },
         {
-          name: "GILGIT BALTISTAN Region",
+          name: "GILGIT BALTISTAN",
           sale: 0
         },
         {

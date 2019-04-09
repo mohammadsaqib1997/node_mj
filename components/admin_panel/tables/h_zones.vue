@@ -34,7 +34,7 @@
           <td>{{ row.user_asn_id }}</td>
           <td>{{ row.full_name }}</td>
           <td>{{ row.crzb_code }}</td>
-          <td>{{ row.area_name }}</td>
+          <td>{{ row.crzb_name }}</td>
           <td>{{ row.total_sale }}</td>
           <td>{{ row.monthly_sale }}</td>
           <td>{{ row.total_comm }}</td>

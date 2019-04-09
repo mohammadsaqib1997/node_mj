@@ -3,7 +3,7 @@
     <div class="box main-box">
       <div class="header columns is-gapless is-multiline">
         <div class="column">
-          <h1>Branch Management</h1>
+          <h1>Zone Management</h1>
         </div>
       </div>
       <div class="body">
@@ -13,19 +13,19 @@
               <div class="column is-6">
                 <b-field
                   expanded
-                  :type="(validation.hasError('f_data.sel_crzb_id')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.sel_crzb_id')"
+                  :type="(validation.hasError('f_data.sel_cr_id')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.sel_cr_id')"
                 >
                   <b-autocomplete
-                    :data="crzb_list"
-                    v-model="ac_crzb"
+                    :data="cr_list"
+                    v-model="ac_cr"
                     field="name"
                     expanded
                     :keep-first="true"
-                    @select="option => f_data.sel_crzb_id = option ? option.id : null"
-                    @input="loadCRZB"
+                    @select="option => f_data.sel_cr_id = option ? option.id : null"
+                    @input="loadCR"
                     :loading="isFetching"
-                    placeholder="Search by Zone, Region, Country"
+                    placeholder="Search by Sales Coordinator, Country"
                   ></b-autocomplete>
                 </b-field>
               </div>
@@ -35,14 +35,15 @@
               <div class="column is-6">
                 <b-field
                   expanded
-                  :type="(validation.hasError('f_data.branch')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.branch')"
+                  :type="(validation.hasError('f_data.zone')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.zone')"
                 >
                   <b-input
                     type="text"
-                    placeholder="Enter Branch Name"
-                    v-model="f_data.branch"
-                    :loading="validation.isValidating('f_data.branch')"
+                    placeholder="Enter Zone Name"
+                    v-model="f_data.zone"
+                    :loading="validation.isValidating('f_data.zone')"
+                    :disabled="!f_data.sel_cr_id ? true: false"
                   ></b-input>
                 </b-field>
               </div>
@@ -52,13 +53,13 @@
               <div class="column is-6">
                 <b-field
                   expanded
-                  :type="(validation.hasError('f_data.branch_desc')) ? 'is-danger':''"
-                  :message="validation.firstError('f_data.branch_desc')"
+                  :type="(validation.hasError('f_data.desc')) ? 'is-danger':''"
+                  :message="validation.firstError('f_data.desc')"
                 >
                   <b-input
                     type="textarea"
-                    placeholder="Enter Branch Description"
-                    v-model="f_data.branch_desc"
+                    placeholder="Enter Zone Description"
+                    v-model="f_data.desc"
                   ></b-input>
                 </b-field>
               </div>
@@ -77,7 +78,7 @@
                   type="button"
                   class="button btn-des-1 dark"
                   @click="resetUpdateForm"
-                >Create New Branch</button>
+                >Create New Zone</button>
               </p>
             </b-field>
           </form>
@@ -88,7 +89,7 @@
     <div class="box main-box">
       <div class="header columns is-gapless is-multiline">
         <div class="column">
-          <h1>Branch List</h1>
+          <h1>Zone List</h1>
         </div>
       </div>
       <div class="body">
@@ -168,33 +169,40 @@ export default {
     return {
       updated_id: null,
       load_upd_data: null,
-      is_auto_crzb: false,
+      is_auto_cr: false,
       loading_form: false,
       isFetching: false,
       submitted: false,
-      ac_crzb: "",
-      crzb_list: [],
+      ac_cr: "",
+      cr_list: [],
       f_data: {
-        sel_crzb_id: null,
-        branch: "",
-        branch_desc: ""
+        sel_cr_id: null,
+        zone: "",
+        desc: ""
       }
     };
   },
+  watch: {
+    "f_data.sel_cr_id": function(val) {
+      if (val === null) {
+        this.f_data.zone = "";
+      }
+    }
+  },
   validators: {
-    "f_data.sel_crzb_id": function(value) {
+    "f_data.sel_cr_id": function(value) {
       return Validator.value(value)
         .required()
         .digit()
         .maxLength(11);
     },
-    "f_data.branch": {
+    "f_data.zone": {
       cache: false,
       debounce: 500,
       validator: function(value) {
         const self = this;
 
-        if (self.submitted || self.validation.isTouched("f_data.branch")) {
+        if (self.submitted || self.validation.isTouched("f_data.zone")) {
           let validator = Validator.value(value)
             .required()
             .maxLength(100);
@@ -206,21 +214,21 @@ export default {
               if (!Validator.isEmpty(value)) {
                 if (
                   self.updated_id !== null &&
-                  self.f_data.sel_crzb_id == self.load_upd_data.parent_id &&
+                  self.f_data.sel_cr_id == self.load_upd_data.parent_id &&
                   value.toLowerCase() == self.load_upd_data.name.toLowerCase()
                 ) {
                   return;
                 }
-                if (!Validator.isEmpty(self.f_data.sel_crzb_id)) {
+                if (!Validator.isEmpty(self.f_data.sel_cr_id)) {
                   return self.$axios
                     .get(
                       `/api/crzb-list/exist-check/${
-                        self.f_data.sel_crzb_id
+                        self.f_data.sel_cr_id
                       }/${value}`
                     )
                     .then(res => {
                       if (res.data.count > 0) {
-                        return "Branch name is already existed!";
+                        return "Zone name is already exist in Sales Coordinator!";
                       }
                     });
                 }
@@ -230,7 +238,7 @@ export default {
         }
       }
     },
-    "f_data.branch_desc": function(value) {
+    "f_data.desc": function(value) {
       return Validator.value(value).maxLength(250);
     }
   },
@@ -239,7 +247,7 @@ export default {
       const self = this;
       self.loading = true;
       await self.$axios
-        .get("/api/crzb-list/branch-list", {
+        .get("/api/crzb-list/zone-list", {
           params: self.load_params
         })
         .then(res => {
@@ -254,32 +262,32 @@ export default {
     after_f_settle: _.debounce(function(cb) {
       cb();
     }, 500),
-    loadCRZB(event) {
+    loadCR(event) {
       const self = this;
       self.isFetching = true;
-      if (self.is_auto_crzb && event !== self.load_upd_data.parent_name) {
-        self.f_data.sel_crzb_id = null;
-        self.is_auto_crzb = false;
+      if (self.is_auto_cr && event !== self.load_upd_data.parent_name) {
+        self.f_data.sel_cr_id = null;
+        self.is_auto_cr = false;
       }
       self.after_f_settle(function() {
-        if (self.f_data.sel_crzb_id !== null) {
+        if (self.f_data.sel_cr_id !== null) {
           self.isFetching = false;
           return;
         }
-        self.crzb_list = [];
+        self.cr_list = [];
 
-        if (!self.ac_crzb.length) {
-          self.crzb_list = [];
+        if (!self.ac_cr.length) {
+          self.cr_list = [];
           self.isFetching = false;
           return;
         }
         self.$axios
-          .get(`/api/crzb-list/ac_search_zone/${self.ac_crzb}`)
+          .get(`/api/crzb-list/ac_search_cr/${self.ac_cr}`)
           .then(({ data }) => {
-            self.crzb_list = data.result;
+            self.cr_list = data.result;
           })
           .catch(error => {
-            self.crzb_list = [];
+            self.cr_list = [];
             throw error;
           })
           .finally(() => {
@@ -294,13 +302,13 @@ export default {
         if (success) {
           self.loading_form = true;
           self.$axios
-            .post("/api/crzb-list/branch-added", self.f_data)
+            .post("/api/crzb-list/zone-add", self.f_data)
             .then(async res => {
               self.reset();
               self.loading_form = false;
               self.$toast.open({
                 duration: 1000,
-                message: "Successfully Branch Added!",
+                message: "Successfully Zone Added!",
                 position: "is-bottom",
                 type: "is-success"
               });
@@ -328,7 +336,7 @@ export default {
           let data = _.cloneDeep(self.f_data);
           data["update_id"] = self.updated_id;
           self.$axios
-            .post("/api/crzb-list/branch-update", data)
+            .post("/api/crzb-list/zone-update", data)
             .then(async res => {
               if (res.data.status === false) {
                 self.loading_form = false;
@@ -343,7 +351,7 @@ export default {
                 self.loading_form = false;
                 self.$toast.open({
                   duration: 1000,
-                  message: "Successfully Branch Updated!",
+                  message: "Successfully Zone Updated!",
                   position: "is-bottom",
                   type: "is-success"
                 });
@@ -365,30 +373,30 @@ export default {
     },
     reset() {
       this.f_data = {
-        sel_crzb_id: null,
-        branch: "",
-        branch_desc: ""
+        sel_cr_id: null,
+        zone: "",
+        desc: ""
       };
-      this.is_auto_crzb = false;
-      this.ac_crzb = "";
+      this.is_auto_cr = false;
+      this.ac_cr = "";
       this.submitted = false;
       this.validation.reset();
     },
     toggleActRow(id, sts) {
       const self = this;
       this.$dialog.confirm({
-        title: `${sts === 1 ? "Disable" : "Enable"} Branch!`,
+        title: `${sts === 1 ? "Disable" : "Enable"} Zone!`,
         message: `Are you sure you want to <b>${
           sts === 1 ? "disable" : "enable"
-        }</b> branch?`,
+        }</b> zone?`,
         confirmText: `${sts === 1 ? "Disable" : "Enable"}`,
         type: "is-danger",
         hasIcon: true,
         onConfirm: async () => {
           self.loading = true;
           await self.$axios
-            .post("/api/crzb-list/tg-act-branch", {
-              del_id: id,
+            .post("/api/crzb-list/tg-act-zone", {
+              tgl_id: id,
               sts
             })
             .then(async res => {
@@ -402,7 +410,7 @@ export default {
               } else {
                 self.$toast.open({
                   duration: 1000,
-                  message: `Successfully branch ${
+                  message: `Successfully zone ${
                     sts === 1 ? "disabled" : "enabled"
                   }.`,
                   position: "is-bottom",
@@ -430,7 +438,7 @@ export default {
       self.reset();
       self.loading_form = true;
       await self.$axios
-        .get(`/api/crzb-list/branch-load/${id}`)
+        .get(`/api/crzb-list/zone-load/${id}`)
         .then(res => {
           if (res.data.status === false) {
             self.$toast.open({
@@ -441,13 +449,13 @@ export default {
             });
           } else {
             self.load_upd_data = res.data.result;
-            self.is_auto_crzb = true;
+            self.is_auto_cr = true;
             self.f_data = {
-              sel_crzb_id: self.load_upd_data.parent_id,
-              branch: self.load_upd_data.name,
-              branch_desc: self.load_upd_data.description
+              sel_cr_id: self.load_upd_data.parent_id,
+              zone: self.load_upd_data.name,
+              desc: self.load_upd_data.description
             };
-            self.ac_crzb = self.load_upd_data.parent_name;
+            self.ac_cr = self.load_upd_data.parent_name;
             self.updated_id = id;
           }
         })
@@ -459,7 +467,7 @@ export default {
     },
     resetUpdateForm() {
       const self = this;
-      self.is_auto_crzb = false;
+      self.is_auto_cr = false;
       self.updated_id = null;
       self.load_upd_data = null;
       self.reset();

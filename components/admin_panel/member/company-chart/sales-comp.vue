@@ -37,7 +37,7 @@
             <div>
               <h5
                 class="title-cus-1"
-              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Region') }} Sale</h5>
+              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Sales Coordinator') }} Sale</h5>
               <div class="tile is-ancestor c-tile is-parent">
                 <div class="tile is-vertical is-narrow">
                   <div class="tile is-child" v-for="(row, ind) in lvl_2_sale" :key="ind">
@@ -103,7 +103,7 @@ export default {
         }
       ],
       lvl_1_sale: {},
-      type_data: ["Country", "Region", "Zone", "Branch", "Franchise"]
+      type_data: ["Country", "Sales Coordinator", "Zone", "Branch"]
     };
   },
   methods: {

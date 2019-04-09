@@ -19,8 +19,6 @@
     >
       <template slot="thead">
         <tr>
-          <th>MJ ID</th>
-          <th>MJ Name</th>
           <th>Code</th>
           <th>Area Name</th>
           <th>Monthly Sale</th>
@@ -29,20 +27,13 @@
       </template>
       <template slot="tbody">
         <tr v-for="(row, ind) in l_data" :key="ind">
-          <td>{{ row.mj_id }}</td>
-          <td>{{ row.mj_name }}</td>
-          <td>{{ row.code }}</td>
-          <td>{{ row.name }}</td>
-          <td>{{ row.total_sale }}</td>
+          <td>{{ row.crzb_code }}</td>
+          <td>{{ row.crzb_name }}</td>
           <td>{{ row.month_sale }}</td>
+          <td>{{ row.total_sale }}</td>
         </tr>
       </template>
     </tableComp>
-    <b-field>
-      <p class="control has-text-centered">
-        <button class="button btn-des-1 dark" @click.prevent="$emit('nextType', 4)">Load Franchise Sale</button>
-      </p>
-    </b-field>
   </div>
 </template>
 
@@ -67,7 +58,7 @@ export default {
       const self = this;
       self.loading = true;
       await self.$axios
-        .get(`/api/hod/sale-list/${self.p_hod_id}/3`, {
+        .get(`/api/hod/zonal-sale-list/${self.p_hod_id}`, {
           params: self.load_params
         })
         .then(res => {

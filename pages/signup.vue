@@ -142,13 +142,14 @@ export default {
               email: form_data.email,
               password: form_data.password,
               contact_num: form_data.cont_num,
+              address: form_data.address,
               ref_user_asn_id:
                 form_data.ref_code !== "" ? form_data.ref_code : null
             },
             ext_data: {
               prd_id: form_data.sel_prd,
-              crzb_id: form_data.sel_crzb_id,
-              franchise: form_data.franchise,
+              crct: form_data.sel_crct_id,
+              brn_id: form_data.sel_brn_id,
               promotion: self.isPromotion
             }
           })

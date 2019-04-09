@@ -52,30 +52,30 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
       }
 
       connection.query(
-        `select 
-            COUNT(*) as tot_rows
+        `select count(*) as tot_rows from (
+          select
+            m.user_asn_id,
+            m.full_name,
+            get_crzb_rd_code(crzb_l.id) as crzb_code,
+            get_crzb_with_p_name(crzb_l.id) as crzb_name
+            
           from crzb_list as crzb_l
           left join assign_roles as asn_role
           on crzb_l.id = asn_role.crzb_id and asn_role.role_status=1
           left join members as m
           on asn_role.member_id = m.id
-          
-          join (
-            select 
-            crzb_l.id,
-            get_crzb_rd_code(crzb_l.id) as crzb_code,
-            get_crzb_with_p_name(crzb_l.id) as crzb_name
-            from crzb_list as crzb_l
-          ) as crzb_var
-          on crzb_l.id = crzb_var.id
-          
-          where crzb_l.type=${type} and crzb_l.parent_id=${parent_id} and crzb_l.active=1 and (
-            m.user_asn_id like '%${search}%' or
-            m.full_name like '%${search}%' or
-            crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-            crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-          )
-          order by crzb_l.id`,
+
+          where 
+            crzb_l.type=${type} and
+            crzb_l.parent_id=${parent_id} and 
+            crzb_l.active=1
+        ) as all_data
+        
+        where 
+          all_data.user_asn_id like '%${search}%' or
+          all_data.full_name like '%${search}%' or
+          all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+          all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'`,
         function (error, result) {
           if (error) {
             connection.release()
@@ -95,12 +95,13 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
             let gen_start_month = date.clone().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
               gen_end_month = date.clone().endOf('month').format('YYYY-MM-DD HH:mm:ss')
             connection.query(
-              `select
-                  crzb_var.crzb_code,
+              `select * from (
+                select
                   m.user_asn_id,
                   m.full_name,
                   crzb_l.id as crzb_id,
-                  crzb_var.crzb_name as area_name,
+                  get_crzb_rd_code(crzb_l.id) as crzb_code,
+                  get_crzb_with_p_name(crzb_l.id) as crzb_name,
                   get_crzb_total_sale(crzb_l.id) as total_sale,
                   get_crzb_month_sale(crzb_l.id, '${gen_start_month}', '${gen_end_month}') as monthly_sale,
                   get_crzb_total_comm(crzb_l.id) as total_comm,
@@ -111,25 +112,23 @@ router.get('/crzb-list/:type/:parent_id', function (req, res) {
                 on crzb_l.id = asn_role.crzb_id and asn_role.role_status=1
                 left join members as m
                 on asn_role.member_id = m.id
-                
-                join (
-                  select 
-                  crzb_l.id,
-                  get_crzb_rd_code(crzb_l.id) as crzb_code,
-                  get_crzb_with_p_name(crzb_l.id) as crzb_name
-                  from crzb_list as crzb_l
-                ) as crzb_var
-                on crzb_l.id = crzb_var.id
-                
-                where crzb_l.type=${type} and crzb_l.parent_id=${parent_id} and crzb_l.active=1 and (
-                  m.user_asn_id like '%${search}%' or
-                  m.full_name like '%${search}%' or
-                  crzb_var.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
-                  crzb_var.crzb_name collate utf8mb4_general_ci like '%${search}%'
-                )
-                order by crzb_l.id
-                LIMIT ${limit}
-                OFFSET ${offset}`,
+
+                where 
+                  crzb_l.type=${type} and
+                  crzb_l.parent_id=${parent_id} and 
+                  crzb_l.active=1
+              ) as all_data
+              
+              where 
+                all_data.user_asn_id like '%${search}%' or
+                all_data.full_name like '%${search}%' or
+                all_data.crzb_code collate utf8mb4_general_ci like '%${search}%' or 
+                all_data.crzb_name collate utf8mb4_general_ci like '%${search}%'
+              
+              order by all_data.crzb_id
+              
+              LIMIT ${limit}
+              OFFSET ${offset}`,
               function (error, results) {
                 connection.release()
                 if (error) {

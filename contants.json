@@ -76,24 +76,19 @@
             "1": "token is verified"
         }
     },
-    "crzb_list": {
+    "crc_list": {
         "type": {
             "0": "Country",
-            "1": "Region",
+            "1": "Region -> Sales Coordinator",
             "2": "Zone",
-            "3": "Branch"
+            "3": "Branch",
+            "4": "Zones -> Others"
         }
     },
-    "mem_link_crzb": {
+    "mem_link_crc": {
         "linked_type": {
-            "0": "old user linked in crzb",
-            "1": "New user linked in crzb"
-        }
-    },
-    "mem_link_franchise": {
-        "linked_type": {
-            "0": "old user linked in crzb",
-            "1": "New user linked in crzb"
+            "0": "old user linked in crct",
+            "1": "New user linked in crct"
         }
     }
 }

@@ -2,9 +2,7 @@
   <div class="main">
     <div class="box counter-box">
       <div class="columns is-gapless is-multiline">
-        <div
-          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
-        >
+        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
               <div class="tile is-ancestor c-tile is-parent">
@@ -34,12 +32,12 @@
             </div>
           </div>
         </div>
-        <div v-if="hod_data.type != 3" class="column is-12-mobile is-6-tablet is-4-widescreen">
+        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
               <h5
                 class="title-cus-1"
-              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Region') }} Commission</h5>
+              >{{ getData(type_data, getData(hod_data, 'type', 0)+1, 'Sales Coordinator') }} Commission</h5>
               <div class="tile is-ancestor c-tile is-parent">
                 <div class="tile is-vertical is-narrow">
                   <div class="tile is-child" v-for="(row, ind) in lvl_2_comm" :key="ind">
@@ -55,9 +53,7 @@
             </div>
           </div>
         </div>
-        <div
-          :class="['column is-12-mobile is-6-tablet', {'is-6-widescreen': hod_data.type == 3}, {'is-4-widescreen': hod_data.type != 3}]"
-        >
+        <div class="column is-12-mobile is-6-tablet is-4-widescreen">
           <div class="flex">
             <div>
               <div class="amount-wrapper">
@@ -146,26 +142,26 @@ export default {
         yearly: 0,
         monthly: 0
       },
-      type_data: ["Country", "Region", "Zone", "Branch"],
+      type_data: ["Country", "Sales Coordinator", "Zone"],
       lvl_2_comm: [
         {
-          r_name: "SINDH Region",
+          r_name: "SINDH",
           comm: 0
         },
         {
-          r_name: "PUNJAB Region",
+          r_name: "PUNJAB",
           comm: 0
         },
         {
-          r_name: "BALOCHISTAN Region",
+          r_name: "BALOCHISTAN",
           comm: 0
         },
         {
-          r_name: "KHYBER PAKHTUNKHWA Region",
+          r_name: "KHYBER PAKHTUNKHWA",
           comm: 0
         },
         {
-          r_name: "GILGIT BALTISTAN Region",
+          r_name: "GILGIT BALTISTAN",
           comm: 0
         },
         {

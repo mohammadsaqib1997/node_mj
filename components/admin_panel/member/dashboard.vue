@@ -29,14 +29,17 @@
                       
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
           .flex
-            table.table
-              tbody
-                tr
-                  td.vert.hd2.s1.has-text-right Rs. {{ wallet }}/-
-                  td.vert.hd1.s1 Shopping Wallet
-                tr
-                  td.vert.hd2.s1.has-text-right Rs. 0/-
-                  td.vert.hd1.s1 Wallet
+            .wallet
+              span.txt Rs. {{ wallet }}/-
+              h3.heading Shopping Wallet
+            // table.table
+            //   tbody
+            //     tr
+            //       td.vert.hd2.s1.has-text-right Rs. {{ wallet }}/-
+            //       td.vert.hd1.s1 Shopping Wallet
+            //     // tr
+            //     //   td.vert.hd2.s1.has-text-right Rs. 0/-
+            //     //   td.vert.hd1.s1 Wallet
 
         .column.is-12-mobile.is-6-tablet.is-3-widescreen
           .flex
@@ -89,13 +92,13 @@
                   tbody
                     tr
                       td Available Balance:
-                      td.has-text-right 0 PKR
+                      td.has-text-right PKR {{ mem_var.available }}/-
                     tr
                       td Pending Balance:
-                      td.has-text-right 0 PKR
+                      td.has-text-right PKR {{ mem_var.pending }}/-
                     tr
                       td Additional Fees:
-                      td.has-text-right 0 PKR
+                      td.has-text-right PKR {{ mem_var.paid_tax }}/-
                     tr
                       td
                         nuxt-link(to="/fund-manager/finance-details") Account Summary
@@ -168,6 +171,7 @@ export default {
       .catch(err => {
         console.log(err);
       });
+    await self.loadAvlb();
     self.loading = false;
   },
   computed: {
@@ -179,6 +183,11 @@ export default {
     let date = moment();
     return {
       loading: false,
+      mem_var: {
+        available: 0,
+        pending: 0,
+        paid_tax: 0
+      },
       bar_data: {},
       tot_paid_r: 0,
       tot_pend_r: 0,
@@ -192,6 +201,30 @@ export default {
         .add(1, "year")
         .format("DD MMM YYYY")
     };
+  },
+  methods: {
+    async loadAvlb() {
+      const self = this;
+      await self.$axios
+        .get("/api/profile/load_fin_var")
+        .then(async res => {
+          if (res.data.result) {
+            self.mem_var = {
+              available: parseInt(res.data.result["available"]),
+              pending: parseInt(res.data.result["pending"]),
+              paid_tax: parseInt(res.data.result["paid_tax"])
+            };
+          }
+        })
+        .catch(err => {
+          self.$toast.open({
+            duration: 3000,
+            message: `Server Error!`,
+            position: "is-bottom",
+            type: "is-danger"
+          });
+        });
+    }
   }
 };
 </script>
@@ -231,6 +264,17 @@ export default {
             font-weight: 700;
           }
         }
+      }
+    }
+    .wallet {
+      .txt {
+        font-size: 30px;
+        color: #d9bd68;
+      }
+      .heading {
+        font-size: 20px;
+        color: white;
+        font-weight: 500;
       }
     }
   }
